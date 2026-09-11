@@ -1,0 +1,87 @@
+You are a senior full-stack engineer and UI/UX designer.
+
+Build a production-ready web application called "Roomlio", a modern platform for finding rooms, roommates, and flatmates across India.
+
+The application should be built like a real startup product with clean architecture, reusable components, scalability, excellent UX, and production-quality code.
+
+Tech Stack:
+- Next.js 15 (App Router)
+- React 19
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+- Supabase (Auth + Database + Storage)
+- Prisma ORM
+- React Hook Form
+- Zod
+- Framer Motion
+- Lucide Icons
+- Google Maps API
+- Cloudinary for image uploads
+
+Requirements:
+- Mobile-first responsive design
+- SEO optimized
+- Accessibility (WCAG AA)
+- Dark mode
+- Clean folder structure
+- Reusable UI components
+- Server Components where appropriate
+- Loading states
+- Error boundaries
+- Skeleton loaders
+- Form validation
+- Optimized images
+- Production-ready code
+
+Pages:
+- Landing Page
+- Find Rooms
+- Find Flatmates
+- Property Details
+- User Profile
+- Dashboard
+- Post Property
+- Login
+- Signup
+- Messages
+- Saved Listings
+- Settings
+- Admin Dashboard
+
+Features:
+- Authentication (Google, Email, Phone OTP)
+- Property Listings
+- Advanced Search & Filters
+- Map View
+- Wishlist
+- Reviews & Ratings
+- Real-time Chat
+- Notifications
+- User Verification
+- AI Roommate Compatibility
+- Rent Split Calculator
+- Responsive Dashboard
+- Admin Moderation
+
+Design:
+Premium modern interface inspired by Airbnb, Stripe, Linear, and NoBroker.
+
+Use:
+Primary: #2563EB
+Secondary: #10B981
+Background: #F8FAFC
+
+Typography:
+Poppins + Inter
+
+Generate:
+- Complete folder structure
+- Components
+- Database schema
+- API routes
+- Authentication
+- Sample data
+- Reusable layouts
+- Clean TypeScript
+- Deployment-ready project
