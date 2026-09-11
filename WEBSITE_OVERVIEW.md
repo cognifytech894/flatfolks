@@ -67,4 +67,4 @@ The `/admin` workspace provides a starting point for listing moderation, report 
 
 The application is ready to run locally and passes a production build. The homepage and existing authentication pages have not been changed.
 
-Before public production deployment, connect persistent services for Supabase/PostgreSQL, secure file storage, maps/Places data, server-side sessions, rate limiting, and error monitoring. The current in-memory data store resets whenever the server restarts.
+Users and listings persist in MariaDB (see DEPLOYMENT.md). Before public production deployment, still add secure file storage, maps/Places data, server-side sessions, rate limiting, and error monitoring.

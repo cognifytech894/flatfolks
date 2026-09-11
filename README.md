@@ -11,7 +11,7 @@ npm.cmd run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-No Supabase account or environment variables are required for local testing. Listings and accounts are held in memory and reset when the server restarts.
+A MariaDB database is required — see [DEPLOYMENT.md](./DEPLOYMENT.md) for schema setup and the `.env.local` variables to configure.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

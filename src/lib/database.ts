@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "crypto";
-import { existsSync, readFileSync, writeFileSync } from "fs";
-import { join } from "path";
+import type { RowDataPacket } from "mysql2";
+import pool from "@/lib/db";
 
 export type Listing = {
   id: string;
@@ -33,48 +33,56 @@ export type ListingReview = { id: string; listingId: string; author: string; rat
 
 export type PublicUser = { id: string; name: string; email: string; phone?: string };
 
-type UserRecord = PublicUser & { passwordHash: string; createdAt: string; updatedAt?: string };
-type StoredDatabase = { users?: UserRecord[]; listings?: Listing[] };
-type PendingRegistration = { name: string; email: string; phone: string; password: string; otp: string; expiresAt: number };
-
-// Development-only data store. It requires no external service and resets when the server restarts.
-const listings: Listing[] = [
-  { id: "room-001", title: "Private Room in 2BHK", location: "Sector 63, Noida", rent: 9500, deposit: 19000, bedrooms: 1, bathrooms: 1, propertyType: "Room", image: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=80", verified: true, tags: ["WiFi", "AC", "Parking"], matchScore: 96, minBudget: 8500, maxBudget: 11000 },
-  { id: "room-002", title: "1 Room in 3BHK Flat", location: "Sector 137, Noida", rent: 8000, deposit: 16000, bedrooms: 1, bathrooms: 1, propertyType: "Flat", image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80", verified: true, tags: ["WiFi", "AC", "Kitchen"], matchScore: 93, minBudget: 7000, maxBudget: 9500 },
-  { id: "room-003", title: "Private Room in 2BHK", location: "Gurugram, Haryana", rent: 11000, deposit: 22000, bedrooms: 1, bathrooms: 1, propertyType: "Room", image: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=80", verified: true, tags: ["WiFi", "AC", "Parking"], matchScore: 91, minBudget: 10000, maxBudget: 12500 },
-  { id: "room-004", title: "1 Room in 2BHK Flat", location: "HSR Layout, Bangalore", rent: 10000, deposit: 20000, bedrooms: 1, bathrooms: 1, propertyType: "Flat", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80", verified: true, tags: ["WiFi", "AC", "Kitchen"], matchScore: 90, minBudget: 9000, maxBudget: 12000 },
-  { id: "room-005", title: "Modern Studio Near Metro", location: "Indirapuram, Ghaziabad", rent: 13500, deposit: 27000, bedrooms: 1, bathrooms: 1, propertyType: "Apartment", image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80", verified: true, tags: ["Lift", "WiFi", "Parking"], matchScore: 88, minBudget: 12000, maxBudget: 15000 },
-  { id: "room-006", title: "Shared Premium PG", location: "Koramangala, Bangalore", rent: 12000, deposit: 24000, bedrooms: 1, bathrooms: 1, propertyType: "PG", image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80", verified: true, tags: ["Meals", "Laundry", "WiFi"], matchScore: 87, minBudget: 10000, maxBudget: 13500 },
-];
-
-const databasePath = join(process.cwd(), "data", "flatfolks-db.json");
-const storedDatabase: StoredDatabase = existsSync(databasePath) ? JSON.parse(readFileSync(databasePath, "utf8")) as StoredDatabase : {};
-const users: UserRecord[] = (storedDatabase.users || []).map((user) => ({ ...user, email: user.email.toLowerCase() }));
-const pendingRegistrations = new Map<string, PendingRegistration>();
+// OTPs and pending registrations are short-lived (10 minutes) and only need to survive within a
+// single running process, so they stay in memory rather than in MariaDB.
+const pendingRegistrations = new Map<string, { name: string; email: string; phone: string; password: string; otp: string; expiresAt: number }>();
 const phoneLoginOtps = new Map<string, { otp: string; expiresAt: number }>();
 const emailLoginOtps = new Map<string, { otp: string; expiresAt: number }>();
-const reviews: ListingReview[] = [];
-
-function publicUser(user: UserRecord): PublicUser {
-  return { id: user.id, name: user.name, email: user.email, phone: user.phone };
-}
 
 function hashPassword(password: string) {
   return createHash("sha256").update(password).digest("hex");
 }
 
-function saveUsers() {
-  // Keep the existing listing data intact while persisting every profile change.
-  storedDatabase.users = users;
-  writeFileSync(databasePath, `${JSON.stringify(storedDatabase, null, 2)}\n`, "utf8");
+function parseJsonField<T>(value: unknown, fallback: T): T {
+  if (value == null) return fallback;
+  if (typeof value === "string") { try { return JSON.parse(value) as T; } catch { return fallback; } }
+  return value as T;
+}
+
+type ListingRow = RowDataPacket & {
+  id: string; title: string; location: string; rent: number; deposit: number; bedrooms: number; bathrooms: number;
+  property_type: Listing["propertyType"]; description: string | null; image: string; verified: number; tags: unknown;
+  match_score: number; min_budget: number; max_budget: number; images: unknown; status: Listing["status"];
+  views: number; saves: number; owner_id: string | null; available_from: string | null;
+  gender_preference: Listing["genderPreference"]; listing_kind: Listing["listingKind"];
+};
+
+function rowToListing(row: ListingRow): Listing {
+  return {
+    id: row.id, title: row.title, location: row.location, rent: row.rent, deposit: row.deposit,
+    bedrooms: row.bedrooms, bathrooms: row.bathrooms, propertyType: row.property_type,
+    description: row.description || undefined, image: row.image, verified: !!row.verified,
+    tags: parseJsonField<string[]>(row.tags, []), matchScore: row.match_score, minBudget: row.min_budget, maxBudget: row.max_budget,
+    images: parseJsonField<string[] | undefined>(row.images, undefined), status: row.status || undefined,
+    views: row.views, saves: row.saves, ownerId: row.owner_id || undefined, availableFrom: row.available_from || undefined,
+    genderPreference: row.gender_preference || undefined, listingKind: row.listing_kind || undefined,
+  };
+}
+
+type UserRow = RowDataPacket & { id: string; name: string; email: string; phone: string | null; password_hash: string };
+
+function rowToPublicUser(row: UserRow): PublicUser {
+  return { id: row.id, name: row.name, email: row.email, phone: row.phone || undefined };
 }
 
 export async function getListings(): Promise<Listing[]> {
-  return [...listings];
+  const [rows] = await pool.query<ListingRow[]>("SELECT * FROM listings ORDER BY created_at DESC");
+  return rows.map(rowToListing);
 }
 
 export async function getFeaturedListings(limit = 4): Promise<Listing[]> {
-  return listings.slice(0, limit);
+  const [rows] = await pool.query<ListingRow[]>("SELECT * FROM listings ORDER BY created_at DESC LIMIT ?", [limit]);
+  return rows.map(rowToListing);
 }
 
 export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; availableFrom?: string; genderPreference?: "Boy" | "Girl" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement" };
@@ -92,70 +100,96 @@ export async function createListing(input: NewListing): Promise<Listing> {
     genderPreference: input.genderPreference || "Any",
     listingKind: input.listingKind || "flat-offer",
   };
-  listings.unshift(listing);
+  await pool.query(
+    `INSERT INTO listings (id, title, location, rent, deposit, bedrooms, bathrooms, property_type, description, image, verified, tags, match_score, min_budget, max_budget, images, status, views, saves, owner_id, available_from, gender_preference, listing_kind)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [listing.id, listing.title, listing.location, listing.rent, listing.deposit, listing.bedrooms, listing.bathrooms, listing.propertyType,
+      listing.description || null, listing.image, listing.verified ? 1 : 0, JSON.stringify(listing.tags), listing.matchScore, listing.minBudget, listing.maxBudget,
+      listing.images ? JSON.stringify(listing.images) : null, listing.status, listing.views, listing.saves, listing.ownerId || null,
+      listing.availableFrom || null, listing.genderPreference, listing.listingKind],
+  );
   return listing;
 }
 
 export async function updateListing(id: string, input: Partial<NewListing>): Promise<Listing> {
-  const listing = listings.find((item) => item.id === id);
-  if (!listing) throw new Error("Listing not found.");
-  if (input.title !== undefined) listing.title = input.title.trim();
-  if (input.location !== undefined) listing.location = input.location.trim();
-  if (input.rent !== undefined) listing.rent = input.rent;
-  if (input.deposit !== undefined) listing.deposit = input.deposit;
-  if (input.propertyType !== undefined) listing.propertyType = input.propertyType;
-  if (input.description !== undefined) listing.description = input.description.trim();
-  if (input.tags !== undefined) listing.tags = input.tags;
-  if (input.images !== undefined) { listing.images = input.images.slice(0, 6); listing.image = listing.images[0] || listing.image; }
-  if (input.status) listing.status = input.status;
-  if (input.listingKind) listing.listingKind = input.listingKind;
-  if (input.availableFrom !== undefined) listing.availableFrom = input.availableFrom;
-  if (input.genderPreference) listing.genderPreference = input.genderPreference;
-  return listing;
+  const sets: string[] = [];
+  const values: unknown[] = [];
+  if (input.title !== undefined) { sets.push("title = ?"); values.push(input.title.trim()); }
+  if (input.location !== undefined) { sets.push("location = ?"); values.push(input.location.trim()); }
+  if (input.rent !== undefined) { sets.push("rent = ?"); values.push(input.rent); }
+  if (input.deposit !== undefined) { sets.push("deposit = ?"); values.push(input.deposit); }
+  if (input.propertyType !== undefined) { sets.push("property_type = ?"); values.push(input.propertyType); }
+  if (input.description !== undefined) { sets.push("description = ?"); values.push(input.description.trim() || null); }
+  if (input.tags !== undefined) { sets.push("tags = ?"); values.push(JSON.stringify(input.tags)); }
+  if (input.images !== undefined) {
+    const images = input.images.slice(0, 6);
+    sets.push("images = ?"); values.push(JSON.stringify(images));
+    if (images[0]) { sets.push("image = ?"); values.push(images[0]); }
+  }
+  if (input.status) { sets.push("status = ?"); values.push(input.status); }
+  if (input.listingKind) { sets.push("listing_kind = ?"); values.push(input.listingKind); }
+  if (input.availableFrom !== undefined) { sets.push("available_from = ?"); values.push(input.availableFrom || null); }
+  if (input.genderPreference) { sets.push("gender_preference = ?"); values.push(input.genderPreference); }
+
+  if (sets.length) {
+    const [result] = await pool.query<import("mysql2").ResultSetHeader>(`UPDATE listings SET ${sets.join(", ")} WHERE id = ?`, [...values, id]);
+    if (result.affectedRows === 0) throw new Error("Listing not found.");
+  }
+  const [rows] = await pool.query<ListingRow[]>("SELECT * FROM listings WHERE id = ?", [id]);
+  if (!rows[0]) throw new Error("Listing not found.");
+  return rowToListing(rows[0]);
 }
 
 export async function deleteListing(id: string): Promise<void> {
-  const index = listings.findIndex((item) => item.id === id);
-  if (index === -1) throw new Error("Listing not found.");
-  listings.splice(index, 1);
+  const [result] = await pool.query<import("mysql2").ResultSetHeader>("DELETE FROM listings WHERE id = ?", [id]);
+  if (result.affectedRows === 0) throw new Error("Listing not found.");
 }
 
 export async function recordListingView(id: string): Promise<Listing | undefined> {
-  const listing = listings.find((item) => item.id === id);
-  if (listing) listing.views = (listing.views || 0) + 1;
-  return listing;
+  await pool.query("UPDATE listings SET views = views + 1 WHERE id = ?", [id]);
+  const [rows] = await pool.query<ListingRow[]>("SELECT * FROM listings WHERE id = ?", [id]);
+  return rows[0] ? rowToListing(rows[0]) : undefined;
 }
 
+type ReviewRow = RowDataPacket & { id: string; listing_id: string; author: string; rating: number; comment: string; created_at: string };
+
 export async function addReview(input: Omit<ListingReview, "id" | "createdAt">): Promise<ListingReview> {
-  if (!listings.some((listing) => listing.id === input.listingId)) throw new Error("Listing not found.");
-  const review = { ...input, id: randomUUID(), createdAt: new Date().toISOString() };
-  reviews.unshift(review);
+  const [listingRows] = await pool.query<RowDataPacket[]>("SELECT id FROM listings WHERE id = ?", [input.listingId]);
+  if (!listingRows[0]) throw new Error("Listing not found.");
+  const review: ListingReview = { ...input, id: randomUUID(), createdAt: new Date().toISOString() };
+  await pool.query("INSERT INTO listing_reviews (id, listing_id, author, rating, comment) VALUES (?, ?, ?, ?, ?)", [review.id, review.listingId, review.author, review.rating, review.comment]);
   return review;
 }
 
-export async function getReviews(listingId: string): Promise<ListingReview[]> { return reviews.filter((review) => review.listingId === listingId); }
+export async function getReviews(listingId: string): Promise<ListingReview[]> {
+  const [rows] = await pool.query<ReviewRow[]>("SELECT * FROM listing_reviews WHERE listing_id = ? ORDER BY created_at DESC", [listingId]);
+  return rows.map((row) => ({ id: row.id, listingId: row.listing_id, author: row.author, rating: row.rating, comment: row.comment, createdAt: row.created_at }));
+}
 
 export async function registerUser(input: { name: string; email: string; phone?: string; password: string }): Promise<PublicUser> {
   const email = input.email.trim().toLowerCase();
-  const phone = input.phone?.trim();
-  if (users.some((user) => user.email === email)) throw new Error("Your account already exists. Please log in instead.");
-  if (phone && users.some((user) => user.phone === phone)) throw new Error("This mobile number already has an account. Please log in instead.");
-  const user: UserRecord = { id: randomUUID(), name: input.name.trim(), email, phone, passwordHash: hashPassword(input.password), createdAt: new Date().toISOString() };
-  users.push(user);
-  saveUsers();
-  return publicUser(user);
+  const phone = input.phone?.trim() || null;
+  const [existing] = await pool.query<RowDataPacket[]>("SELECT id FROM users WHERE email = ? OR (phone IS NOT NULL AND phone = ?)", [email, phone]);
+  if (existing.some((row) => row.email === email)) throw new Error("Your account already exists. Please log in instead.");
+  if (phone && existing.length) throw new Error("This mobile number already has an account. Please log in instead.");
+  const id = randomUUID();
+  await pool.query("INSERT INTO users (id, name, email, phone, password_hash) VALUES (?, ?, ?, ?, ?)", [id, input.name.trim(), email, phone, hashPassword(input.password)]);
+  return { id, name: input.name.trim(), email, phone: phone || undefined };
 }
 
 export async function loginUser(input: { email?: string; phone?: string; password: string }): Promise<PublicUser> {
   const passwordHash = hashPassword(input.password);
-  const user = users.find((candidate) => (input.email ? candidate.email === input.email.trim().toLowerCase() : candidate.phone === input.phone?.trim()) && candidate.passwordHash === passwordHash);
-  if (!user) throw new Error("Incorrect email or password.");
-  return publicUser(user);
+  const [rows] = input.email
+    ? await pool.query<UserRow[]>("SELECT * FROM users WHERE email = ? AND password_hash = ?", [input.email.trim().toLowerCase(), passwordHash])
+    : await pool.query<UserRow[]>("SELECT * FROM users WHERE phone = ? AND password_hash = ?", [input.phone?.trim(), passwordHash]);
+  if (!rows[0]) throw new Error("Incorrect email or password.");
+  return rowToPublicUser(rows[0]);
 }
 
 export async function requestPhoneLoginOtp(phone: string): Promise<string> {
   const normalizedPhone = phone.trim();
-  if (!users.some((user) => user.phone === normalizedPhone)) throw new Error("No account was found for this mobile number.");
+  const [rows] = await pool.query<RowDataPacket[]>("SELECT id FROM users WHERE phone = ?", [normalizedPhone]);
+  if (!rows[0]) throw new Error("No account was found for this mobile number.");
   const otp = String(Math.floor(100000 + Math.random() * 900000));
   phoneLoginOtps.set(normalizedPhone, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
   return otp;
@@ -164,10 +198,10 @@ export async function requestPhoneLoginOtp(phone: string): Promise<string> {
 export async function verifyPhoneLoginOtp(phone: string, otp: string): Promise<PublicUser> {
   const normalizedPhone = phone.trim(); const pending = phoneLoginOtps.get(normalizedPhone);
   if (!pending || pending.otp !== otp || pending.expiresAt < Date.now()) throw new Error("Invalid or expired OTP. Please request a new OTP.");
-  const user = users.find((candidate) => candidate.phone === normalizedPhone);
-  if (!user) throw new Error("No account was found for this mobile number.");
+  const [rows] = await pool.query<UserRow[]>("SELECT * FROM users WHERE phone = ?", [normalizedPhone]);
+  if (!rows[0]) throw new Error("No account was found for this mobile number.");
   phoneLoginOtps.delete(normalizedPhone);
-  return publicUser(user);
+  return rowToPublicUser(rows[0]);
 }
 
 /**
@@ -176,7 +210,8 @@ export async function verifyPhoneLoginOtp(phone: string, otp: string): Promise<P
  */
 export async function requestEmailLoginOtp(email: string): Promise<string> {
   const normalizedEmail = email.trim().toLowerCase();
-  if (!users.some((user) => user.email === normalizedEmail)) throw new Error("No account was found for this email address.");
+  const [rows] = await pool.query<RowDataPacket[]>("SELECT id FROM users WHERE email = ?", [normalizedEmail]);
+  if (!rows[0]) throw new Error("No account was found for this email address.");
   const otp = String(Math.floor(100000 + Math.random() * 900000));
   emailLoginOtps.set(normalizedEmail, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
   return otp;
@@ -186,18 +221,20 @@ export async function verifyEmailLoginOtp(email: string, otp: string): Promise<P
   const normalizedEmail = email.trim().toLowerCase();
   const pending = emailLoginOtps.get(normalizedEmail);
   if (!pending || pending.otp !== otp || pending.expiresAt < Date.now()) throw new Error("Invalid or expired OTP. Please request a new OTP.");
-  const user = users.find((candidate) => candidate.email === normalizedEmail);
-  if (!user) throw new Error("No account was found for this email address.");
+  const [rows] = await pool.query<UserRow[]>("SELECT * FROM users WHERE email = ?", [normalizedEmail]);
+  if (!rows[0]) throw new Error("No account was found for this email address.");
   emailLoginOtps.delete(normalizedEmail);
-  return publicUser(user);
+  return rowToPublicUser(rows[0]);
 }
 
 export async function requestRegistrationOtp(input: { email: string; phone: string; password: string }) {
   const email = input.email.trim().toLowerCase();
-  if (users.some((user) => user.email === email)) throw new Error("Your account already exists. Please log in instead.");
+  const phone = input.phone.trim();
+  const [rows] = await pool.query<RowDataPacket[]>("SELECT email, phone FROM users WHERE email = ? OR phone = ?", [email, phone]);
+  if (rows.some((row) => row.email === email)) throw new Error("Your account already exists. Please log in instead.");
+  if (rows.some((row) => row.phone === phone)) throw new Error("This mobile number already has an account. Please log in instead.");
   const otp = String(Math.floor(100000 + Math.random() * 900000));
-  if (users.some((user) => user.phone === input.phone.trim())) throw new Error("This mobile number already has an account. Please log in instead.");
-  pendingRegistrations.set(email, { ...input, name: email.split("@")[0] || "FlatFolks member", email, phone: input.phone.trim(), otp, expiresAt: Date.now() + 10 * 60 * 1000 });
+  pendingRegistrations.set(email, { ...input, name: email.split("@")[0] || "FlatFolks member", email, phone, otp, expiresAt: Date.now() + 10 * 60 * 1000 });
   return otp;
 }
 
@@ -210,11 +247,11 @@ export async function verifyRegistrationOtp(input: { email: string; otp: string 
 }
 
 export async function updateUser(id: string, input: { name: string; email: string; phone: string }): Promise<PublicUser> {
-  const user = users.find((candidate) => candidate.id === id);
-  if (!user) throw new Error("User not found. Please sign in again.");
   const email = input.email.trim().toLowerCase();
-  if (users.some((candidate) => candidate.id !== id && candidate.email === email)) throw new Error("Another account already uses this email.");
-  user.name = input.name.trim(); user.email = email; user.phone = input.phone.trim(); user.updatedAt = new Date().toISOString();
-  saveUsers();
-  return publicUser(user);
+  const [duplicate] = await pool.query<RowDataPacket[]>("SELECT id FROM users WHERE email = ? AND id <> ?", [email, id]);
+  if (duplicate[0]) throw new Error("Another account already uses this email.");
+  const [result] = await pool.query<import("mysql2").ResultSetHeader>("UPDATE users SET name = ?, email = ?, phone = ?, updated_at = NOW() WHERE id = ?", [input.name.trim(), email, input.phone.trim(), id]);
+  if (result.affectedRows === 0) throw new Error("User not found. Please sign in again.");
+  const [rows] = await pool.query<UserRow[]>("SELECT * FROM users WHERE id = ?", [id]);
+  return rowToPublicUser(rows[0]);
 }

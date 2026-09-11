@@ -1,12 +1,23 @@
-**Deployment & Local Testing (Windows)**
+**Deployment & Local Testing**
 
 Prerequisites
 
-- Install Node.js (v18 or newer) and Git on Windows 11.
+- Node.js (v18 or newer)
+- A MariaDB server (10.5+) reachable from the app — see "Database setup" below.
 
-Data storage
+Database setup (MariaDB)
 
-No environment variables or external services are required. The application uses local demo data, which resets when the server restarts. It is suitable for local testing only.
+1. Install MariaDB on the target (Linux) server: `sudo apt-get install mariadb-server`.
+2. Create the database and an app user:
+   ```sql
+   CREATE DATABASE flatfolks CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE USER 'flatfolks'@'localhost' IDENTIFIED BY 'choose-a-strong-password';
+   GRANT ALL PRIVILEGES ON flatfolks.* TO 'flatfolks'@'localhost';
+   FLUSH PRIVILEGES;
+   ```
+3. Load the schema and seed data: `mysql -u flatfolks -p flatfolks < data/schema.sql`.
+4. Copy `.env.example` to `.env.local` (dev) or `.env` (server) and fill in `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`.
+5. If photo uploads fail with a packet-size error, raise MariaDB's `max_allowed_packet` (e.g. `SET GLOBAL max_allowed_packet = 64*1024*1024;` and persist it in `my.cnf`).
 
 Local development (quick start)
 
@@ -42,4 +53,4 @@ pm2 save
 Notes
 
 - For HTTPS/SSL, terminate TLS at a reverse proxy or load balancer (IIS, Nginx on a reverse proxy server, or cloud LB).
-- The local demo store is not suitable for production because listings and accounts are reset whenever the server restarts.
+- Listings and user accounts now persist in MariaDB. OTP codes and pending sign-ups still live in server memory (by design — they expire after 10 minutes) and reset on restart.

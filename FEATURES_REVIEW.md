@@ -78,8 +78,8 @@ Open `http://localhost:3000`.
 
 ## Local demo data and limitations
 
-- No Supabase, external database, API keys, or environment variables are required.
-- Listings and user accounts are held in server memory and reset when the server restarts.
+- A MariaDB database is required (see DEPLOYMENT.md for schema and `.env.local` setup).
+- Listings and user accounts persist in MariaDB.
 - Chat requests, chat messages, and profile photos use browser local storage.
 - This version is for local testing and feature review. A real database, secure authentication, owner acceptance workflow, and persistent storage are required before production deployment.
 
