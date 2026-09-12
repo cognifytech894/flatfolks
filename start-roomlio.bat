@@ -2,10 +2,6 @@
 cd /d "%~dp0"
 title FlatFolks Production Server
 
-echo Checking MariaDB...
-powershell -NoProfile -Command "if (-not (Get-NetTCPConnection -LocalPort 3306 -State Listen -ErrorAction SilentlyContinue)) { Start-Process -FilePath 'C:\Program Files\MariaDB 12.3\bin\mariadbd.exe' -ArgumentList '--defaults-file=\"C:\Program Files\MariaDB 12.3\data\my.ini\"' -WindowStyle Hidden }"
-timeout /t 3 /nobreak >nul
-
 echo Removing the previous FlatFolks build...
 if exist ".next\" rmdir /s /q ".next"
 echo Building FlatFolks...

@@ -1,56 +1,44 @@
-**Deployment & Local Testing**
+**Deployment (Vercel + Supabase, free tier)**
 
 Prerequisites
 
-- Node.js (v18 or newer)
-- A MariaDB server (10.5+) reachable from the app — see "Database setup" below.
+- A GitHub repo with this code pushed (already done: https://github.com/cognifytech894/flatfolks).
+- A free [Supabase](https://supabase.com) account.
+- A free [Vercel](https://vercel.com) account.
+- (Optional) A purchased domain to point at the Vercel deployment.
 
-Database setup (MariaDB)
+1. Database setup (Supabase)
 
-1. Install MariaDB on the target (Linux) server: `sudo apt-get install mariadb-server`.
-2. Create the database and an app user:
-   ```sql
-   CREATE DATABASE flatfolks CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-   CREATE USER 'flatfolks'@'localhost' IDENTIFIED BY 'choose-a-strong-password';
-   GRANT ALL PRIVILEGES ON flatfolks.* TO 'flatfolks'@'localhost';
-   FLUSH PRIVILEGES;
-   ```
-3. Load the schema and seed data: `mysql -u flatfolks -p flatfolks < data/schema.sql`.
-4. Copy `.env.example` to `.env.local` (dev) or `.env` (server) and fill in `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`.
-5. If photo uploads fail with a packet-size error, raise MariaDB's `max_allowed_packet` (e.g. `SET GLOBAL max_allowed_packet = 64*1024*1024;` and persist it in `my.cnf`).
+1. Create a new Supabase project (choose a region close to your users, e.g. Mumbai/Singapore for India).
+2. Open **SQL Editor** in the Supabase dashboard, paste the contents of `data/schema.sql`, and run it. This creates the tables and seeds the demo listings/testimonials.
+3. Go to **Project Settings → Database → Connection string → URI**. Use the **Transaction pooler** connection string (port 6543) — this is required for serverless hosts like Vercel, which open many short-lived connections.
 
-Local development (quick start)
+2. App deployment (Vercel)
 
-Install dependencies and start the dev server:
+1. Go to [vercel.com/new](https://vercel.com/new), import the `cognifytech894/flatfolks` GitHub repo.
+2. In the import screen (or later under **Settings → Environment Variables**), add:
+   - `DATABASE_URL` = the Supabase connection string from step 1.3.
+3. Deploy. Vercel builds and hosts the app on a free `*.vercel.app` URL.
+
+3. Connect your domain
+
+1. In the Vercel project, go to **Settings → Domains** and add your purchased domain.
+2. Vercel shows the exact DNS records to add (usually an `A` record or `CNAME`) — add them in your domain registrar's DNS settings.
+3. Vercel automatically issues a free SSL certificate once DNS propagates (can take up to a few hours).
+
+Local development
 
 ```powershell
 npm.cmd ci
+```
+
+Copy `.env.example` to `.env.local` and set `DATABASE_URL` to a Supabase connection string (or a local Postgres instance for offline testing), then:
+
+```powershell
 npm.cmd run dev
-```
-
-Production (build and run)
-
-Build and start the app on Windows:
-
-```powershell
-npm.cmd ci
-npm.cmd run build
-npm.cmd run start
-```
-
-The `start` script binds to `0.0.0.0:3000` by default; open `http://localhost:3000`.
-
-Running as a background process
-
-You can run the app under a process manager on Windows (for example, `pm2`):
-
-```powershell
-npm i -g pm2
-pm2 start npm --name flatfolks -- start
-pm2 save
 ```
 
 Notes
 
-- For HTTPS/SSL, terminate TLS at a reverse proxy or load balancer (IIS, Nginx on a reverse proxy server, or cloud LB).
-- Listings and user accounts now persist in MariaDB. OTP codes and pending sign-ups still live in server memory (by design — they expire after 10 minutes) and reset on restart.
+- Listings, users, feedback, and OTP codes all persist in Postgres via Supabase — this works correctly across Vercel's stateless serverless instances (OTPs auto-expire after 10 minutes via `expires_at`).
+- If photo uploads fail, check Supabase's request size limits — base64-encoded images are capped at ~2MB each in the app already (`src/app/api/listings/route.ts`).

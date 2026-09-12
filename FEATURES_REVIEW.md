@@ -78,8 +78,8 @@ Open `http://localhost:3000`.
 
 ## Local demo data and limitations
 
-- A MariaDB database is required (see DEPLOYMENT.md for schema and `.env.local` setup).
-- Listings and user accounts persist in MariaDB.
+- A Postgres database (Supabase free tier) is required (see DEPLOYMENT.md for schema and `.env.local` setup).
+- Listings and user accounts persist in Postgres.
 - Chat requests, chat messages, and profile photos use browser local storage.
 - This version is for local testing and feature review. A real database, secure authentication, owner acceptance workflow, and persistent storage are required before production deployment.
 

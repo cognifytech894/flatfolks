@@ -1,5 +1,4 @@
 import { createHash, randomUUID } from "crypto";
-import type { RowDataPacket } from "mysql2";
 import pool from "@/lib/db";
 
 export type Listing = {
@@ -35,14 +34,30 @@ export type Feedback = { id: string; name: string; city: string; rating: number;
 
 export type PublicUser = { id: string; name: string; email: string; phone?: string };
 
-// OTPs and pending registrations are short-lived (10 minutes) and only need to survive within a
-// single running process, so they stay in memory rather than in MariaDB.
-const pendingRegistrations = new Map<string, { name: string; email: string; phone: string; password: string; otp: string; expiresAt: number }>();
-const phoneLoginOtps = new Map<string, { otp: string; expiresAt: number }>();
-const emailLoginOtps = new Map<string, { otp: string; expiresAt: number }>();
-
 function hashPassword(password: string) {
   return createHash("sha256").update(password).digest("hex");
+}
+
+// OTPs live in Postgres (not in-memory) because Vercel's serverless functions can run the
+// "request" and "verify" calls on two different instances that don't share process memory.
+async function setOtp(id: string, purpose: string, otp: string, payload?: unknown) {
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  await pool.query(
+    `INSERT INTO otps (id, purpose, otp, payload, expires_at) VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (id, purpose) DO UPDATE SET otp = $3, payload = $4, expires_at = $5`,
+    [id, purpose, otp, payload ? JSON.stringify(payload) : null, expiresAt],
+  );
+}
+
+async function consumeOtp<T>(id: string, purpose: string, otp: string): Promise<T | null> {
+  const { rows } = await pool.query<{ otp: string; payload: unknown; expires_at: string }>(
+    "SELECT otp, payload, expires_at FROM otps WHERE id = $1 AND purpose = $2",
+    [id, purpose],
+  );
+  const row = rows[0];
+  if (!row || row.otp !== otp || new Date(row.expires_at) < new Date()) return null;
+  await pool.query("DELETE FROM otps WHERE id = $1 AND purpose = $2", [id, purpose]);
+  return (row.payload ?? {}) as T;
 }
 
 function parseJsonField<T>(value: unknown, fallback: T): T {
@@ -51,9 +66,9 @@ function parseJsonField<T>(value: unknown, fallback: T): T {
   return value as T;
 }
 
-type ListingRow = RowDataPacket & {
+type ListingRow = {
   id: string; title: string; location: string; rent: number; deposit: number; bedrooms: number; bathrooms: number;
-  property_type: Listing["propertyType"]; description: string | null; image: string; verified: number; tags: unknown;
+  property_type: Listing["propertyType"]; description: string | null; image: string; verified: boolean; tags: unknown;
   match_score: number; min_budget: number; max_budget: number; images: unknown; status: Listing["status"];
   views: number; saves: number; owner_id: string | null; available_from: string | null;
   gender_preference: Listing["genderPreference"]; listing_kind: Listing["listingKind"];
@@ -71,19 +86,19 @@ function rowToListing(row: ListingRow): Listing {
   };
 }
 
-type UserRow = RowDataPacket & { id: string; name: string; email: string; phone: string | null; password_hash: string };
+type UserRow = { id: string; name: string; email: string; phone: string | null; password_hash: string };
 
 function rowToPublicUser(row: UserRow): PublicUser {
   return { id: row.id, name: row.name, email: row.email, phone: row.phone || undefined };
 }
 
 export async function getListings(): Promise<Listing[]> {
-  const [rows] = await pool.query<ListingRow[]>("SELECT * FROM listings ORDER BY created_at DESC");
+  const { rows } = await pool.query<ListingRow>("SELECT * FROM listings ORDER BY created_at DESC");
   return rows.map(rowToListing);
 }
 
 export async function getFeaturedListings(limit = 4): Promise<Listing[]> {
-  const [rows] = await pool.query<ListingRow[]>("SELECT * FROM listings ORDER BY created_at DESC LIMIT ?", [limit]);
+  const { rows } = await pool.query<ListingRow>("SELECT * FROM listings ORDER BY created_at DESC LIMIT $1", [limit]);
   return rows.map(rowToListing);
 }
 
@@ -104,9 +119,9 @@ export async function createListing(input: NewListing): Promise<Listing> {
   };
   await pool.query(
     `INSERT INTO listings (id, title, location, rent, deposit, bedrooms, bathrooms, property_type, description, image, verified, tags, match_score, min_budget, max_budget, images, status, views, saves, owner_id, available_from, gender_preference, listing_kind)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)`,
     [listing.id, listing.title, listing.location, listing.rent, listing.deposit, listing.bedrooms, listing.bathrooms, listing.propertyType,
-      listing.description || null, listing.image, listing.verified ? 1 : 0, JSON.stringify(listing.tags), listing.matchScore, listing.minBudget, listing.maxBudget,
+      listing.description || null, listing.image, listing.verified, JSON.stringify(listing.tags), listing.matchScore, listing.minBudget, listing.maxBudget,
       listing.images ? JSON.stringify(listing.images) : null, listing.status, listing.views, listing.saves, listing.ownerId || null,
       listing.availableFrom || null, listing.genderPreference, listing.listingKind],
   );
@@ -116,93 +131,95 @@ export async function createListing(input: NewListing): Promise<Listing> {
 export async function updateListing(id: string, input: Partial<NewListing>): Promise<Listing> {
   const sets: string[] = [];
   const values: unknown[] = [];
-  if (input.title !== undefined) { sets.push("title = ?"); values.push(input.title.trim()); }
-  if (input.location !== undefined) { sets.push("location = ?"); values.push(input.location.trim()); }
-  if (input.rent !== undefined) { sets.push("rent = ?"); values.push(input.rent); }
-  if (input.deposit !== undefined) { sets.push("deposit = ?"); values.push(input.deposit); }
-  if (input.propertyType !== undefined) { sets.push("property_type = ?"); values.push(input.propertyType); }
-  if (input.description !== undefined) { sets.push("description = ?"); values.push(input.description.trim() || null); }
-  if (input.tags !== undefined) { sets.push("tags = ?"); values.push(JSON.stringify(input.tags)); }
+  const set = (column: string, value: unknown) => { values.push(value); sets.push(`${column} = $${values.length}`); };
+
+  if (input.title !== undefined) set("title", input.title.trim());
+  if (input.location !== undefined) set("location", input.location.trim());
+  if (input.rent !== undefined) set("rent", input.rent);
+  if (input.deposit !== undefined) set("deposit", input.deposit);
+  if (input.propertyType !== undefined) set("property_type", input.propertyType);
+  if (input.description !== undefined) set("description", input.description.trim() || null);
+  if (input.tags !== undefined) set("tags", JSON.stringify(input.tags));
   if (input.images !== undefined) {
     const images = input.images.slice(0, 6);
-    sets.push("images = ?"); values.push(JSON.stringify(images));
-    if (images[0]) { sets.push("image = ?"); values.push(images[0]); }
+    set("images", JSON.stringify(images));
+    if (images[0]) set("image", images[0]);
   }
-  if (input.status) { sets.push("status = ?"); values.push(input.status); }
-  if (input.listingKind) { sets.push("listing_kind = ?"); values.push(input.listingKind); }
-  if (input.availableFrom !== undefined) { sets.push("available_from = ?"); values.push(input.availableFrom || null); }
-  if (input.genderPreference) { sets.push("gender_preference = ?"); values.push(input.genderPreference); }
+  if (input.status) set("status", input.status);
+  if (input.listingKind) set("listing_kind", input.listingKind);
+  if (input.availableFrom !== undefined) set("available_from", input.availableFrom || null);
+  if (input.genderPreference) set("gender_preference", input.genderPreference);
 
   if (sets.length) {
-    const [result] = await pool.query<import("mysql2").ResultSetHeader>(`UPDATE listings SET ${sets.join(", ")} WHERE id = ?`, [...values, id]);
-    if (result.affectedRows === 0) throw new Error("Listing not found.");
+    values.push(id);
+    const result = await pool.query(`UPDATE listings SET ${sets.join(", ")} WHERE id = $${values.length}`, values);
+    if (result.rowCount === 0) throw new Error("Listing not found.");
   }
-  const [rows] = await pool.query<ListingRow[]>("SELECT * FROM listings WHERE id = ?", [id]);
+  const { rows } = await pool.query<ListingRow>("SELECT * FROM listings WHERE id = $1", [id]);
   if (!rows[0]) throw new Error("Listing not found.");
   return rowToListing(rows[0]);
 }
 
 export async function deleteListing(id: string): Promise<void> {
-  const [result] = await pool.query<import("mysql2").ResultSetHeader>("DELETE FROM listings WHERE id = ?", [id]);
-  if (result.affectedRows === 0) throw new Error("Listing not found.");
+  const result = await pool.query("DELETE FROM listings WHERE id = $1", [id]);
+  if (result.rowCount === 0) throw new Error("Listing not found.");
 }
 
 export async function recordListingView(id: string): Promise<Listing | undefined> {
-  await pool.query("UPDATE listings SET views = views + 1 WHERE id = ?", [id]);
-  const [rows] = await pool.query<ListingRow[]>("SELECT * FROM listings WHERE id = ?", [id]);
+  await pool.query("UPDATE listings SET views = views + 1 WHERE id = $1", [id]);
+  const { rows } = await pool.query<ListingRow>("SELECT * FROM listings WHERE id = $1", [id]);
   return rows[0] ? rowToListing(rows[0]) : undefined;
 }
 
-type ReviewRow = RowDataPacket & { id: string; listing_id: string; author: string; rating: number; comment: string; created_at: string };
+type ReviewRow = { id: string; listing_id: string; author: string; rating: number; comment: string; created_at: string };
 
 export async function addReview(input: Omit<ListingReview, "id" | "createdAt">): Promise<ListingReview> {
-  const [listingRows] = await pool.query<RowDataPacket[]>("SELECT id FROM listings WHERE id = ?", [input.listingId]);
+  const { rows: listingRows } = await pool.query("SELECT id FROM listings WHERE id = $1", [input.listingId]);
   if (!listingRows[0]) throw new Error("Listing not found.");
   const review: ListingReview = { ...input, id: randomUUID(), createdAt: new Date().toISOString() };
-  await pool.query("INSERT INTO listing_reviews (id, listing_id, author, rating, comment) VALUES (?, ?, ?, ?, ?)", [review.id, review.listingId, review.author, review.rating, review.comment]);
+  await pool.query("INSERT INTO listing_reviews (id, listing_id, author, rating, comment) VALUES ($1, $2, $3, $4, $5)", [review.id, review.listingId, review.author, review.rating, review.comment]);
   return review;
 }
 
 export async function getReviews(listingId: string): Promise<ListingReview[]> {
-  const [rows] = await pool.query<ReviewRow[]>("SELECT * FROM listing_reviews WHERE listing_id = ? ORDER BY created_at DESC", [listingId]);
+  const { rows } = await pool.query<ReviewRow>("SELECT * FROM listing_reviews WHERE listing_id = $1 ORDER BY created_at DESC", [listingId]);
   return rows.map((row) => ({ id: row.id, listingId: row.listing_id, author: row.author, rating: row.rating, comment: row.comment, createdAt: row.created_at }));
 }
 
 export async function registerUser(input: { name: string; email: string; phone?: string; password: string }): Promise<PublicUser> {
   const email = input.email.trim().toLowerCase();
   const phone = input.phone?.trim() || null;
-  const [existing] = await pool.query<RowDataPacket[]>("SELECT id FROM users WHERE email = ? OR (phone IS NOT NULL AND phone = ?)", [email, phone]);
+  const { rows: existing } = await pool.query("SELECT id, email, phone FROM users WHERE email = $1 OR (phone IS NOT NULL AND phone = $2)", [email, phone]);
   if (existing.some((row) => row.email === email)) throw new Error("Your account already exists. Please log in instead.");
   if (phone && existing.length) throw new Error("This mobile number already has an account. Please log in instead.");
   const id = randomUUID();
-  await pool.query("INSERT INTO users (id, name, email, phone, password_hash) VALUES (?, ?, ?, ?, ?)", [id, input.name.trim(), email, phone, hashPassword(input.password)]);
+  await pool.query("INSERT INTO users (id, name, email, phone, password_hash) VALUES ($1, $2, $3, $4, $5)", [id, input.name.trim(), email, phone, hashPassword(input.password)]);
   return { id, name: input.name.trim(), email, phone: phone || undefined };
 }
 
 export async function loginUser(input: { email?: string; phone?: string; password: string }): Promise<PublicUser> {
   const passwordHash = hashPassword(input.password);
-  const [rows] = input.email
-    ? await pool.query<UserRow[]>("SELECT * FROM users WHERE email = ? AND password_hash = ?", [input.email.trim().toLowerCase(), passwordHash])
-    : await pool.query<UserRow[]>("SELECT * FROM users WHERE phone = ? AND password_hash = ?", [input.phone?.trim(), passwordHash]);
+  const { rows } = input.email
+    ? await pool.query<UserRow>("SELECT * FROM users WHERE email = $1 AND password_hash = $2", [input.email.trim().toLowerCase(), passwordHash])
+    : await pool.query<UserRow>("SELECT * FROM users WHERE phone = $1 AND password_hash = $2", [input.phone?.trim(), passwordHash]);
   if (!rows[0]) throw new Error("Incorrect email or password.");
   return rowToPublicUser(rows[0]);
 }
 
 export async function requestPhoneLoginOtp(phone: string): Promise<string> {
   const normalizedPhone = phone.trim();
-  const [rows] = await pool.query<RowDataPacket[]>("SELECT id FROM users WHERE phone = ?", [normalizedPhone]);
+  const { rows } = await pool.query("SELECT id FROM users WHERE phone = $1", [normalizedPhone]);
   if (!rows[0]) throw new Error("No account was found for this mobile number.");
   const otp = String(Math.floor(100000 + Math.random() * 900000));
-  phoneLoginOtps.set(normalizedPhone, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
+  await setOtp(normalizedPhone, "phone-login", otp);
   return otp;
 }
 
 export async function verifyPhoneLoginOtp(phone: string, otp: string): Promise<PublicUser> {
-  const normalizedPhone = phone.trim(); const pending = phoneLoginOtps.get(normalizedPhone);
-  if (!pending || pending.otp !== otp || pending.expiresAt < Date.now()) throw new Error("Invalid or expired OTP. Please request a new OTP.");
-  const [rows] = await pool.query<UserRow[]>("SELECT * FROM users WHERE phone = ?", [normalizedPhone]);
+  const normalizedPhone = phone.trim();
+  if (!(await consumeOtp(normalizedPhone, "phone-login", otp))) throw new Error("Invalid or expired OTP. Please request a new OTP.");
+  const { rows } = await pool.query<UserRow>("SELECT * FROM users WHERE phone = $1", [normalizedPhone]);
   if (!rows[0]) throw new Error("No account was found for this mobile number.");
-  phoneLoginOtps.delete(normalizedPhone);
   return rowToPublicUser(rows[0]);
 }
 
@@ -212,61 +229,59 @@ export async function verifyPhoneLoginOtp(phone: string, otp: string): Promise<P
  */
 export async function requestEmailLoginOtp(email: string): Promise<string> {
   const normalizedEmail = email.trim().toLowerCase();
-  const [rows] = await pool.query<RowDataPacket[]>("SELECT id FROM users WHERE email = ?", [normalizedEmail]);
+  const { rows } = await pool.query("SELECT id FROM users WHERE email = $1", [normalizedEmail]);
   if (!rows[0]) throw new Error("No account was found for this email address.");
   const otp = String(Math.floor(100000 + Math.random() * 900000));
-  emailLoginOtps.set(normalizedEmail, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
+  await setOtp(normalizedEmail, "email-login", otp);
   return otp;
 }
 
 export async function verifyEmailLoginOtp(email: string, otp: string): Promise<PublicUser> {
   const normalizedEmail = email.trim().toLowerCase();
-  const pending = emailLoginOtps.get(normalizedEmail);
-  if (!pending || pending.otp !== otp || pending.expiresAt < Date.now()) throw new Error("Invalid or expired OTP. Please request a new OTP.");
-  const [rows] = await pool.query<UserRow[]>("SELECT * FROM users WHERE email = ?", [normalizedEmail]);
+  if (!(await consumeOtp(normalizedEmail, "email-login", otp))) throw new Error("Invalid or expired OTP. Please request a new OTP.");
+  const { rows } = await pool.query<UserRow>("SELECT * FROM users WHERE email = $1", [normalizedEmail]);
   if (!rows[0]) throw new Error("No account was found for this email address.");
-  emailLoginOtps.delete(normalizedEmail);
   return rowToPublicUser(rows[0]);
 }
 
 export async function requestRegistrationOtp(input: { email: string; phone: string; password: string }) {
   const email = input.email.trim().toLowerCase();
   const phone = input.phone.trim();
-  const [rows] = await pool.query<RowDataPacket[]>("SELECT email, phone FROM users WHERE email = ? OR phone = ?", [email, phone]);
+  const { rows } = await pool.query("SELECT email, phone FROM users WHERE email = $1 OR phone = $2", [email, phone]);
   if (rows.some((row) => row.email === email)) throw new Error("Your account already exists. Please log in instead.");
   if (rows.some((row) => row.phone === phone)) throw new Error("This mobile number already has an account. Please log in instead.");
   const otp = String(Math.floor(100000 + Math.random() * 900000));
-  pendingRegistrations.set(email, { ...input, name: email.split("@")[0] || "FlatFolks member", email, phone, otp, expiresAt: Date.now() + 10 * 60 * 1000 });
+  const name = email.split("@")[0] || "FlatFolks member";
+  await setOtp(email, "registration", otp, { name, email, phone, password: input.password });
   return otp;
 }
 
 export async function verifyRegistrationOtp(input: { email: string; otp: string }): Promise<PublicUser> {
   const email = input.email.trim().toLowerCase();
-  const pending = pendingRegistrations.get(email);
-  if (!pending || pending.otp !== input.otp || pending.expiresAt < Date.now()) throw new Error("Invalid or expired OTP. Please request a new OTP.");
-  pendingRegistrations.delete(email);
+  const pending = await consumeOtp<{ name: string; email: string; phone: string; password: string }>(email, "registration", input.otp);
+  if (!pending) throw new Error("Invalid or expired OTP. Please request a new OTP.");
   return registerUser(pending);
 }
 
-type FeedbackRow = RowDataPacket & { id: string; name: string; city: string; rating: number; message: string; created_at: string };
+type FeedbackRow = { id: string; name: string; city: string; rating: number; message: string; created_at: string };
 
 export async function getFeedback(limit = 12): Promise<Feedback[]> {
-  const [rows] = await pool.query<FeedbackRow[]>("SELECT * FROM feedback ORDER BY created_at DESC LIMIT ?", [limit]);
+  const { rows } = await pool.query<FeedbackRow>("SELECT * FROM feedback ORDER BY created_at DESC LIMIT $1", [limit]);
   return rows.map((row) => ({ id: row.id, name: row.name, city: row.city, rating: row.rating, message: row.message, createdAt: row.created_at }));
 }
 
 export async function addFeedback(input: { name: string; city: string; rating: number; message: string }): Promise<Feedback> {
   const id = randomUUID();
-  await pool.query("INSERT INTO feedback (id, name, city, rating, message) VALUES (?, ?, ?, ?, ?)", [id, input.name.trim(), input.city.trim(), input.rating, input.message.trim()]);
+  await pool.query("INSERT INTO feedback (id, name, city, rating, message) VALUES ($1, $2, $3, $4, $5)", [id, input.name.trim(), input.city.trim(), input.rating, input.message.trim()]);
   return { id, name: input.name.trim(), city: input.city.trim(), rating: input.rating, message: input.message.trim(), createdAt: new Date().toISOString() };
 }
 
 export async function updateUser(id: string, input: { name: string; email: string; phone: string }): Promise<PublicUser> {
   const email = input.email.trim().toLowerCase();
-  const [duplicate] = await pool.query<RowDataPacket[]>("SELECT id FROM users WHERE email = ? AND id <> ?", [email, id]);
+  const { rows: duplicate } = await pool.query("SELECT id FROM users WHERE email = $1 AND id <> $2", [email, id]);
   if (duplicate[0]) throw new Error("Another account already uses this email.");
-  const [result] = await pool.query<import("mysql2").ResultSetHeader>("UPDATE users SET name = ?, email = ?, phone = ?, updated_at = NOW() WHERE id = ?", [input.name.trim(), email, input.phone.trim(), id]);
-  if (result.affectedRows === 0) throw new Error("User not found. Please sign in again.");
-  const [rows] = await pool.query<UserRow[]>("SELECT * FROM users WHERE id = ?", [id]);
+  const result = await pool.query("UPDATE users SET name = $1, email = $2, phone = $3, updated_at = NOW() WHERE id = $4", [input.name.trim(), email, input.phone.trim(), id]);
+  if (result.rowCount === 0) throw new Error("User not found. Please sign in again.");
+  const { rows } = await pool.query<UserRow>("SELECT * FROM users WHERE id = $1", [id]);
   return rowToPublicUser(rows[0]);
 }

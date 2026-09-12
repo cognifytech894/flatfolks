@@ -67,4 +67,4 @@ The `/admin` workspace provides a starting point for listing moderation, report 
 
 The application is ready to run locally and passes a production build. The homepage and existing authentication pages have not been changed.
 
-Users and listings persist in MariaDB (see DEPLOYMENT.md). Before public production deployment, still add secure file storage, maps/Places data, server-side sessions, rate limiting, and error monitoring.
+Users, listings, and feedback persist in Postgres via Supabase (see DEPLOYMENT.md). Before public production deployment, still add secure file storage, maps/Places data, server-side sessions, rate limiting, and error monitoring.
