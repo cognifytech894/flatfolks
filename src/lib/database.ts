@@ -31,6 +31,8 @@ export type Listing = {
 
 export type ListingReview = { id: string; listingId: string; author: string; rating: number; comment: string; createdAt: string };
 
+export type Feedback = { id: string; name: string; city: string; rating: number; message: string; createdAt: string };
+
 export type PublicUser = { id: string; name: string; email: string; phone?: string };
 
 // OTPs and pending registrations are short-lived (10 minutes) and only need to survive within a
@@ -244,6 +246,19 @@ export async function verifyRegistrationOtp(input: { email: string; otp: string 
   if (!pending || pending.otp !== input.otp || pending.expiresAt < Date.now()) throw new Error("Invalid or expired OTP. Please request a new OTP.");
   pendingRegistrations.delete(email);
   return registerUser(pending);
+}
+
+type FeedbackRow = RowDataPacket & { id: string; name: string; city: string; rating: number; message: string; created_at: string };
+
+export async function getFeedback(limit = 12): Promise<Feedback[]> {
+  const [rows] = await pool.query<FeedbackRow[]>("SELECT * FROM feedback ORDER BY created_at DESC LIMIT ?", [limit]);
+  return rows.map((row) => ({ id: row.id, name: row.name, city: row.city, rating: row.rating, message: row.message, createdAt: row.created_at }));
+}
+
+export async function addFeedback(input: { name: string; city: string; rating: number; message: string }): Promise<Feedback> {
+  const id = randomUUID();
+  await pool.query("INSERT INTO feedback (id, name, city, rating, message) VALUES (?, ?, ?, ?, ?)", [id, input.name.trim(), input.city.trim(), input.rating, input.message.trim()]);
+  return { id, name: input.name.trim(), city: input.city.trim(), rating: input.rating, message: input.message.trim(), createdAt: new Date().toISOString() };
 }
 
 export async function updateUser(id: string, input: { name: string; email: string; phone: string }): Promise<PublicUser> {

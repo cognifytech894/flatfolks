@@ -53,6 +53,21 @@ CREATE TABLE IF NOT EXISTS listing_reviews (
   INDEX idx_listing (listing_id)
 );
 
+-- Site-wide testimonials shown on the landing page ("Loved by Thousands").
+CREATE TABLE IF NOT EXISTS feedback (
+  id CHAR(36) PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  city VARCHAR(120) NOT NULL,
+  rating TINYINT NOT NULL DEFAULT 5,
+  message VARCHAR(500) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT IGNORE INTO feedback (id, name, city, rating, message) VALUES
+  ('feedback-001', 'Priya Sharma', 'Bangalore', 5, 'Found my flatmate in three days. Amazing platform!'),
+  ('feedback-002', 'Aman Verma', 'Noida', 5, 'Finally a platform better than Facebook groups.'),
+  ('feedback-003', 'Kunal Mehta', 'Pune', 5, 'Clean interface, genuine listings and quick responses.');
+
 -- Seed data matching the original in-memory demo listings.
 INSERT IGNORE INTO listings (id, title, location, rent, deposit, bedrooms, bathrooms, property_type, image, verified, tags, match_score, min_budget, max_budget, listing_kind) VALUES
   ('room-001', 'Private Room in 2BHK', 'Sector 63, Noida', 9500, 19000, 1, 1, 'Room', 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=80', 1, '["WiFi", "AC", "Parking"]', 96, 8500, 11000, 'flat-offer'),

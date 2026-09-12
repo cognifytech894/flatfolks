@@ -10,12 +10,12 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
-  Star,
   Wifi,
 } from "lucide-react";
 import { SearchCard } from "@/components/home/search-card";
 import { StatsRow } from "@/components/home/stats-row";
-import { getFeaturedListings } from "@/lib/database";
+import { Testimonials } from "@/components/home/testimonials";
+import { getFeaturedListings, getFeedback } from "@/lib/database";
 
 const cities = [
   ["Noida", "photo-1486406146926-c627a92ad1ab"],
@@ -27,12 +27,6 @@ const cities = [
   ["Hyderabad", "photo-1524230572899-a752b3835840"],
 ];
 
-const testimonials = [
-  ["Found my flatmate in three days. Amazing platform!", "Priya Sharma", "Bangalore"],
-  ["Finally a platform better than Facebook groups.", "Aman Verma", "Noida"],
-  ["Clean interface, genuine listings and quick responses.", "Kunal Mehta", "Pune"],
-];
-
 function Unsplash({ id, alt, className }: { id: string; alt: string; className?: string }) {
   return <Image src={`https://images.unsplash.com/${id}?auto=format&fit=crop&w=1000&q=82`} alt={alt} fill className={className ?? "object-cover"} sizes="(max-width: 768px) 100vw, 400px" />;
 }
@@ -40,7 +34,7 @@ function Unsplash({ id, alt, className }: { id: string; alt: string; className?:
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const rooms = await getFeaturedListings();
+  const [rooms, feedback] = await Promise.all([getFeaturedListings(), getFeedback()]);
   return (
     <div className="min-h-screen bg-white text-[#10162d]">
       <main>
@@ -78,7 +72,7 @@ export default async function Home() {
           <section className="mt-5"><h2 className="text-lg font-bold">How FlatFolks Works</h2><div className="mt-4 grid grid-cols-3 gap-3">{[[Search,"Search","Find rooms and flatmates that match your budget and location."],[MessageCircle,"Connect","Chat with verified owners and flatmates instantly."],[HomeIcon,"Move In","Finalize your choice and move in without any hassle."]].map(([Icon,title,description], index) => { const C = Icon as typeof Search; return <div key={title as string} className="relative pl-1"><span className={`mb-2 grid h-11 w-11 place-items-center rounded-full text-white shadow-lg ${index === 0 ? "bg-blue-600" : index === 1 ? "bg-emerald-500" : "bg-amber-500"}`}><C className="h-5 w-5" /></span><b className="block text-xs">{title as string}</b><p className="mt-1 text-[10px] leading-4 text-slate-600">{description as string}</p></div>})}</div></section>
           <div className="mt-5 grid gap-5 md:grid-cols-[.85fr_1.15fr]">
             <section className="relative overflow-hidden rounded-xl border border-emerald-100 bg-[#ecfbf4] p-4"><Sparkles className="absolute -bottom-3 -right-3 h-28 w-28 text-emerald-100" /><h2 className="text-base font-bold">Find Your Ideal <span className="text-emerald-500">Flatmate</span></h2><p className="mt-2 text-[11px] leading-4 text-slate-600">Get matched with compatible flatmates based on lifestyle, preferences &amp; budget.</p><div className="mt-3 flex -space-x-2">{["photo-1494790108377-be9c29b29330","photo-1500648767791-00dcc994a43e","photo-1534528741775-53994a69daeb","photo-1506794778202-cad84cf45f1d"].map(id => <div key={id} className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-white"><Unsplash id={id} alt="FlatFolks flatmate" /></div>)}</div><p className="mt-3 text-[11px] font-bold">10,000+ <span className="font-normal">Flatmates<br />Already Joined</span></p><Link href="/search" className="mt-3 inline-flex items-center gap-1 rounded-md bg-emerald-500 px-3 py-2 text-xs font-bold text-white">Find Flatmates <ArrowRight className="h-3.5 w-3.5" /></Link></section>
-            <section><h2 className="text-base font-bold">Loved by Thousands</h2><div className="mt-3 grid gap-2 sm:grid-cols-3">{testimonials.map(([quote,name,city]) => <article key={name} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"><div className="flex text-amber-400">{Array.from({ length: 5 }, (_, i) => <Star key={i} className="h-3 w-3 fill-current" />)}</div><p className="mt-2 min-h-[52px] text-[10px] leading-4 text-slate-700">“{quote}”</p><b className="mt-2 block text-[10px]">{name}</b><small className="text-[9px] text-slate-500">{city}</small></article>)}</div></section>
+            <Testimonials initial={feedback} />
           </div>
         </section>
         <section className="mx-auto max-w-[1600px] px-5 pb-8 sm:px-8 lg:px-12 xl:px-16"><div className="grid gap-4 rounded-xl border border-slate-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-4">{[[ShieldCheck,"Verified Listings","Every property is reviewed for a safe experience."],[Check,"Verified Users","Only genuine owners and tenants."],[Building2,"No Hidden Charges","Transparent pricing, always."],[Sparkles,"Smart Matching","AI recommends your best fit."]].map(([Icon,title,description]) => { const C = Icon as typeof ShieldCheck; return <div key={title as string} className="flex items-start gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-50 text-blue-600"><C className="h-5 w-5" /></span><span><b className="block text-xs">{title as string}</b><p className="mt-1 text-[10px] leading-4 text-slate-500">{description as string}</p></span></div>})}</div></section>
