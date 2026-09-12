@@ -1,9 +1,14 @@
 @echo off
 cd /d "%~dp0"
-title Roomlio Production Server
-echo Removing the previous Roomlio build...
+title FlatFolks Production Server
+
+echo Checking MariaDB...
+powershell -NoProfile -Command "if (-not (Get-NetTCPConnection -LocalPort 3306 -State Listen -ErrorAction SilentlyContinue)) { Start-Process -FilePath 'C:\Program Files\MariaDB 12.3\bin\mariadbd.exe' -ArgumentList '--defaults-file=\"C:\Program Files\MariaDB 12.3\data\my.ini\"' -WindowStyle Hidden }"
+timeout /t 3 /nobreak >nul
+
+echo Removing the previous FlatFolks build...
 if exist ".next\" rmdir /s /q ".next"
-echo Building Roomlio...
+echo Building FlatFolks...
 call npm.cmd run build
 if errorlevel 1 (
   echo.
@@ -11,9 +16,9 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-echo Starting Roomlio at http://localhost:3000
+echo Starting FlatFolks at http://localhost:3000
 echo.
 call npm.cmd run start
 echo.
-echo The Roomlio server has stopped.
+echo The FlatFolks server has stopped.
 pause
