@@ -29,7 +29,7 @@ fi
 
 echo "==> Installing system packages"
 apt-get update -y
-apt-get install -y ca-certificates curl gnupg postgresql postgresql-contrib ufw rsync
+apt-get install -y ca-certificates curl gnupg postgresql postgresql-contrib ufw rsync psmisc
 
 echo "==> Installing Node.js ${NODE_MAJOR}.x"
 if ! command -v node >/dev/null 2>&1 || [[ "$(node -v)" != v${NODE_MAJOR}.* ]]; then
@@ -94,7 +94,9 @@ chown -R "${APP_USER}:${APP_USER}" "${APP_DIR}"
 chmod 600 "${APP_DIR}/.env"
 
 echo "==> Loading schema (safe to re-run; uses IF NOT EXISTS / ON CONFLICT)"
-sudo -u postgres psql -v ON_ERROR_STOP=1 -d "${DB_NAME}" -f "${APP_DIR}/data/schema.sql"
+# Load it as the flatfolks role itself (not the postgres superuser), so the
+# tables it creates are owned by flatfolks and the app can actually use them.
+psql "${DATABASE_URL}" -v ON_ERROR_STOP=1 -f "${APP_DIR}/data/schema.sql"
 
 echo "==> Installing dependencies and building"
 sudo -u "${APP_USER}" bash -lc "cd '${APP_DIR}' && npm ci && npm run build"
@@ -119,9 +121,16 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
+echo "==> Freeing port 3000 in case a stray process (e.g. a manual 'npm run start') is holding it"
+systemctl stop flatfolks 2>/dev/null || true
+fuser -k 3000/tcp 2>/dev/null || true
+sleep 1
+
 systemctl daemon-reload
 systemctl enable --now flatfolks
 systemctl restart flatfolks
+sleep 2
+systemctl status flatfolks --no-pager || true
 
 echo "==> Configuring firewall"
 ufw allow OpenSSH >/dev/null
