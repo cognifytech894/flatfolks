@@ -176,6 +176,11 @@ export async function updateListing(id: string, input: Partial<NewListing>): Pro
   return rowToListing(rows[0]);
 }
 
+export async function getListingOwnerId(id: string): Promise<string | null | undefined> {
+  const { rows } = await pool.query<{ owner_id: string | null }>("SELECT owner_id FROM listings WHERE id = $1", [id]);
+  return rows[0] ? rows[0].owner_id : undefined;
+}
+
 export async function deleteListing(id: string): Promise<void> {
   const result = await pool.query("DELETE FROM listings WHERE id = $1", [id]);
   if (result.rowCount === 0) throw new Error("Listing not found.");

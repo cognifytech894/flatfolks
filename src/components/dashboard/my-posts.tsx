@@ -12,11 +12,13 @@ export function MyPosts() {
   const [draft, setDraft] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [ownerId, setOwnerId] = useState<string | undefined>();
 
   useEffect(() => {
     const raw = localStorage.getItem("flatfolks_user");
     const user = raw ? JSON.parse(raw) as { id?: string } : null;
     if (!user?.id) { setLoading(false); return; }
+    setOwnerId(user.id);
     fetch(`/api/listings?ownerId=${encodeURIComponent(user.id)}`).then(async (response) => response.ok ? response.json() as Promise<Post[]> : []).then(setPosts).catch(() => setPosts([])).finally(() => setLoading(false));
   }, []);
 
@@ -33,7 +35,7 @@ export function MyPosts() {
   async function remove(id: string) {
     if (!window.confirm("Delete this post? This cannot be undone.")) return;
     setMessage("");
-    const response = await fetch(`/api/listings?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    const response = await fetch(`/api/listings?id=${encodeURIComponent(id)}&ownerId=${encodeURIComponent(ownerId || "")}`, { method: "DELETE" });
     if (!response.ok && response.status !== 204) { setMessage("Could not delete this post."); return; }
     setPosts((current) => current.filter((post) => post.id !== id));
     if (draft?.id === id) setDraft(null);

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { createListing, deleteListing, getListings, updateListing, type NewListing } from "@/lib/database";
+import { cookies } from "next/headers";
+import { createListing, deleteListing, getListingOwnerId, getListings, updateListing, type NewListing } from "@/lib/database";
 import { lifestylePreferences } from "@/data/preferences";
+import { ADMIN_SESSION_COOKIE, isValidAdminSessionToken } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 
@@ -86,8 +88,19 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   if (rateLimited(request)) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
-  const id = new URL(request.url).searchParams.get("id");
+  const url = new URL(request.url);
+  const id = url.searchParams.get("id");
+  const ownerId = url.searchParams.get("ownerId");
   if (!id) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });
+
+  const cookieStore = await cookies();
+  const isAdmin = isValidAdminSessionToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+  if (!isAdmin) {
+    const actualOwnerId = await getListingOwnerId(id);
+    if (actualOwnerId === undefined) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
+    if (!ownerId || actualOwnerId !== ownerId) return NextResponse.json({ error: "You can only delete your own listings." }, { status: 403 });
+  }
+
   try { await deleteListing(id); return new NextResponse(null, { status: 204 }); }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Could not delete listing." }, { status: 404 }); }
 }

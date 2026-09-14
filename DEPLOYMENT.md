@@ -97,3 +97,4 @@ Notes
 
 - Listings, users, feedback, and OTP codes all persist in Postgres via Supabase — this works correctly across Vercel's stateless serverless instances (OTPs auto-expire after 10 minutes via `expires_at`).
 - If photo uploads fail, check Supabase's request size limits — base64-encoded images are capped at ~2MB each in the app already (`src/app/api/listings/route.ts`).
+- `/admin` is disabled (login always fails) until `ADMIN_USERNAME` and `ADMIN_PASSWORD` are set. Add them to Vercel's env vars, or on a self-hosted server add them directly to the app's `.env` file (e.g. `sudo nano /home/ankit/flatfolks/.env`) and `sudo systemctl restart flatfolks` — never commit real values to `.env.example` or anywhere in git.

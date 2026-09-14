@@ -54,7 +54,9 @@ The listings API validates input server-side and rate-limits requests.
 
 ### Admin workspace
 
-- `/admin` shows total/pending-moderation listing counts and a per-listing view/save table — a starting point, not a full moderation system yet (no real user management or report queues).
+- `/admin` is gated behind a username/password login (`/admin/login`); credentials are set via the `ADMIN_USERNAME`/`ADMIN_PASSWORD` environment variables, not stored in the database or the repo.
+- Shows total/pending-moderation listing counts, a per-listing view/save table, and a full listings table where the admin can open (view) or permanently delete any listing.
+- Still a starting point, not a full moderation system (no real user management or report queues yet).
 
 ### SEO, accessibility, and performance
 
