@@ -1,4 +1,52 @@
-**Deployment (Vercel + Supabase, free tier)**
+**Deployment**
+
+Two supported options: a self-hosted Ubuntu server (below), or Vercel + Supabase (further down).
+
+---
+
+**Option A — Self-hosted (Ubuntu 24.04 LTS)**
+
+Runs the app directly on your own server with a local Postgres database, reachable at `http://<server-ip>:3000`. No domain or reverse proxy required.
+
+Prerequisites
+
+- A fresh Ubuntu 24.04 LTS server (VPS or bare metal) with root/sudo access.
+- Port 3000 reachable from wherever you'll access the site (the script opens it via `ufw`).
+
+Steps
+
+1. On the server, clone the repo and run the provisioning script:
+
+   ```bash
+   git clone https://github.com/cognifytech894/flatfolks.git
+   cd flatfolks
+   sudo bash deploy/setup-ubuntu.sh
+   ```
+
+2. The script (`deploy/setup-ubuntu.sh`) does everything in one pass:
+   - Installs Node.js 22.x and Postgres.
+   - Creates a dedicated `flatfolks` system user and a Postgres role/database with a randomly generated password (saved to `/root/flatfolks-db-credentials.txt`, root-only).
+   - Copies the app to `/opt/flatfolks`, writes `.env` with the local `DATABASE_URL`, runs `data/schema.sql`, then `npm ci && npm run build`.
+   - Installs and starts a `flatfolks` systemd service (auto-restarts on crash and on reboot).
+   - Opens port 3000 in `ufw` (and explicitly allows OpenSSH first, so you don't get locked out).
+
+3. When it finishes, it prints the URL — `http://<server-ip>:3000`.
+
+Operating it afterwards
+
+```bash
+systemctl status flatfolks     # check it's running
+journalctl -u flatfolks -f     # tail logs
+sudo systemctl restart flatfolks
+```
+
+To deploy a code update: `git pull` inside your original clone, then re-run `sudo bash deploy/setup-ubuntu.sh` — it's safe to run again (rebuilds and restarts the service, reuses the existing database and password).
+
+Adding a domain + HTTPS later: put Nginx in front of `127.0.0.1:3000` as a reverse proxy and get a certificate with `certbot --nginx`; this isn't set up by the script since none was requested at setup time.
+
+---
+
+**Option B — Vercel + Supabase (free tier)**
 
 Prerequisites
 
