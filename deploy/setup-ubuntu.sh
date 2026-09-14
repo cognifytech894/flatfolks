@@ -1,21 +1,25 @@
 #!/usr/bin/env bash
 # Provisions FlatFolks on a fresh Ubuntu 24.04 LTS server: Node.js, Postgres,
-# a dedicated system user, the app itself (built and run under systemd), and
-# a firewall rule for port 3000. No domain/reverse proxy — the app is reached
-# directly at http://<server-ip>:3000.
+# the app itself under the given Linux user's home directory (built and run
+# under systemd), and Nginx as a reverse proxy on port 80. No domain/TLS —
+# the app is reached at http://<server-ip>/ over plain HTTP.
 #
 # Usage: run this FROM INSIDE a clone of the repo on the server, as root:
 #   git clone https://github.com/cognifytech894/flatfolks.git
 #   cd flatfolks
 #   sudo bash deploy/setup-ubuntu.sh
 #
+# By default the app is installed under /home/ankit/flatfolks, owned by the
+# Linux user "ankit". Override with env vars if you want a different user:
+#   sudo APP_USER=someuser bash deploy/setup-ubuntu.sh
+#
 # Re-running is safe: it skips steps that are already done and redeploys the
 # latest code in the current directory.
 
 set -euo pipefail
 
-APP_DIR=/opt/flatfolks
-APP_USER=flatfolks
+APP_USER="${APP_USER:-ankit}"
+APP_DIR="${APP_DIR:-/home/${APP_USER}/flatfolks}"
 DB_NAME=flatfolks
 DB_USER=flatfolks
 DB_CREDS_FILE=/root/flatfolks-db-credentials.txt
@@ -29,7 +33,7 @@ fi
 
 echo "==> Installing system packages"
 apt-get update -y
-apt-get install -y ca-certificates curl gnupg postgresql postgresql-contrib ufw rsync psmisc
+apt-get install -y ca-certificates curl gnupg postgresql postgresql-contrib nginx ufw rsync psmisc
 
 echo "==> Installing Node.js ${NODE_MAJOR}.x"
 if ! command -v node >/dev/null 2>&1 || [[ "$(node -v)" != v${NODE_MAJOR}.* ]]; then
@@ -38,9 +42,9 @@ if ! command -v node >/dev/null 2>&1 || [[ "$(node -v)" != v${NODE_MAJOR}.* ]]; 
 fi
 node -v
 
-echo "==> Creating system user '${APP_USER}'"
+echo "==> Ensuring Linux user '${APP_USER}' exists"
 if ! id -u "${APP_USER}" >/dev/null 2>&1; then
-  useradd --system --create-home --home-dir "${APP_DIR}" --shell /usr/sbin/nologin "${APP_USER}"
+  adduser --disabled-password --gecos "" "${APP_USER}"
 fi
 
 echo "==> Configuring Postgres role and database"
@@ -132,15 +136,44 @@ systemctl restart flatfolks
 sleep 2
 systemctl status flatfolks --no-pager || true
 
+echo "==> Configuring Nginx as a reverse proxy on port 80"
+cat > /etc/nginx/sites-available/flatfolks <<'EOF'
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+rm -f /etc/nginx/sites-enabled/default
+ln -sf /etc/nginx/sites-available/flatfolks /etc/nginx/sites-enabled/flatfolks
+nginx -t
+systemctl enable --now nginx
+systemctl reload nginx
+
 echo "==> Configuring firewall"
 ufw allow OpenSSH >/dev/null
-ufw allow 3000/tcp >/dev/null
+ufw allow 'Nginx HTTP' >/dev/null
+# Port 3000 is now only reached via Nginx's proxy, not directly from outside.
+ufw delete allow 3000/tcp >/dev/null 2>&1 || true
 ufw --force enable >/dev/null
 
 SERVER_IP="$(hostname -I | awk '{print $1}')"
 
 echo
-echo "Done. FlatFolks should be running at: http://${SERVER_IP}:3000"
+echo "Done. FlatFolks should be running at: http://${SERVER_IP}/"
+echo "App code:   ${APP_DIR} (owned by ${APP_USER})"
 echo "Database credentials saved at: ${DB_CREDS_FILE} (root-only)"
-echo "Check status with: systemctl status flatfolks"
-echo "Tail logs with:    journalctl -u flatfolks -f"
+echo "Check app status with:   systemctl status flatfolks"
+echo "Tail app logs with:      journalctl -u flatfolks -f"
+echo "Check Nginx status with: systemctl status nginx"
