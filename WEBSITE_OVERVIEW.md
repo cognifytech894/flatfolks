@@ -6,52 +6,55 @@ FlatFolks is a housing-discovery platform for finding rooms, flats, PGs, and com
 
 ### Home page
 
-- Main landing experience with FlatFolks branding and property-discovery entry points.
-- The home page is intentionally preserved without visual changes.
+- Landing page with hero search bar, popular cities, featured rooms, trust stats, and a footer.
 
 ### Search and listings
 
-- Browse verified listings by location, budget, property type, and amenities.
-- Switch between list and map-style result views.
-- View property details, pricing, nearby landmarks, and owner information.
-- Save listings and submit interest to unlock private one-to-one chat.
+- Browse verified listings by location, budget, property type, and amenities; switch between list and map-style views.
+- Each listing's detail page shows a one-at-a-time photo carousel (prev/next + dots), real bedroom/bathroom counts, description, amenities, lifestyle-preference tags, the actual owner's name, and a working contact number (Call and WhatsApp links).
+- Save a listing to a personal wishlist, or submit interest to unlock a private chat with that listing's real owner.
 
 ### Property posting
 
-- Post a property with multiple images, save it as a draft, or publish it.
-- Add title, location, property type, rent, deposit, and property images.
-- Listing API includes server-side input validation and basic request rate limiting.
+Posting a property covers two distinct flows, both requiring a contact number:
+
+- **Looking for a flatmate** (a flat/room offer): title, flat type, bedrooms/bathrooms, rent, deposit, availability, preferred tenant gender, amenities, lifestyle-preference tags, description, and up to 3 photos (auto-compressed and center-cropped to 16:9, 9:16, or 1:1 in the browser before upload).
+- **Looking for a flat** (a requirement): title, needed-from date, preferred gender, location, max budget, amenities, and lifestyle-preference tags — no photos.
+
+The listings API validates input server-side and rate-limits requests.
 
 ### Flatmates
 
-- Create and browse flatmate profiles.
-- Add preferred area, budget, food preference, and lifestyle information.
-- FlatFolks can surface compatibility-oriented flatmate suggestions from profile preferences.
+- Browse posted flat *requirements* (people looking for a flat, not standalone "profiles") on the Flatmates page.
+- Each card shows the poster's real name, gender preference, location, budget, amenities, lifestyle tags, and contact number.
+- "I have a suitable flat" links to that specific requirement's interest flow.
 
 ### Chat and interest
 
-- Submit an interest request for a listing to unlock owner chat.
-- Use one-to-one live chat across browser tabs, with browser notification support.
+- Submitting interest on a listing adds that listing's real owner to your contacts list (no more placeholder names).
+- Chat is a same-browser, cross-tab prototype built on `BroadcastChannel` and `localStorage` — it only syncs between tabs open in the same browser on the same device, with a browser notification on new messages. It is **not** a real server-backed messaging system between two different people's devices yet.
+- Contacts can be removed from the list at any time.
 
 ### Wishlist
 
-- Save and remove property listings from a personal wishlist.
-- Saved-listing totals are reflected on the dashboard.
+- Save and remove property listings from a personal wishlist; totals are reflected on the dashboard.
 
 ### Profile and settings
 
-- Manage profile details, photos, housing preferences, verification status, and notification settings.
-- Track profile-completion preferences such as preferred city, monthly budget, and lifestyle.
+- Edit name, email, and phone number.
+- Set a profile photo either by uploading one (compressed client-side) or picking one of 6 preset avatar icons.
+- A separate "Preferences & settings" mini-form for preferred city, budget, and lifestyle text, plus a notifications toggle.
+- A "Dashboard" quick-link card (this is currently the only way to reach `/dashboard` from the UI).
 
 ### Dashboard
 
-- Track listing views, saved listings, messages, and interests from the dashboard.
-- Review recent activity and profile readiness.
+- Stat cards for listing views, saved listings, messages, and interests.
+- "My Posts": edit any of your own posts in place (title, description, location, budget, bedrooms/bathrooms, photos, contact number, availability, gender preference, lifestyle tags) or delete them outright.
+- Placeholder "recent activity" and "profile status" panels.
 
 ### Admin workspace
 
-- Review listing moderation status and listing-level analytics.
-- Provides a foundation for future user management and reported-content workflows.
+- `/admin` shows total/pending-moderation listing counts and a per-listing view/save table — a starting point, not a full moderation system yet (no real user management or report queues).
 
 ### SEO, accessibility, and performance
 
@@ -59,12 +62,17 @@ FlatFolks is a housing-discovery platform for finding rooms, flats, PGs, and com
 - Semantic controls and ARIA labels are used where relevant, with keyboard-accessible form controls.
 - Next.js production build supports route-level optimization and code splitting.
 
-## Admin capabilities
+## Known gaps (honest state, not yet built)
 
-The `/admin` workspace provides a starting point for listing moderation, report handling, user management, and listing analytics.
+- **Login is email/password or OTP-based, but OTP delivery is not real SMS/email yet** — the code (`requestPhoneLoginOtp`, `requestEmailLoginOtp`) generates a code and hands it straight back to the same browser to display, rather than actually texting or emailing it. A phone-only login option (via a real provider like Firebase Phone Auth) has been discussed but not implemented.
+- **Chat has no real backend** — see above; it only works within one browser across its own tabs.
+- Photo uploads are capped at 3 per listing, ~2MB each after compression.
 
-## Current status
+## Deployment
 
-The application is ready to run locally and passes a production build. The homepage and existing authentication pages have not been changed.
+Two documented paths — see `DEPLOYMENT.md` for both:
 
-Users, listings, and feedback persist in Postgres via Supabase (see DEPLOYMENT.md). Before public production deployment, still add secure file storage, maps/Places data, server-side sessions, rate limiting, and error monitoring.
+- **Self-hosted Ubuntu 24.04 LTS**: Node + local Postgres + Nginx reverse proxy, provisioned by `deploy/setup-ubuntu.sh`.
+- **Vercel + Supabase** (free tier): Postgres-hosted, serverless.
+
+Users, listings, reviews, and feedback all persist in Postgres either way. Before a real public launch, still worth adding: secure file/object storage for photos (instead of storing base64 in Postgres), a real SMS/email OTP provider, a real chat backend, server-side sessions (auth currently stores the logged-in user in `localStorage`, not a signed session/cookie), and error monitoring.
