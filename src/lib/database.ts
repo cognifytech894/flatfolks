@@ -276,6 +276,11 @@ export async function addFeedback(input: { name: string; city: string; rating: n
   return { id, name: input.name.trim(), city: input.city.trim(), rating: input.rating, message: input.message.trim(), createdAt: new Date().toISOString() };
 }
 
+export async function getUserById(id: string): Promise<PublicUser | undefined> {
+  const { rows } = await pool.query<UserRow>("SELECT * FROM users WHERE id = $1", [id]);
+  return rows[0] ? rowToPublicUser(rows[0]) : undefined;
+}
+
 export async function updateUser(id: string, input: { name: string; email: string; phone: string }): Promise<PublicUser> {
   const email = input.email.trim().toLowerCase();
   const { rows: duplicate } = await pool.query("SELECT id FROM users WHERE email = $1 AND id <> $2", [email, id]);
