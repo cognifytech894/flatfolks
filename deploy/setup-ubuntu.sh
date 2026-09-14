@@ -52,18 +52,23 @@ else
   DB_PASSWORD="$(openssl rand -base64 24 | tr -d '/+=')"
 fi
 
-sudo -u postgres psql -v ON_ERROR_STOP=1 -v db_user="${DB_USER}" -v db_password="${DB_PASSWORD}" -v db_name="${DB_NAME}" <<'SQL'
-DO $$
+# DB_USER/DB_NAME are fixed constants and DB_PASSWORD is alnum-only (generated
+# above), so plain interpolation into the SQL text below is safe. psql's own
+# :'var' substitution does NOT reach inside $$...$$ dollar-quoted bodies, so
+# that approach (tried earlier) fails with a syntax error — hence bash does
+# the substitution here instead, before the heredoc ever reaches psql.
+sudo -u postgres psql -v ON_ERROR_STOP=1 <<SQL
+DO \$\$
 BEGIN
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = :'db_user') THEN
-    EXECUTE format('CREATE ROLE %I LOGIN PASSWORD %L', :'db_user', :'db_password');
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '${DB_USER}') THEN
+    CREATE ROLE ${DB_USER} LOGIN PASSWORD '${DB_PASSWORD}';
   ELSE
-    EXECUTE format('ALTER ROLE %I WITH PASSWORD %L', :'db_user', :'db_password');
+    ALTER ROLE ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';
   END IF;
 END
-$$;
-SELECT format('CREATE DATABASE %I OWNER %I', :'db_name', :'db_user')
-WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = :'db_name')
+\$\$;
+SELECT 'CREATE DATABASE ${DB_NAME} OWNER ${DB_USER}'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${DB_NAME}')
 \gexec
 SQL
 
