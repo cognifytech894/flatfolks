@@ -87,9 +87,16 @@ DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}"
 
 echo "==> Deploying app code to ${APP_DIR}"
 mkdir -p "${APP_DIR}"
-rsync -a --delete \
-  --exclude 'node_modules' --exclude '.next' --exclude '.git' --exclude '.env.local' \
-  "${REPO_DIR}/" "${APP_DIR}/"
+if [[ "$(cd "${REPO_DIR}" && pwd -P)" == "$(cd "${APP_DIR}" && pwd -P)" ]]; then
+  # The repo is already checked out directly at APP_DIR (e.g. it was cloned
+  # as ~/flatfolks) — rsyncing it onto itself with --delete would be
+  # destructive, so just use it in place instead of copying.
+  echo "    (repo is already at ${APP_DIR}; deploying in place)"
+else
+  rsync -a --delete \
+    --exclude 'node_modules' --exclude '.next' --exclude '.git' --exclude '.env.local' \
+    "${REPO_DIR}/" "${APP_DIR}/"
+fi
 
 cat > "${APP_DIR}/.env" <<EOF
 DATABASE_URL=${DATABASE_URL}
