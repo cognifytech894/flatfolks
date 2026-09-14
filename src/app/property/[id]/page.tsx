@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { Bath, Bed, MapPin, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import { SaveListingButton } from "@/components/listing/save-listing-button";
-import { getUserById, recordListingView } from "@/lib/database";
+import { recordListingView } from "@/lib/database";
 
 export const dynamic = "force-dynamic";
 
@@ -10,8 +10,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   const listing = await recordListingView(id);
   if (!listing) notFound();
 
-  const owner = listing.ownerId ? await getUserById(listing.ownerId) : undefined;
-  const ownerName = owner?.name || "FlatFolks member";
+  const ownerName = listing.ownerName || "FlatFolks member";
   const photos = listing.images?.length ? listing.images : [listing.image];
 
   return (

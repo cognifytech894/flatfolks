@@ -22,6 +22,7 @@ export type Listing = {
   views?: number;
   saves?: number;
   ownerId?: string;
+  ownerName?: string;
   availableFrom?: string;
   genderPreference?: "Boy" | "Girl" | "Any";
   /** A flat offer is shown to people looking for a flat; a requirement is shown to flat owners. */
@@ -70,7 +71,7 @@ type ListingRow = {
   id: string; title: string; location: string; rent: number; deposit: number; bedrooms: number; bathrooms: number;
   property_type: Listing["propertyType"]; description: string | null; image: string; verified: boolean; tags: unknown;
   match_score: number; min_budget: number; max_budget: number; images: unknown; status: Listing["status"];
-  views: number; saves: number; owner_id: string | null; available_from: string | null;
+  views: number; saves: number; owner_id: string | null; owner_name: string | null; available_from: string | null;
   gender_preference: Listing["genderPreference"]; listing_kind: Listing["listingKind"];
 };
 
@@ -81,10 +82,12 @@ function rowToListing(row: ListingRow): Listing {
     description: row.description || undefined, image: row.image, verified: !!row.verified,
     tags: parseJsonField<string[]>(row.tags, []), matchScore: row.match_score, minBudget: row.min_budget, maxBudget: row.max_budget,
     images: parseJsonField<string[] | undefined>(row.images, undefined), status: row.status || undefined,
-    views: row.views, saves: row.saves, ownerId: row.owner_id || undefined, availableFrom: row.available_from || undefined,
+    views: row.views, saves: row.saves, ownerId: row.owner_id || undefined, ownerName: row.owner_name || undefined, availableFrom: row.available_from || undefined,
     genderPreference: row.gender_preference || undefined, listingKind: row.listing_kind || undefined,
   };
 }
+
+const listingSelect = "SELECT listings.*, users.name AS owner_name FROM listings LEFT JOIN users ON users.id = listings.owner_id";
 
 type UserRow = { id: string; name: string; email: string; phone: string | null; password_hash: string };
 
@@ -93,12 +96,12 @@ function rowToPublicUser(row: UserRow): PublicUser {
 }
 
 export async function getListings(): Promise<Listing[]> {
-  const { rows } = await pool.query<ListingRow>("SELECT * FROM listings ORDER BY created_at DESC");
+  const { rows } = await pool.query<ListingRow>(`${listingSelect} ORDER BY listings.created_at DESC`);
   return rows.map(rowToListing);
 }
 
 export async function getFeaturedListings(limit = 4): Promise<Listing[]> {
-  const { rows } = await pool.query<ListingRow>("SELECT * FROM listings ORDER BY created_at DESC LIMIT $1", [limit]);
+  const { rows } = await pool.query<ListingRow>(`${listingSelect} ORDER BY listings.created_at DESC LIMIT $1`, [limit]);
   return rows.map(rowToListing);
 }
 
@@ -167,7 +170,7 @@ export async function deleteListing(id: string): Promise<void> {
 
 export async function recordListingView(id: string): Promise<Listing | undefined> {
   await pool.query("UPDATE listings SET views = views + 1 WHERE id = $1", [id]);
-  const { rows } = await pool.query<ListingRow>("SELECT * FROM listings WHERE id = $1", [id]);
+  const { rows } = await pool.query<ListingRow>(`${listingSelect} WHERE listings.id = $1`, [id]);
   return rows[0] ? rowToListing(rows[0]) : undefined;
 }
 
@@ -274,11 +277,6 @@ export async function addFeedback(input: { name: string; city: string; rating: n
   const id = randomUUID();
   await pool.query("INSERT INTO feedback (id, name, city, rating, message) VALUES ($1, $2, $3, $4, $5)", [id, input.name.trim(), input.city.trim(), input.rating, input.message.trim()]);
   return { id, name: input.name.trim(), city: input.city.trim(), rating: input.rating, message: input.message.trim(), createdAt: new Date().toISOString() };
-}
-
-export async function getUserById(id: string): Promise<PublicUser | undefined> {
-  const { rows } = await pool.query<UserRow>("SELECT * FROM users WHERE id = $1", [id]);
-  return rows[0] ? rowToPublicUser(rows[0]) : undefined;
 }
 
 export async function updateUser(id: string, input: { name: string; email: string; phone: string }): Promise<PublicUser> {
