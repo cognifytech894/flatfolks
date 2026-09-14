@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Camera, CheckCircle2, MapPin, X } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
 import { searchLocations } from "@/data/indian-cities";
+import { compressImageFile } from "@/lib/compress-image";
 
 const amenities = ["WiFi", "AC", "Parking", "Kitchen", "Lift", "Power Backup"];
 type Form = { title: string; description: string; location: string; budget: string; availableFrom: string; genderPreference: "Boy" | "Girl" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG" };
@@ -59,7 +60,7 @@ function PostListing() {
 
   function selectImage(event: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files || []).slice(0, 3 - images.length);
-    files.forEach((file) => { const reader = new FileReader(); reader.onload = () => { setImages((current) => [...current, String(reader.result)].slice(0, 3)); }; reader.readAsDataURL(file); });
+    files.forEach((file) => { compressImageFile(file).then((compressed) => setImages((current) => [...current, compressed].slice(0, 3))); });
     event.target.value = "";
   }
 

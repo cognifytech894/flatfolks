@@ -5,13 +5,14 @@ import Link from "next/link";
 import { Camera, LogOut, Mail, Pencil, Phone, UserRound } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
 import { ProfilePreferences } from "@/components/profile/profile-preferences";
+import { compressImageFile } from "@/lib/compress-image";
 
 type Profile = { id: string; name: string; email: string; phone?: string };
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null); const [draft, setDraft] = useState<Profile | null>(null); const [photo, setPhoto] = useState(""); const [editing, setEditing] = useState(false); const [message, setMessage] = useState(""); const [saving, setSaving] = useState(false);
   useEffect(() => { const frame = window.requestAnimationFrame(() => { const raw = localStorage.getItem("flatfolks_user"); const savedPhoto = localStorage.getItem("flatfolks_profile_photo"); if (raw) { const user = JSON.parse(raw) as Profile; setProfile(user); setDraft(user); } if (savedPhoto) setPhoto(savedPhoto); }); return () => window.cancelAnimationFrame(frame); }, []);
-  function uploadPhoto(event: ChangeEvent<HTMLInputElement>) { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { const image = String(reader.result); setPhoto(image); localStorage.setItem("flatfolks_profile_photo", image); window.dispatchEvent(new Event("flatfolks-profile-photo")); }; reader.readAsDataURL(file); }
+  function uploadPhoto(event: ChangeEvent<HTMLInputElement>) { const file = event.target.files?.[0]; if (!file) return; compressImageFile(file, 512).then((image) => { setPhoto(image); localStorage.setItem("flatfolks_profile_photo", image); window.dispatchEvent(new Event("flatfolks-profile-photo")); }); }
   function update(field: keyof Profile, value: string) { setDraft((current) => current ? { ...current, [field]: value } : current); }
   function logout() {
     localStorage.removeItem("flatfolks_user");

@@ -2,6 +2,7 @@
 
 import { Camera, Pencil, Save, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { compressImageFile } from "@/lib/compress-image";
 
 type Post = { id: string; title: string; description?: string; location: string; rent: number; propertyType: string; listingKind?: "flat-offer" | "flat-requirement"; availableFrom?: string; genderPreference?: "Boy" | "Girl" | "Any"; tags: string[]; images?: string[] };
 
@@ -31,7 +32,7 @@ export function MyPosts() {
   function addDraftImages(event: React.ChangeEvent<HTMLInputElement>) {
     if (!draft) return;
     const files = Array.from(event.target.files || []).slice(0, 3 - (draft.images?.length || 0));
-    files.forEach((file) => { const reader = new FileReader(); reader.onload = () => { const source = String(reader.result); setDraft((current) => current ? { ...current, images: [...(current.images || []), source].slice(0, 3) } : current); }; reader.readAsDataURL(file); });
+    files.forEach((file) => { compressImageFile(file).then((source) => setDraft((current) => current ? { ...current, images: [...(current.images || []), source].slice(0, 3) } : current)); });
     event.target.value = "";
   }
 
