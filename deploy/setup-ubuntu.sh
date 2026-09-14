@@ -149,6 +149,10 @@ server {
     listen 80 default_server;
     listen [::]:80 default_server;
     server_name _;
+    # The app accepts up to 3 base64-encoded photos per listing (~2MB each as
+    # a JSON string), so the default 1MB nginx limit rejects real submissions
+    # with a 413 the frontend can't parse as JSON. Give it real headroom.
+    client_max_body_size 20m;
 
     location / {
         proxy_pass http://127.0.0.1:3000;
