@@ -8,12 +8,12 @@ import { searchLocations } from "@/data/indian-cities";
 import { compressImageFile } from "@/lib/compress-image";
 
 const amenities = ["WiFi", "AC", "Parking", "Kitchen", "Lift", "Power Backup"];
-type Form = { title: string; description: string; location: string; budget: string; availableFrom: string; genderPreference: "Boy" | "Girl" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string };
+type Form = { title: string; description: string; location: string; budget: string; availableFrom: string; genderPreference: "Boy" | "Girl" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string };
 
 function PostListing() {
   const params = useSearchParams();
   const isFlatRequirement = params.get("intent") === "flat";
-  const [form, setForm] = useState<Form>({ title: "", description: "", location: "", budget: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "" });
+  const [form, setForm] = useState<Form>({ title: "", description: "", location: "", budget: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "", bedrooms: "1", bathrooms: "1" });
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
@@ -48,6 +48,8 @@ function PostListing() {
           rent: Number(form.budget),
           deposit: 0,
           propertyType: form.propertyType,
+          bedrooms: isFlatRequirement ? undefined : Number(form.bedrooms),
+          bathrooms: isFlatRequirement ? undefined : Number(form.bathrooms),
           tags: selectedAmenities,
           images: isFlatRequirement ? [] : images,
           listingKind: isFlatRequirement ? "flat-requirement" : "flat-offer",
@@ -62,7 +64,7 @@ function PostListing() {
       if (!response.ok) throw new Error(result.error || "Could not publish your post.");
       setStatus("success");
       setMessage(isFlatRequirement ? "Requirement posted! Flat owners can now find it under Find Flatmates." : "Flat posted! People looking for a flat can now find it under Find Flats.");
-      setForm((current) => ({ title: "", description: "", location: "", budget: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: current.contactPhone })); setSelectedAmenities([]); setImages([]);
+      setForm((current) => ({ title: "", description: "", location: "", budget: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: current.contactPhone, bedrooms: "1", bathrooms: "1" })); setSelectedAmenities([]); setImages([]);
     } catch (error) { setStatus("error"); setMessage(error instanceof Error ? error.message : "Could not publish your post."); }
   }
 
@@ -105,6 +107,23 @@ function PostListing() {
         <option>Girl</option>
       </select>
     </label>
+  );
+
+  const roomCountsField = (
+    <div className="grid grid-cols-2 gap-4">
+      <label className={labelClass}>
+        Bedrooms
+        <select value={form.bedrooms} onChange={(event) => update("bedrooms", event.target.value)} className={fieldClass}>
+          {[1, 2, 3, 4, 5].map((count) => <option key={count} value={count}>{count}</option>)}
+        </select>
+      </label>
+      <label className={labelClass}>
+        Bathrooms
+        <select value={form.bathrooms} onChange={(event) => update("bathrooms", event.target.value)} className={fieldClass}>
+          {[1, 2, 3, 4, 5].map((count) => <option key={count} value={count}>{count}</option>)}
+        </select>
+      </label>
+    </div>
   );
 
   const contactField = (
@@ -266,6 +285,7 @@ function PostListing() {
                       <option>PG</option>
                     </select>
                   </label>
+                  {roomCountsField}
                   {dateField}
                 </div>
                 <div className="space-y-4">

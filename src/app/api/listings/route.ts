@@ -7,6 +7,10 @@ function isValidPhone(phone: string) {
   return /^[\d\s+-]{7,20}$/.test(phone) && phone.replace(/\D/g, "").length >= 10;
 }
 
+function isValidCount(value: unknown) {
+  return value === undefined || (Number.isInteger(Number(value)) && Number(value) >= 1 && Number(value) <= 10);
+}
+
 const requests = new Map<string, { count: number; resetAt: number }>();
 function rateLimited(request: Request) {
   const key = request.headers.get("x-forwarded-for") || "local";
@@ -30,6 +34,7 @@ export async function POST(request: Request) {
   if (!body.contactPhone?.trim() || !isValidPhone(body.contactPhone.trim())) {
     return NextResponse.json({ error: "A valid contact number is required." }, { status: 400 });
   }
+  if (!isValidCount(body.bedrooms) || !isValidCount(body.bathrooms)) return NextResponse.json({ error: "Bedrooms and bathrooms must be between 1 and 10." }, { status: 400 });
   if (!Number.isFinite(Number(body.rent)) || !Number.isFinite(Number(body.deposit ?? 0)) || Number(body.rent) < 1 || Number(body.deposit ?? 0) < 0) return NextResponse.json({ error: "Budget and deposit must be valid amounts." }, { status: 400 });
   if (body.listingKind && body.listingKind !== "flat-offer" && body.listingKind !== "flat-requirement") return NextResponse.json({ error: "Invalid listing type." }, { status: 400 });
   if (body.availableFrom && !/^\d{4}-\d{2}-\d{2}$/.test(body.availableFrom)) return NextResponse.json({ error: "Availability date must be valid." }, { status: 400 });
@@ -43,6 +48,8 @@ export async function POST(request: Request) {
     rent: Number(body.rent),
     deposit: Number(body.deposit ?? 0),
     propertyType: body.propertyType,
+    bedrooms: body.bedrooms ? Number(body.bedrooms) : undefined,
+    bathrooms: body.bathrooms ? Number(body.bathrooms) : undefined,
     description: body.description,
     image: body.image,
     images,
@@ -63,6 +70,7 @@ export async function PATCH(request: Request) {
   if (!body.id) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });
   if (body.description && body.description.length > 2000) return NextResponse.json({ error: "Description must be 2000 characters or fewer." }, { status: 400 });
   if (body.contactPhone !== undefined && body.contactPhone.trim() && !isValidPhone(body.contactPhone.trim())) return NextResponse.json({ error: "A valid contact number is required." }, { status: 400 });
+  if (!isValidCount(body.bedrooms) || !isValidCount(body.bathrooms)) return NextResponse.json({ error: "Bedrooms and bathrooms must be between 1 and 10." }, { status: 400 });
   const images = body.images ? body.images.filter((image) => typeof image === "string" && image.length < 2_000_000).slice(0, 3) : undefined;
   try { return NextResponse.json(await updateListing(body.id, { ...body, images })); }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Could not update listing." }, { status: 404 }); }

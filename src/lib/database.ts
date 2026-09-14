@@ -109,12 +109,12 @@ export async function getFeaturedListings(limit = 4): Promise<Listing[]> {
   return rows.map(rowToListing);
 }
 
-export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; contactPhone?: string; availableFrom?: string; genderPreference?: "Boy" | "Girl" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement" };
+export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { bedrooms?: number; bathrooms?: number; description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; contactPhone?: string; availableFrom?: string; genderPreference?: "Boy" | "Girl" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement" };
 
 export async function createListing(input: NewListing): Promise<Listing> {
   const listing: Listing = {
     id: randomUUID(), title: input.title.trim(), location: input.location.trim(), rent: input.rent, deposit: input.deposit,
-    bedrooms: 1, bathrooms: 1, propertyType: input.propertyType,
+    bedrooms: input.bedrooms || 1, bathrooms: input.bathrooms || 1, propertyType: input.propertyType,
     description: input.description?.trim() || undefined,
     image: input.image || input.images?.[0] || "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=80",
     verified: false, tags: input.tags?.length ? input.tags : [], matchScore: 0,
@@ -146,6 +146,8 @@ export async function updateListing(id: string, input: Partial<NewListing>): Pro
   if (input.rent !== undefined) set("rent", input.rent);
   if (input.deposit !== undefined) set("deposit", input.deposit);
   if (input.propertyType !== undefined) set("property_type", input.propertyType);
+  if (input.bedrooms !== undefined) set("bedrooms", input.bedrooms);
+  if (input.bathrooms !== undefined) set("bathrooms", input.bathrooms);
   if (input.description !== undefined) set("description", input.description.trim() || null);
   if (input.tags !== undefined) set("tags", JSON.stringify(input.tags));
   if (input.images !== undefined) {
