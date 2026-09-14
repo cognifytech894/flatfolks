@@ -168,6 +168,18 @@ nginx -t
 systemctl enable --now nginx
 systemctl reload nginx
 
+if ss -tlnp 2>/dev/null | grep -q ':80 .*users:.*"nginx"'; then
+  : # nginx holds port 80, as expected
+else
+  echo
+  echo "WARNING: something other than nginx already holds port 80, so nginx could" >&2
+  echo "not bind it (the app may not actually be reachable on port 80 yet)." >&2
+  echo "Check with: sudo ss -tlnp | grep ':80'" >&2
+  echo "If it's an unused Apache install, free the port with:" >&2
+  echo "  sudo systemctl stop apache2 && sudo systemctl disable apache2 && sudo systemctl restart nginx" >&2
+  echo
+fi
+
 echo "==> Configuring firewall"
 ufw allow OpenSSH >/dev/null
 ufw allow 'Nginx HTTP' >/dev/null
