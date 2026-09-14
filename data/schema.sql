@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS listings (
   available_from DATE,
   gender_preference VARCHAR(10) NOT NULL DEFAULT 'Any' CHECK (gender_preference IN ('Boy', 'Girl', 'Any')),
   listing_kind VARCHAR(20) NOT NULL DEFAULT 'flat-offer' CHECK (listing_kind IN ('flat-offer', 'flat-requirement')),
+  contact_phone VARCHAR(20),
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_listing_kind ON listings (listing_kind);
@@ -42,6 +43,8 @@ CREATE INDEX IF NOT EXISTS idx_owner ON listings (owner_id);
 -- Widens `image` on databases created before it was TEXT (was VARCHAR(2048),
 -- too short for an uploaded photo's base64 string); a no-op once already TEXT.
 ALTER TABLE listings ALTER COLUMN image TYPE TEXT;
+-- Adds the poster's contact number on databases created before it existed.
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(20);
 
 CREATE TABLE IF NOT EXISTS listing_reviews (
   id UUID PRIMARY KEY,

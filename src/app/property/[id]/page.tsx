@@ -5,6 +5,12 @@ import { recordListingView } from "@/lib/database";
 
 export const dynamic = "force-dynamic";
 
+// Assumes an Indian mobile number when no country code was entered.
+function toWhatsAppNumber(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  return digits.length === 10 ? `91${digits}` : digits;
+}
+
 export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const listing = await recordListingView(id);
@@ -81,10 +87,17 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                     <p className="text-sm text-slate-600">Owner</p>
                   </div>
                 </div>
-                <div className="flex gap-3">
-                  <button className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white"><MessageCircle className="h-4 w-4" /> WhatsApp</button>
-                  <button className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><Phone className="h-4 w-4" /> Call</button>
-                </div>
+                {listing.contactPhone ? (
+                  <>
+                    <p className="flex items-center gap-2 text-sm font-medium text-slate-700"><Phone className="h-4 w-4 text-slate-400" /> {listing.contactPhone}</p>
+                    <div className="flex gap-3">
+                      <a href={`https://wa.me/${toWhatsAppNumber(listing.contactPhone)}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white"><MessageCircle className="h-4 w-4" /> WhatsApp</a>
+                      <a href={`tel:${listing.contactPhone}`} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><Phone className="h-4 w-4" /> Call</a>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-slate-500">No contact number was provided for this listing.</p>
+                )}
                 <SaveListingButton listingId={listing.id} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700" />
               </div>
             </div>

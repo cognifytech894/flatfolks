@@ -3,6 +3,10 @@ import { createListing, deleteListing, getListings, updateListing, type NewListi
 
 export const runtime = "nodejs";
 
+function isValidPhone(phone: string) {
+  return /^[\d\s+-]{7,20}$/.test(phone) && phone.replace(/\D/g, "").length >= 10;
+}
+
 const requests = new Map<string, { count: number; resetAt: number }>();
 function rateLimited(request: Request) {
   const key = request.headers.get("x-forwarded-for") || "local";
@@ -23,6 +27,9 @@ export async function POST(request: Request) {
   if (!body.title?.trim() || !body.location?.trim() || !body.rent || !body.propertyType) {
     return NextResponse.json({ error: "Title, location, budget, and property type are required." }, { status: 400 });
   }
+  if (!body.contactPhone?.trim() || !isValidPhone(body.contactPhone.trim())) {
+    return NextResponse.json({ error: "A valid contact number is required." }, { status: 400 });
+  }
   if (!Number.isFinite(Number(body.rent)) || !Number.isFinite(Number(body.deposit ?? 0)) || Number(body.rent) < 1 || Number(body.deposit ?? 0) < 0) return NextResponse.json({ error: "Budget and deposit must be valid amounts." }, { status: 400 });
   if (body.listingKind && body.listingKind !== "flat-offer" && body.listingKind !== "flat-requirement") return NextResponse.json({ error: "Invalid listing type." }, { status: 400 });
   if (body.availableFrom && !/^\d{4}-\d{2}-\d{2}$/.test(body.availableFrom)) return NextResponse.json({ error: "Availability date must be valid." }, { status: 400 });
@@ -41,6 +48,7 @@ export async function POST(request: Request) {
     images,
     tags: body.tags?.filter((tag) => typeof tag === "string").slice(0, 12),
     ownerId: body.ownerId,
+    contactPhone: body.contactPhone.trim(),
     availableFrom: body.availableFrom,
     genderPreference: body.genderPreference,
     status: body.status === "draft" ? "draft" : "published",
@@ -54,6 +62,7 @@ export async function PATCH(request: Request) {
   const body = await request.json() as Partial<NewListing> & { id?: string };
   if (!body.id) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });
   if (body.description && body.description.length > 2000) return NextResponse.json({ error: "Description must be 2000 characters or fewer." }, { status: 400 });
+  if (body.contactPhone !== undefined && body.contactPhone.trim() && !isValidPhone(body.contactPhone.trim())) return NextResponse.json({ error: "A valid contact number is required." }, { status: 400 });
   const images = body.images ? body.images.filter((image) => typeof image === "string" && image.length < 2_000_000).slice(0, 3) : undefined;
   try { return NextResponse.json(await updateListing(body.id, { ...body, images })); }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Could not update listing." }, { status: 404 }); }

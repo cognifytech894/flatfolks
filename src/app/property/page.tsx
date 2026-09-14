@@ -1,19 +1,19 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Camera, CheckCircle2, MapPin, X } from "lucide-react";
+import { Camera, CheckCircle2, MapPin, Phone, X } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
 import { searchLocations } from "@/data/indian-cities";
 import { compressImageFile } from "@/lib/compress-image";
 
 const amenities = ["WiFi", "AC", "Parking", "Kitchen", "Lift", "Power Backup"];
-type Form = { title: string; description: string; location: string; budget: string; availableFrom: string; genderPreference: "Boy" | "Girl" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG" };
+type Form = { title: string; description: string; location: string; budget: string; availableFrom: string; genderPreference: "Boy" | "Girl" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string };
 
 function PostListing() {
   const params = useSearchParams();
   const isFlatRequirement = params.get("intent") === "flat";
-  const [form, setForm] = useState<Form>({ title: "", description: "", location: "", budget: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat" });
+  const [form, setForm] = useState<Form>({ title: "", description: "", location: "", budget: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "" });
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
@@ -23,6 +23,13 @@ function PostListing() {
 
   const update = (field: keyof Form, value: string) => setForm((current) => ({ ...current, [field]: value }));
   const toggleAmenity = (amenity: string) => setSelectedAmenities((current) => current.includes(amenity) ? current.filter((item) => item !== amenity) : [...current, amenity]);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("flatfolks_user");
+    if (!storedUser) return;
+    const user = JSON.parse(storedUser) as { phone?: string };
+    if (user.phone) setForm((current) => ({ ...current, contactPhone: user.phone! }));
+  }, []);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); setStatus("saving"); setMessage("");
@@ -47,6 +54,7 @@ function PostListing() {
           availableFrom: form.availableFrom,
           genderPreference: form.genderPreference,
           ownerId: owner.id,
+          contactPhone: form.contactPhone,
           status: "published",
         }),
       });
@@ -54,7 +62,7 @@ function PostListing() {
       if (!response.ok) throw new Error(result.error || "Could not publish your post.");
       setStatus("success");
       setMessage(isFlatRequirement ? "Requirement posted! Flat owners can now find it under Find Flatmates." : "Flat posted! People looking for a flat can now find it under Find Flats.");
-      setForm({ title: "", description: "", location: "", budget: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat" }); setSelectedAmenities([]); setImages([]);
+      setForm((current) => ({ title: "", description: "", location: "", budget: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: current.contactPhone })); setSelectedAmenities([]); setImages([]);
     } catch (error) { setStatus("error"); setMessage(error instanceof Error ? error.message : "Could not publish your post."); }
   }
 
@@ -96,6 +104,16 @@ function PostListing() {
         <option>Boy</option>
         <option>Girl</option>
       </select>
+    </label>
+  );
+
+  const contactField = (
+    <label className={labelClass}>
+      Contact number
+      <div className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-blue-500">
+        <Phone className="h-4 w-4 text-slate-400" />
+        <input required type="tel" value={form.contactPhone} onChange={(event) => update("contactPhone", event.target.value)} className="w-full bg-transparent outline-none" placeholder="98765 43210" />
+      </div>
     </label>
   );
 
@@ -200,6 +218,7 @@ function PostListing() {
                   {titleField}
                   {dateField}
                   {genderField}
+                  {contactField}
                 </div>
                 <div className="space-y-4">
                   {locationField}
@@ -253,6 +272,7 @@ function PostListing() {
                   {locationField}
                   {budgetField}
                   {genderField}
+                  {contactField}
                 </div>
               </div>
               {amenitiesField}
