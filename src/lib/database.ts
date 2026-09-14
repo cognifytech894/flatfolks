@@ -24,6 +24,8 @@ export type Listing = {
   ownerId?: string;
   ownerName?: string;
   contactPhone?: string;
+  /** Lifestyle-tag ids from src/data/preferences.ts, e.g. "night-owl". */
+  preferences?: string[];
   availableFrom?: string;
   genderPreference?: "Boy" | "Girl" | "Any";
   /** A flat offer is shown to people looking for a flat; a requirement is shown to flat owners. */
@@ -73,7 +75,7 @@ type ListingRow = {
   property_type: Listing["propertyType"]; description: string | null; image: string; verified: boolean; tags: unknown;
   match_score: number; min_budget: number; max_budget: number; images: unknown; status: Listing["status"];
   views: number; saves: number; owner_id: string | null; owner_name: string | null; owner_phone: string | null; available_from: string | null;
-  gender_preference: Listing["genderPreference"]; listing_kind: Listing["listingKind"]; contact_phone: string | null;
+  gender_preference: Listing["genderPreference"]; listing_kind: Listing["listingKind"]; contact_phone: string | null; preferences: unknown;
 };
 
 function rowToListing(row: ListingRow): Listing {
@@ -86,6 +88,7 @@ function rowToListing(row: ListingRow): Listing {
     views: row.views, saves: row.saves, ownerId: row.owner_id || undefined, ownerName: row.owner_name || undefined,
     // Falls back to the owner's account phone for listings posted before contact_phone existed.
     contactPhone: row.contact_phone || row.owner_phone || undefined,
+    preferences: parseJsonField<string[]>(row.preferences, []),
     availableFrom: row.available_from || undefined,
     genderPreference: row.gender_preference || undefined, listingKind: row.listing_kind || undefined,
   };
@@ -109,7 +112,7 @@ export async function getFeaturedListings(limit = 4): Promise<Listing[]> {
   return rows.map(rowToListing);
 }
 
-export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { bedrooms?: number; bathrooms?: number; description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; contactPhone?: string; availableFrom?: string; genderPreference?: "Boy" | "Girl" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement" };
+export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { bedrooms?: number; bathrooms?: number; description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; contactPhone?: string; preferences?: string[]; availableFrom?: string; genderPreference?: "Boy" | "Girl" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement" };
 
 export async function createListing(input: NewListing): Promise<Listing> {
   const listing: Listing = {
@@ -121,17 +124,18 @@ export async function createListing(input: NewListing): Promise<Listing> {
     minBudget: Math.max(0, input.rent - 2000), maxBudget: input.rent + 2000,
     images: input.images?.slice(0, 3), status: input.status || "published", views: 0, saves: 0, ownerId: input.ownerId,
     contactPhone: input.contactPhone?.trim() || undefined,
+    preferences: input.preferences?.length ? input.preferences : [],
     availableFrom: input.availableFrom,
     genderPreference: input.genderPreference || "Any",
     listingKind: input.listingKind || "flat-offer",
   };
   await pool.query(
-    `INSERT INTO listings (id, title, location, rent, deposit, bedrooms, bathrooms, property_type, description, image, verified, tags, match_score, min_budget, max_budget, images, status, views, saves, owner_id, available_from, gender_preference, listing_kind, contact_phone)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)`,
+    `INSERT INTO listings (id, title, location, rent, deposit, bedrooms, bathrooms, property_type, description, image, verified, tags, match_score, min_budget, max_budget, images, status, views, saves, owner_id, available_from, gender_preference, listing_kind, contact_phone, preferences)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)`,
     [listing.id, listing.title, listing.location, listing.rent, listing.deposit, listing.bedrooms, listing.bathrooms, listing.propertyType,
       listing.description || null, listing.image, listing.verified, JSON.stringify(listing.tags), listing.matchScore, listing.minBudget, listing.maxBudget,
       listing.images ? JSON.stringify(listing.images) : null, listing.status, listing.views, listing.saves, listing.ownerId || null,
-      listing.availableFrom || null, listing.genderPreference, listing.listingKind, listing.contactPhone || null],
+      listing.availableFrom || null, listing.genderPreference, listing.listingKind, listing.contactPhone || null, JSON.stringify(listing.preferences)],
   );
   return listing;
 }
@@ -150,6 +154,7 @@ export async function updateListing(id: string, input: Partial<NewListing>): Pro
   if (input.bathrooms !== undefined) set("bathrooms", input.bathrooms);
   if (input.description !== undefined) set("description", input.description.trim() || null);
   if (input.tags !== undefined) set("tags", JSON.stringify(input.tags));
+  if (input.preferences !== undefined) set("preferences", JSON.stringify(input.preferences));
   if (input.images !== undefined) {
     const images = input.images.slice(0, 6);
     set("images", JSON.stringify(images));

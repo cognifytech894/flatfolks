@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { createListing, deleteListing, getListings, updateListing, type NewListing } from "@/lib/database";
+import { lifestylePreferences } from "@/data/preferences";
 
 export const runtime = "nodejs";
+
+const validPreferenceIds = new Set(lifestylePreferences.map((preference) => preference.id));
+function sanitizePreferences(preferences: unknown) {
+  return Array.isArray(preferences) ? preferences.filter((id) => typeof id === "string" && validPreferenceIds.has(id)).slice(0, 12) : undefined;
+}
 
 function isValidPhone(phone: string) {
   return /^[\d\s+-]{7,20}$/.test(phone) && phone.replace(/\D/g, "").length >= 10;
@@ -56,6 +62,7 @@ export async function POST(request: Request) {
     tags: body.tags?.filter((tag) => typeof tag === "string").slice(0, 12),
     ownerId: body.ownerId,
     contactPhone: body.contactPhone.trim(),
+    preferences: sanitizePreferences(body.preferences),
     availableFrom: body.availableFrom,
     genderPreference: body.genderPreference,
     status: body.status === "draft" ? "draft" : "published",
@@ -72,7 +79,8 @@ export async function PATCH(request: Request) {
   if (body.contactPhone !== undefined && body.contactPhone.trim() && !isValidPhone(body.contactPhone.trim())) return NextResponse.json({ error: "A valid contact number is required." }, { status: 400 });
   if (!isValidCount(body.bedrooms) || !isValidCount(body.bathrooms)) return NextResponse.json({ error: "Bedrooms and bathrooms must be between 1 and 10." }, { status: 400 });
   const images = body.images ? body.images.filter((image) => typeof image === "string" && image.length < 2_000_000).slice(0, 3) : undefined;
-  try { return NextResponse.json(await updateListing(body.id, { ...body, images })); }
+  const preferences = sanitizePreferences(body.preferences);
+  try { return NextResponse.json(await updateListing(body.id, { ...body, images, preferences })); }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Could not update listing." }, { status: 404 }); }
 }
 

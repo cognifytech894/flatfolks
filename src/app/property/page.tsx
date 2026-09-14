@@ -6,6 +6,7 @@ import { Camera, CheckCircle2, MapPin, Phone, X } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
 import { searchLocations } from "@/data/indian-cities";
 import { compressImageFile } from "@/lib/compress-image";
+import { PreferencesField } from "@/components/listing/preferences-field";
 
 const amenities = ["WiFi", "AC", "Parking", "Kitchen", "Lift", "Power Backup"];
 type Form = { title: string; description: string; location: string; budget: string; availableFrom: string; genderPreference: "Boy" | "Girl" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string };
@@ -15,6 +16,7 @@ function PostListing() {
   const isFlatRequirement = params.get("intent") === "flat";
   const [form, setForm] = useState<Form>({ title: "", description: "", location: "", budget: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "", bedrooms: "1", bathrooms: "1" });
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -23,6 +25,7 @@ function PostListing() {
 
   const update = (field: keyof Form, value: string) => setForm((current) => ({ ...current, [field]: value }));
   const toggleAmenity = (amenity: string) => setSelectedAmenities((current) => current.includes(amenity) ? current.filter((item) => item !== amenity) : [...current, amenity]);
+  const togglePreference = (id: string) => setSelectedPreferences((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("flatfolks_user");
@@ -51,6 +54,7 @@ function PostListing() {
           bedrooms: isFlatRequirement ? undefined : Number(form.bedrooms),
           bathrooms: isFlatRequirement ? undefined : Number(form.bathrooms),
           tags: selectedAmenities,
+          preferences: selectedPreferences,
           images: isFlatRequirement ? [] : images,
           listingKind: isFlatRequirement ? "flat-requirement" : "flat-offer",
           availableFrom: form.availableFrom,
@@ -64,7 +68,7 @@ function PostListing() {
       if (!response.ok) throw new Error(result.error || "Could not publish your post.");
       setStatus("success");
       setMessage(isFlatRequirement ? "Requirement posted! Flat owners can now find it under Find Flatmates." : "Flat posted! People looking for a flat can now find it under Find Flats.");
-      setForm((current) => ({ title: "", description: "", location: "", budget: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: current.contactPhone, bedrooms: "1", bathrooms: "1" })); setSelectedAmenities([]); setImages([]);
+      setForm((current) => ({ title: "", description: "", location: "", budget: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: current.contactPhone, bedrooms: "1", bathrooms: "1" })); setSelectedAmenities([]); setSelectedPreferences([]); setImages([]);
     } catch (error) { setStatus("error"); setMessage(error instanceof Error ? error.message : "Could not publish your post."); }
   }
 
@@ -245,6 +249,7 @@ function PostListing() {
                   {amenitiesField}
                 </div>
               </div>
+              <PreferencesField selected={selectedPreferences} onToggle={togglePreference} />
               {descriptionField}
               {statusMessage}
               {submitButton}
@@ -296,6 +301,7 @@ function PostListing() {
                 </div>
               </div>
               {amenitiesField}
+              <PreferencesField selected={selectedPreferences} onToggle={togglePreference} />
               {descriptionField}
               {statusMessage}
               {submitButton}
