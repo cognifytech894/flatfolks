@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS listings (
   bathrooms INT NOT NULL DEFAULT 1,
   property_type VARCHAR(20) NOT NULL CHECK (property_type IN ('Room', 'Apartment', 'Flat', 'PG')),
   description TEXT,
-  image VARCHAR(2048) NOT NULL,
+  image TEXT NOT NULL,
   verified BOOLEAN NOT NULL DEFAULT FALSE,
   tags JSONB NOT NULL DEFAULT '[]',
   match_score INT NOT NULL DEFAULT 0,
@@ -39,6 +39,9 @@ CREATE TABLE IF NOT EXISTS listings (
 );
 CREATE INDEX IF NOT EXISTS idx_listing_kind ON listings (listing_kind);
 CREATE INDEX IF NOT EXISTS idx_owner ON listings (owner_id);
+-- Widens `image` on databases created before it was TEXT (was VARCHAR(2048),
+-- too short for an uploaded photo's base64 string); a no-op once already TEXT.
+ALTER TABLE listings ALTER COLUMN image TYPE TEXT;
 
 CREATE TABLE IF NOT EXISTS listing_reviews (
   id UUID PRIMARY KEY,
