@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Bath, Bed, MapPin, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import { SaveListingButton } from "@/components/listing/save-listing-button";
+import { PhotoCarousel } from "@/components/listing/photo-carousel";
 import { recordListingView } from "@/lib/database";
 
 export const dynamic = "force-dynamic";
@@ -23,18 +24,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
-          <div className="grid gap-1 sm:grid-cols-[2fr_1fr]">
-            <div className="h-80 overflow-hidden sm:h-96">
-              <img src={photos[0]} alt={listing.title} className="h-full w-full object-cover" />
-            </div>
-            {photos.length > 1 && (
-              <div className="hidden grid-rows-2 gap-1 sm:grid">
-                {photos.slice(1, 3).map((photo, index) => (
-                  <img key={index} src={photo} alt={`${listing.title} photo ${index + 2}`} className="h-full w-full object-cover" />
-                ))}
-              </div>
-            )}
-          </div>
+          <PhotoCarousel photos={photos} title={listing.title} />
           <div className="p-6 lg:p-8">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
