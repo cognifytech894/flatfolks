@@ -38,7 +38,7 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-white text-[#10162d]">
       <main>
-        <section className="relative overflow-hidden border-b border-slate-100 bg-[#f9fbff]">
+        <section className="relative border-b border-slate-100 bg-[#f9fbff]">
           <div className="relative mx-auto max-w-[1600px] px-5 pb-8 pt-8 sm:px-8 lg:px-12 lg:pb-10 lg:pt-9 xl:px-16">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_30%,rgba(37,99,235,0.08),transparent_33%)]" />
             <div className="relative z-10">
