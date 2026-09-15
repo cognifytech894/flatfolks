@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Bath, Bed, ChevronRight, Home as HomeIcon, MapPin, MessageCircle, Phone, ShieldCheck, UsersRound } from "lucide-react";
+import { Bath, Bed, ChevronRight, Home as HomeIcon, MapPin, MessageCircle, Phone, ShieldCheck, UserRound, UsersRound } from "lucide-react";
 import { SaveListingButton } from "@/components/listing/save-listing-button";
 import { PhotoCarousel } from "@/components/listing/photo-carousel";
 import { getListingById, recordListingView } from "@/lib/database";
@@ -96,10 +96,12 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           <span className="truncate text-slate-700">{listing.title}</span>
         </nav>
         <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
-          {photos.length > 0 && <PhotoCarousel photos={photos} title={listing.title} />}
-          <div className="p-6 lg:p-8">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div>
+          {isRequirement ? (
+            <div className="grid sm:grid-cols-2">
+              <div className="relative aspect-[9/16] w-full overflow-hidden bg-slate-100">
+                {photos[0] ? <img src={photos[0]} alt={listing.title} className="h-full w-full object-cover" /> : <div className="grid h-full min-h-72 place-items-center text-slate-300"><UserRound className="h-20 w-20" /></div>}
+              </div>
+              <div className="p-6 lg:p-8">
                 {listing.verified && (
                   <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
                     <ShieldCheck className="h-4 w-4" /> Verified listing
@@ -107,14 +109,36 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                 )}
                 <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">{listing.title}</h1>
                 <p className="mt-3 flex items-center gap-2 text-slate-600"><MapPin className="h-4 w-4" /> {listing.location}</p>
-              </div>
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">{isRequirement ? "Maximum budget" : "Monthly rent"}</p>
-                <p className="text-3xl font-semibold text-slate-900">₹{listing.rent.toLocaleString("en-IN")}</p>
-                {!isRequirement && <p className="mt-2 text-sm font-medium text-slate-700">Security deposit: ₹{listing.deposit.toLocaleString("en-IN")}</p>}
+                <div className="mt-6 inline-block rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm text-slate-500">Maximum budget</p>
+                  <p className="text-3xl font-semibold text-slate-900">₹{listing.rent.toLocaleString("en-IN")}</p>
+                </div>
               </div>
             </div>
-
+          ) : (
+            <>
+              {photos.length > 0 && <PhotoCarousel photos={photos} title={listing.title} />}
+              <div className="px-6 pt-6 lg:px-8 lg:pt-8">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    {listing.verified && (
+                      <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
+                        <ShieldCheck className="h-4 w-4" /> Verified listing
+                      </div>
+                    )}
+                    <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">{listing.title}</h1>
+                    <p className="mt-3 flex items-center gap-2 text-slate-600"><MapPin className="h-4 w-4" /> {listing.location}</p>
+                  </div>
+                  <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm text-slate-500">Monthly rent</p>
+                    <p className="text-3xl font-semibold text-slate-900">₹{listing.rent.toLocaleString("en-IN")}</p>
+                    <p className="mt-2 text-sm font-medium text-slate-700">Security deposit: ₹{listing.deposit.toLocaleString("en-IN")}</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+          <div className="px-6 pb-6 lg:px-8 lg:pb-8">
             <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
               <div className="space-y-6">
                 <div>
