@@ -51,8 +51,8 @@ export default async function Home() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
-      { "@type": "Organization", name: "FlatFolks", url: baseUrl, logo: `${baseUrl}/favicon.ico` },
-      { "@type": "WebSite", name: "FlatFolks", url: baseUrl, potentialAction: { "@type": "SearchAction", target: `${baseUrl}/search?location={search_term_string}`, "query-input": "required name=search_term_string" } },
+      { "@type": "Organization", name: "FlatFolks", alternateName: ["Flat Folks", "FlatFolk", "Flatfolks India"], url: baseUrl, logo: `${baseUrl}/icon` },
+      { "@type": "WebSite", name: "FlatFolks", alternateName: ["Flat Folks", "FlatFolk"], url: baseUrl, potentialAction: { "@type": "SearchAction", target: `${baseUrl}/search?location={search_term_string}`, "query-input": "required name=search_term_string" } },
     ],
   };
   return (
