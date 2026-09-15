@@ -27,7 +27,7 @@ export type Listing = {
   /** Lifestyle-tag ids from src/data/preferences.ts, e.g. "night-owl". */
   preferences?: string[];
   availableFrom?: string;
-  genderPreference?: "Boy" | "Girl" | "Any";
+  genderPreference?: "Boy" | "Girl" | "Family" | "Any";
   /** A flat offer is shown to people looking for a flat; a requirement is shown to flat owners. */
   listingKind?: "flat-offer" | "flat-requirement";
 };
@@ -112,7 +112,7 @@ export async function getFeaturedListings(limit = 4): Promise<Listing[]> {
   return rows.map(rowToListing);
 }
 
-export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { bedrooms?: number; bathrooms?: number; description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; contactPhone?: string; preferences?: string[]; availableFrom?: string; genderPreference?: "Boy" | "Girl" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement" };
+export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { bedrooms?: number; bathrooms?: number; description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; contactPhone?: string; preferences?: string[]; availableFrom?: string; genderPreference?: "Boy" | "Girl" | "Family" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement" };
 
 export async function createListing(input: NewListing): Promise<Listing> {
   const listing: Listing = {

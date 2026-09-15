@@ -9,7 +9,7 @@ import { compressImageFile } from "@/lib/compress-image";
 import { PreferencesField } from "@/components/listing/preferences-field";
 
 const amenities = ["WiFi", "AC", "Parking", "Kitchen", "Lift", "Power Backup"];
-type Form = { title: string; description: string; location: string; budget: string; availableFrom: string; genderPreference: "Boy" | "Girl" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string };
+type Form = { title: string; description: string; location: string; budget: string; availableFrom: string; genderPreference: "Boy" | "Girl" | "Family" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string };
 
 function PostListing() {
   const params = useSearchParams();
@@ -109,6 +109,7 @@ function PostListing() {
         <option>Any</option>
         <option>Boy</option>
         <option>Girl</option>
+        <option>Family</option>
       </select>
     </label>
   );
