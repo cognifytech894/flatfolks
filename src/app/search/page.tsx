@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Map, SlidersHorizontal } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
@@ -8,7 +9,22 @@ import { getListings } from "@/lib/database";
 
 export const dynamic = "force-dynamic";
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
 type SearchParams = { location?: string; budget?: string; minBudget?: string; maxBudget?: string; propertyType?: string; gender?: string; moveIn?: string; amenity?: string; map?: string };
+
+export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParams> }): Promise<Metadata> {
+  const filters = await searchParams;
+  // Only the location narrows down to genuinely distinct, worth-indexing content;
+  // budget/type/amenity/etc. just filter the same page, so they're dropped from the
+  // canonical to avoid a combinatorial explosion of near-duplicate indexed URLs.
+  const canonical = filters.location ? `${baseUrl}/search?location=${encodeURIComponent(filters.location)}` : `${baseUrl}/search`;
+  const title = filters.location ? `Rooms & Flats for Rent in ${filters.location} | FlatFolks` : "Find Rooms and Flatmates Near You | FlatFolks";
+  const description = filters.location
+    ? `Browse verified rooms and flats for rent in ${filters.location}. Filter by budget, property type, and amenities on FlatFolks.`
+    : "Search verified rooms, flats, and PGs across India. Filter by location, budget, property type, and amenities on FlatFolks.";
+  return { title, description, alternates: { canonical } };
+}
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const filters = await searchParams;

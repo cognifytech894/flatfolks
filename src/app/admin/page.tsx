@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { BarChart3, Flag, ShieldCheck, UsersRound } from "lucide-react";
@@ -7,6 +8,7 @@ import { ADMIN_SESSION_COOKIE, isValidAdminSessionToken } from "@/lib/admin-auth
 import { ListingsTable } from "@/components/admin/listings-table";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function AdminPage() {
   const cookieStore = await cookies();

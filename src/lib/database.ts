@@ -182,6 +182,12 @@ export async function deleteListing(id: string): Promise<void> {
   if (result.rowCount === 0) throw new Error("Listing not found.");
 }
 
+/** Read-only lookup — use this for anything that shouldn't count as a page view (e.g. generateMetadata, which Next.js may invoke separately from the page render). */
+export async function getListingById(id: string): Promise<Listing | undefined> {
+  const { rows } = await pool.query<ListingRow>(`${listingSelect} WHERE listings.id = $1`, [id]);
+  return rows[0] ? rowToListing(rows[0]) : undefined;
+}
+
 export async function recordListingView(id: string): Promise<Listing | undefined> {
   await pool.query("UPDATE listings SET views = views + 1 WHERE id = $1", [id]);
   const { rows } = await pool.query<ListingRow>(`${listingSelect} WHERE listings.id = $1`, [id]);

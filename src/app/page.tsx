@@ -32,11 +32,20 @@ function Unsplash({ id, alt, className }: { id: string; alt: string; className?:
 }
 
 export const dynamic = "force-dynamic";
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export default async function Home() {
   const [rooms, feedback] = await Promise.all([getFeaturedListings(), getFeedback()]);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "Organization", name: "FlatFolks", url: baseUrl, logo: `${baseUrl}/favicon.ico` },
+      { "@type": "WebSite", name: "FlatFolks", url: baseUrl, potentialAction: { "@type": "SearchAction", target: `${baseUrl}/search?location={search_term_string}`, "query-input": "required name=search_term_string" } },
+    ],
+  };
   return (
     <div className="min-h-screen bg-white text-[#10162d]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <main>
         <section className="relative border-b border-slate-100 bg-[#f9fbff]">
           <div className="relative mx-auto max-w-[1600px] px-5 pb-8 pt-8 sm:px-8 lg:px-12 lg:pb-10 lg:pt-9 xl:px-16">

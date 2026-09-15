@@ -1,16 +1,37 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bath, Bed, MapPin, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import { SaveListingButton } from "@/components/listing/save-listing-button";
 import { PhotoCarousel } from "@/components/listing/photo-carousel";
-import { recordListingView } from "@/lib/database";
+import { getListingById, recordListingView } from "@/lib/database";
 import { lifestylePreferences } from "@/data/preferences";
 
 export const dynamic = "force-dynamic";
+
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 // Assumes an Indian mobile number when no country code was entered.
 function toWhatsAppNumber(phone: string) {
   const digits = phone.replace(/\D/g, "");
   return digits.length === 10 ? `91${digits}` : digits;
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const listing = await getListingById(id);
+  if (!listing) return { title: "Listing not found | FlatFolks" };
+
+  const description = listing.description?.trim().slice(0, 155)
+    || `${listing.propertyType} in ${listing.location} for ₹${listing.rent.toLocaleString("en-IN")}/month — ${listing.bedrooms} bedroom, ${listing.bathrooms} bathroom. Verified on FlatFolks.`;
+  const title = `${listing.title} in ${listing.location} | FlatFolks`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `${baseUrl}/property/${id}` },
+    openGraph: { title, description, images: [listing.image], type: "website", url: `${baseUrl}/property/${id}` },
+    twitter: { card: "summary_large_image", title, description, images: [listing.image] },
+  };
 }
 
 export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -20,8 +41,24 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
 
   const ownerName = listing.ownerName || "FlatFolks member";
   const photos = listing.images?.length ? listing.images : [listing.image];
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: listing.title,
+    description: listing.description || `${listing.propertyType} in ${listing.location}`,
+    image: photos,
+    offers: {
+      "@type": "Offer",
+      price: listing.rent,
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
+      url: `${baseUrl}/property/${id}`,
+    },
+  };
 
   return (
+    <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
@@ -109,5 +146,6 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
         </div>
       </div>
     </div>
+    </>
   );
 }

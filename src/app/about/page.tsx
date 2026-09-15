@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Handshake, LockKeyhole, MapPin, MessageCircle, Rocket, ShieldCheck, Target, UsersRound } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
 import { StatsRow } from "@/components/home/stats-row";
+
+export const metadata: Metadata = {
+  title: "About FlatFolks | Verified Rooms & Flatmates in India",
+  description: "FlatFolks helps you find verified rooms, flats, and compatible flatmates across India with no brokerage — smart search, secure messaging, and direct contact with owners.",
+};
 
 const offers = [
   [ShieldCheck, "Verified room and flat listings", "bg-blue-50 text-blue-600"],
