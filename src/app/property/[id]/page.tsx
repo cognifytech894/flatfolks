@@ -137,10 +137,13 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                   )}
                 </div>
                 {listing.contactPhone ? (
-                  <div className="flex gap-3">
-                    <a href={`https://wa.me/${toWhatsAppNumber(listing.contactPhone)}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white"><MessageCircle className="h-4 w-4" /> Chat</a>
-                    <a href={`tel:${listing.contactPhone}`} className="flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><Phone className="h-4 w-4" /></a>
-                  </div>
+                  <>
+                    <p className="flex items-center justify-center gap-2 text-sm font-medium text-slate-700"><Phone className="h-4 w-4 text-slate-400" /> {listing.contactPhone}</p>
+                    <div className="flex gap-3">
+                      <a href={`https://wa.me/${toWhatsAppNumber(listing.contactPhone)}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white"><MessageCircle className="h-4 w-4" /> Chat</a>
+                      <a href={`tel:${listing.contactPhone}`} className="flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><Phone className="h-4 w-4" /></a>
+                    </div>
+                  </>
                 ) : (
                   <p className="text-sm text-slate-500">No contact number was provided for this listing.</p>
                 )}
