@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        // Matches any Supabase project's Storage subdomain (uploaded listing photos).
+        hostname: "*.supabase.co",
+      },
     ],
   },
 };
