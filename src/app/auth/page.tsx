@@ -1,34 +1,176 @@
 "use client";
 
 import { useState } from "react";
-import { LockKeyhole, Mail, Phone } from "lucide-react";
+import { LockKeyhole, Mail, MapPin, UserRound, UsersRound } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
+import { searchLocations } from "@/data/indian-cities";
 
-type Mode = "login" | "signup";
-type LoginMethod = "email" | "phone";
-type PublicUser = { id: string; name: string; email: string; phone?: string };
+type PublicUser = { id: string; name: string; email: string; phone?: string; location?: string; gender?: "Boy" | "Girl" };
+type Step = "email" | "otp" | "onboarding";
 const fieldClass = "mt-1.5 flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-3 focus-within:border-blue-500";
 const inputClass = "w-full bg-transparent outline-none";
 
 export default function AuthPage() {
-  const [mode, setMode] = useState<Mode>("login"); const [loginMethod, setLoginMethod] = useState<LoginMethod>("email");
-  const [email, setEmail] = useState(""); const [phone, setPhone] = useState(""); const [password, setPassword] = useState(""); const [otp, setOtp] = useState("");
-  const [signupOtp, setSignupOtp] = useState(false); const [emailOtp, setEmailOtp] = useState(false); const [phoneOtp, setPhoneOtp] = useState(false); const [developmentCode, setDevelopmentCode] = useState(""); const [message, setMessage] = useState(""); const [loading, setLoading] = useState(false);
-  const finish = (user: PublicUser) => {
+  const [step, setStep] = useState<Step>("email");
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [developmentCode, setDevelopmentCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [userId, setUserId] = useState("");
+  const [name, setName] = useState("");
+  const [location, setLocation] = useState("");
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [gender, setGender] = useState<"Boy" | "Girl" | "">("");
+  const locationSuggestions = searchLocations(location);
+
+  function finish(user: PublicUser) {
     localStorage.setItem("flatfolks_user", JSON.stringify(user));
     // A full navigation ensures the home navigation reads the just-saved login
-    // session immediately after either password or OTP authentication.
+    // session immediately after authentication.
     window.location.assign("/");
-  };
-  const reset = (next: Mode) => { setMode(next); setMessage(""); setSignupOtp(false); setEmailOtp(false); setPhoneOtp(false); setOtp(""); setDevelopmentCode(""); };
-  const request = async (action: string, body: object) => { const response = await fetch("/api/auth/otp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, ...body }) }); const result = await response.json() as { error?: string; developmentCode?: string; user?: PublicUser }; if (!response.ok) throw new Error(result.error || "Request failed."); return result; };
-  async function emailLogin(event: React.FormEvent) { event.preventDefault(); setLoading(true); setMessage(""); try { if (emailOtp) { const result = await request("email-login-verify", { email, otp }); if (!result.user) throw new Error("OTP verification failed."); finish(result.user); } else { const response = await fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "login", email, password }) }); const result = await response.json() as { error?: string; user?: PublicUser }; if (!response.ok || !result.user) throw new Error(result.error || "Login failed."); finish(result.user); } } catch (error) { setMessage(error instanceof Error ? error.message : "Login failed."); } finally { setLoading(false); } }
-  async function requestEmailOtp() { setLoading(true); setMessage(""); try { const result = await request("email-login-request", { email }); setEmailOtp(true); setOtp(""); setDevelopmentCode(result.developmentCode || ""); } catch (error) { setMessage(error instanceof Error ? error.message : "Could not create OTP."); } finally { setLoading(false); } }
-  async function phoneLogin(event: React.FormEvent) { event.preventDefault(); setLoading(true); setMessage(""); try { if (!phoneOtp) { const result = await request("phone-login-request", { phone }); setPhoneOtp(true); setDevelopmentCode(result.developmentCode || ""); } else { const result = await request("phone-login-verify", { phone, otp }); if (!result.user) throw new Error("OTP verification failed."); finish(result.user); } } catch (error) { setMessage(error instanceof Error ? error.message : "Could not verify OTP."); } finally { setLoading(false); } }
-  async function signup(event: React.FormEvent) { event.preventDefault(); setLoading(true); setMessage(""); try { if (!signupOtp) { const result = await request("request", { email, phone, password }); setSignupOtp(true); setDevelopmentCode(result.developmentCode || ""); } else { const result = await request("verify", { email, otp }); if (!result.user) throw new Error("OTP verification failed."); finish(result.user); } } catch (error) { setMessage(error instanceof Error ? error.message : "Could not create account."); } finally { setLoading(false); } }
-  const otpField = <label className="block text-sm font-medium text-slate-700">6-digit OTP<div className={fieldClass}><LockKeyhole className="h-4 w-4 text-slate-400" /><input autoFocus required value={otp} maxLength={6} inputMode="numeric" onChange={(event) => setOtp(event.target.value)} className={inputClass} placeholder="Enter OTP" /></div></label>;
+  }
 
-  const inputEmail = <label className="block text-sm font-medium text-slate-700">Email address<div className={fieldClass}><Mail className="h-4 w-4 text-slate-400" /><input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={inputClass} placeholder="you@example.com" disabled={emailOtp} /></div></label>;
-  const localOtp = developmentCode && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Temporary password (valid for 10 minutes): <b>{developmentCode}</b></p>;
-  return <main className="min-h-screen bg-slate-50 px-4 py-12 sm:px-6"><div className="mx-auto max-w-xl"><BackLink /><section className="mt-5 rounded-[2rem] border border-slate-200 bg-white p-7 shadow-sm sm:p-10"><p className="text-sm font-semibold uppercase tracking-[.22em] text-blue-600">FlatFolks account</p><h1 className="mt-2 text-3xl font-semibold text-slate-950">Welcome to FlatFolks</h1><div className="mt-7 grid grid-cols-2 rounded-xl bg-slate-100 p-1"><button onClick={() => reset("login")} className={`rounded-lg py-2 text-sm font-semibold ${mode === "login" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500"}`}>Log in</button><button onClick={() => reset("signup")} className={`rounded-lg py-2 text-sm font-semibold ${mode === "signup" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500"}`}>Create account</button></div>{mode === "login" ? <><div className="mt-6 grid grid-cols-2 rounded-xl bg-slate-100 p-1"><button onClick={() => { setLoginMethod("email"); setEmailOtp(false); setPhoneOtp(false); setOtp(""); setDevelopmentCode(""); }} className={`rounded-lg py-2 text-sm font-semibold ${loginMethod === "email" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500"}`}>With email</button><button onClick={() => { setLoginMethod("phone"); setEmailOtp(false); setPhoneOtp(false); setOtp(""); setDevelopmentCode(""); }} className={`rounded-lg py-2 text-sm font-semibold ${loginMethod === "phone" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500"}`}>With mobile number</button></div><form onSubmit={loginMethod === "email" ? emailLogin : phoneLogin} className="mt-6 space-y-4">{loginMethod === "email" ? <>{inputEmail}{emailOtp ? <>{otpField}{localOtp}</> : <><label className="block text-sm font-medium text-slate-700">Password<div className={fieldClass}><LockKeyhole className="h-4 w-4 text-slate-400" /><input required type="password" value={password} onChange={(event) => setPassword(event.target.value)} className={inputClass} placeholder="Your password" /></div></label><button type="button" onClick={requestEmailOtp} disabled={loading} className="text-sm font-semibold text-blue-600">Use a temporary password instead</button></>}</> : <><label className="block text-sm font-medium text-slate-700">Mobile number<div className={fieldClass}><Phone className="h-4 w-4 text-slate-400" /><input required type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className={inputClass} placeholder="+91 98765 43210" disabled={phoneOtp} /></div></label>{phoneOtp && otpField}{phoneOtp && localOtp}</>}<button disabled={loading || ((phoneOtp || emailOtp) && otp.length !== 6)} className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white disabled:opacity-70">{loading ? "Please wait..." : loginMethod === "phone" ? phoneOtp ? "Verify OTP" : "Send OTP" : emailOtp ? "Verify OTP" : "Log in"}</button>{emailOtp && <button type="button" onClick={() => { setEmailOtp(false); setOtp(""); setDevelopmentCode(""); }} className="w-full text-sm font-semibold text-blue-600">Use password instead</button>}{phoneOtp && <button type="button" onClick={() => { setPhoneOtp(false); setOtp(""); setDevelopmentCode(""); }} className="w-full text-sm font-semibold text-blue-600">Change mobile number</button>}</form></> : <form onSubmit={signup} className="mt-6 space-y-4">{!signupOtp ? <>{inputEmail}<label className="block text-sm font-medium text-slate-700">Mobile number<div className={fieldClass}><Phone className="h-4 w-4 text-slate-400" /><input required type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className={inputClass} placeholder="+91 98765 43210" /></div></label><label className="block text-sm font-medium text-slate-700">Password<div className={fieldClass}><LockKeyhole className="h-4 w-4 text-slate-400" /><input required minLength={6} type="password" value={password} onChange={(event) => setPassword(event.target.value)} className={inputClass} placeholder="At least 6 characters" /></div></label></> : <>{otpField}{localOtp}</>}<button disabled={loading || (signupOtp && otp.length !== 6)} className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white disabled:opacity-70">{loading ? "Please wait..." : signupOtp ? "Verify and create account" : "Create account"}</button>{signupOtp && <button type="button" onClick={() => { setSignupOtp(false); setOtp(""); }} className="w-full text-sm font-semibold text-blue-600">Edit account details</button>}</form>}{message && <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{message}</p>}<p className="mt-5 text-center text-xs text-slate-500">Temporary passwords are displayed here for this demo.</p></section></div></main>;
+  async function requestOtp(event: React.FormEvent) {
+    event.preventDefault(); setLoading(true); setMessage("");
+    try {
+      const response = await fetch("/api/auth/otp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "email-auth-request", email }) });
+      const result = await response.json() as { error?: string; developmentCode?: string };
+      if (!response.ok) throw new Error(result.error || "Could not send OTP.");
+      setDevelopmentCode(result.developmentCode || "");
+      setOtp("");
+      setStep("otp");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Could not send OTP."); }
+    finally { setLoading(false); }
+  }
+
+  async function verifyOtp(event: React.FormEvent) {
+    event.preventDefault(); setLoading(true); setMessage("");
+    try {
+      const response = await fetch("/api/auth/otp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "email-auth-verify", email, otp }) });
+      const result = await response.json() as { error?: string; user?: PublicUser; isNewUser?: boolean };
+      if (!response.ok || !result.user) throw new Error(result.error || "Invalid or expired OTP.");
+      if (result.isNewUser) {
+        setUserId(result.user.id);
+        setName(result.user.name);
+        setStep("onboarding");
+      } else {
+        finish(result.user);
+      }
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Invalid or expired OTP."); }
+    finally { setLoading(false); }
+  }
+
+  async function completeOnboarding(event: React.FormEvent) {
+    event.preventDefault(); setLoading(true); setMessage("");
+    try {
+      const response = await fetch(`/api/users/${userId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, location, gender: gender || undefined }) });
+      const result = await response.json() as { error?: string; user?: PublicUser };
+      if (!response.ok || !result.user) throw new Error(result.error || "Could not save your details.");
+      finish(result.user);
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Could not save your details."); }
+    finally { setLoading(false); }
+  }
+
+  return (
+    <main className="min-h-screen bg-slate-50 px-4 py-12 sm:px-6">
+      <div className="mx-auto max-w-xl">
+        <BackLink />
+        <section className="mt-5 rounded-[2rem] border border-slate-200 bg-white p-7 shadow-sm sm:p-10">
+          <p className="text-sm font-semibold uppercase tracking-[.22em] text-blue-600">FlatFolks account</p>
+          <h1 className="mt-2 text-3xl font-semibold text-slate-950">{step === "onboarding" ? "Tell us a bit about you" : "Log in or sign up"}</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            {step === "email" && "Enter your email — we'll send a one-time code. New here? Your account is created automatically."}
+            {step === "otp" && `Enter the 6-digit code sent to ${email}.`}
+            {step === "onboarding" && "This helps us show you the most relevant flats and flatmates."}
+          </p>
+
+          {step === "email" && (
+            <form onSubmit={requestOtp} className="mt-6 space-y-4">
+              <label className="block text-sm font-medium text-slate-700">
+                Email address
+                <div className={fieldClass}><Mail className="h-4 w-4 text-slate-400" /><input autoFocus required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={inputClass} placeholder="you@example.com" /></div>
+              </label>
+              <button disabled={loading} className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white disabled:opacity-70">{loading ? "Sending..." : "Send OTP"}</button>
+            </form>
+          )}
+
+          {step === "otp" && (
+            <form onSubmit={verifyOtp} className="mt-6 space-y-4">
+              <label className="block text-sm font-medium text-slate-700">
+                6-digit OTP
+                <div className={fieldClass}><LockKeyhole className="h-4 w-4 text-slate-400" /><input autoFocus required value={otp} maxLength={6} inputMode="numeric" onChange={(event) => setOtp(event.target.value)} className={inputClass} placeholder="Enter OTP" /></div>
+              </label>
+              {developmentCode ? (
+                <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Temporary password (valid for 10 minutes): <b>{developmentCode}</b></p>
+              ) : (
+                <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">We&apos;ve emailed a 6-digit code to <b>{email}</b>. It expires in 10 minutes.</p>
+              )}
+              <button disabled={loading || otp.length !== 6} className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white disabled:opacity-70">{loading ? "Verifying..." : "Verify & continue"}</button>
+              <button type="button" onClick={() => { setStep("email"); setOtp(""); setDevelopmentCode(""); setMessage(""); }} className="w-full text-sm font-semibold text-blue-600">Use a different email</button>
+            </form>
+          )}
+
+          {step === "onboarding" && (
+            <form onSubmit={completeOnboarding} className="mt-6 space-y-4">
+              <label className="block text-sm font-medium text-slate-700">
+                Your name
+                <div className={fieldClass}><UserRound className="h-4 w-4 text-slate-400" /><input autoFocus required value={name} onChange={(event) => setName(event.target.value)} className={inputClass} placeholder="Your full name" /></div>
+              </label>
+              <label className="relative block text-sm font-medium text-slate-700">
+                Location
+                <div className={fieldClass}>
+                  <MapPin className="h-4 w-4 text-slate-400" />
+                  <input
+                    value={location}
+                    onFocus={() => setShowLocationSuggestions(true)}
+                    onBlur={() => window.setTimeout(() => setShowLocationSuggestions(false), 150)}
+                    onChange={(event) => { setLocation(event.target.value); setShowLocationSuggestions(true); }}
+                    autoComplete="off"
+                    className={inputClass}
+                    placeholder="Area, city or PIN code"
+                  />
+                </div>
+                {showLocationSuggestions && locationSuggestions.length > 0 && (
+                  <div className="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+                    {locationSuggestions.map(({ label, hint }) => (
+                      <button
+                        type="button"
+                        key={`${label}-${hint}`}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => { setLocation(hint.startsWith("PIN ") ? label : `${label}, ${hint}`); setShowLocationSuggestions(false); }}
+                        className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm hover:bg-blue-50"
+                      >
+                        <span className="font-medium text-slate-800">{label}</span>
+                        <span className="text-xs text-slate-500">{hint}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </label>
+              <fieldset>
+                <legend className="text-sm font-medium text-slate-700">You are a</legend>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {(["Boy", "Girl"] as const).map((option) => (
+                    <button
+                      type="button"
+                      key={option}
+                      onClick={() => setGender(option)}
+                      className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold ${gender === option ? "border-blue-600 bg-blue-50 text-blue-700" : "border-slate-200 text-slate-600"}`}
+                    >
+                      <UsersRound className="h-4 w-4" />{option}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+              <button disabled={loading} className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white disabled:opacity-70">{loading ? "Saving..." : "Finish & continue"}</button>
+            </form>
+          )}
+
+          {message && <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{message}</p>}
+          {developmentCode && <p className="mt-5 text-center text-xs text-slate-500">Temporary passwords are displayed here for this demo.</p>}
+        </section>
+      </div>
+    </main>
+  );
 }

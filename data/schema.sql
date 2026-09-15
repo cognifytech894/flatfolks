@@ -6,10 +6,16 @@ CREATE TABLE IF NOT EXISTS users (
   name VARCHAR(120) NOT NULL,
   email VARCHAR(190) NOT NULL UNIQUE,
   phone VARCHAR(20) UNIQUE,
-  password_hash CHAR(64) NOT NULL,
+  location VARCHAR(200),
+  gender VARCHAR(10) CHECK (gender IN ('Boy', 'Girl')),
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP
 );
+-- Login is email-OTP only now, so the password column is no longer used.
+ALTER TABLE users DROP COLUMN IF EXISTS password_hash;
+-- Adds onboarding fields on databases created before they existed.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS location VARCHAR(200);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(10) CHECK (gender IN ('Boy', 'Girl'));
 
 CREATE TABLE IF NOT EXISTS listings (
   id UUID PRIMARY KEY,

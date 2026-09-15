@@ -67,12 +67,16 @@ Prerequisites
 1. Create a new Supabase project (choose a region close to your users, e.g. Mumbai/Singapore for India).
 2. Open **SQL Editor** in the Supabase dashboard, paste the contents of `data/schema.sql`, and run it. This creates the tables and seeds the demo listings/testimonials.
 3. Go to **Project Settings → Database → Connection string → URI**. Use the **Transaction pooler** connection string (port 6543) — this is required for serverless hosts like Vercel, which open many short-lived connections.
+4. Go to **Storage** and create a new **public** bucket named `listing-photos` (uploaded listing photos are stored here, capped at 2MB each — see `src/lib/image-storage.ts`). The free tier gives 1GB of Storage total.
+5. Go to **Project Settings → Data API** and copy the **Project URL**, then **Project Settings → API Keys** and copy the **`service_role`** secret key (not the `anon`/public key — this one bypasses Row Level Security so it must stay server-side only, never in a `NEXT_PUBLIC_*` variable).
 
 2. App deployment (Vercel)
 
 1. Go to [vercel.com/new](https://vercel.com/new), import the `cognifytech894/flatfolks` GitHub repo.
 2. In the import screen (or later under **Settings → Environment Variables**), add:
    - `DATABASE_URL` = the Supabase connection string from step 1.3.
+   - `SUPABASE_URL` = the Project URL from step 1.5.
+   - `SUPABASE_SERVICE_ROLE_KEY` = the `service_role` key from step 1.5.
 3. Deploy. Vercel builds and hosts the app on a free `*.vercel.app` URL.
 
 3. Connect your domain
@@ -96,5 +100,5 @@ npm.cmd run dev
 Notes
 
 - Listings, users, feedback, and OTP codes all persist in Postgres via Supabase — this works correctly across Vercel's stateless serverless instances (OTPs auto-expire after 10 minutes via `expires_at`).
-- If photo uploads fail, check Supabase's request size limits — base64-encoded images are capped at ~2MB each in the app already (`src/app/api/listings/route.ts`).
+- Listing photos upload to Supabase Storage (bucket `listing-photos`, capped at 2MB each — see `src/lib/image-storage.ts`), not the database. Photo uploads fail with a clear error if `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` aren't set, or if that bucket doesn't exist yet.
 - `/admin` is disabled (login always fails) until `ADMIN_USERNAME` and `ADMIN_PASSWORD` are set. Add them to Vercel's env vars, or on a self-hosted server add them directly to the app's `.env` file (e.g. `sudo nano /home/ankit/flatfolks/.env`) and `sudo systemctl restart flatfolks` — never commit real values to `.env.example` or anywhere in git.

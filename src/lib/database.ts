@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "crypto";
+import { randomUUID } from "crypto";
 import pool from "@/lib/db";
 
 export type Listing = {
@@ -36,11 +36,7 @@ export type ListingReview = { id: string; listingId: string; author: string; rat
 
 export type Feedback = { id: string; name: string; city: string; rating: number; message: string; createdAt: string };
 
-export type PublicUser = { id: string; name: string; email: string; phone?: string };
-
-function hashPassword(password: string) {
-  return createHash("sha256").update(password).digest("hex");
-}
+export type PublicUser = { id: string; name: string; email: string; phone?: string; location?: string; gender?: "Boy" | "Girl" };
 
 // OTPs live in Postgres (not in-memory) because Vercel's serverless functions can run the
 // "request" and "verify" calls on two different instances that don't share process memory.
@@ -96,10 +92,10 @@ function rowToListing(row: ListingRow): Listing {
 
 const listingSelect = "SELECT listings.*, users.name AS owner_name, users.phone AS owner_phone FROM listings LEFT JOIN users ON users.id = listings.owner_id";
 
-type UserRow = { id: string; name: string; email: string; phone: string | null; password_hash: string };
+type UserRow = { id: string; name: string; email: string; phone: string | null; location: string | null; gender: PublicUser["gender"] | null };
 
 function rowToPublicUser(row: UserRow): PublicUser {
-  return { id: row.id, name: row.name, email: row.email, phone: row.phone || undefined };
+  return { id: row.id, name: row.name, email: row.email, phone: row.phone || undefined, location: row.location || undefined, gender: row.gender || undefined };
 }
 
 export async function getListings(): Promise<Listing[]> {
@@ -207,81 +203,31 @@ export async function getReviews(listingId: string): Promise<ListingReview[]> {
   return rows.map((row) => ({ id: row.id, listingId: row.listing_id, author: row.author, rating: row.rating, comment: row.comment, createdAt: row.created_at }));
 }
 
-export async function registerUser(input: { name: string; email: string; phone?: string; password: string }): Promise<PublicUser> {
-  const email = input.email.trim().toLowerCase();
-  const phone = input.phone?.trim() || null;
-  const { rows: existing } = await pool.query("SELECT id, email, phone FROM users WHERE email = $1 OR (phone IS NOT NULL AND phone = $2)", [email, phone]);
-  if (existing.some((row) => row.email === email)) throw new Error("Your account already exists. Please log in instead.");
-  if (phone && existing.length) throw new Error("This mobile number already has an account. Please log in instead.");
-  const id = randomUUID();
-  await pool.query("INSERT INTO users (id, name, email, phone, password_hash) VALUES ($1, $2, $3, $4, $5)", [id, input.name.trim(), email, phone, hashPassword(input.password)]);
-  return { id, name: input.name.trim(), email, phone: phone || undefined };
+function generateOtp() {
+  return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-export async function loginUser(input: { email?: string; phone?: string; password: string }): Promise<PublicUser> {
-  const passwordHash = hashPassword(input.password);
-  const { rows } = input.email
-    ? await pool.query<UserRow>("SELECT * FROM users WHERE email = $1 AND password_hash = $2", [input.email.trim().toLowerCase(), passwordHash])
-    : await pool.query<UserRow>("SELECT * FROM users WHERE phone = $1 AND password_hash = $2", [input.phone?.trim(), passwordHash]);
-  if (!rows[0]) throw new Error("Incorrect email or password.");
-  return rowToPublicUser(rows[0]);
-}
-
-export async function requestPhoneLoginOtp(phone: string): Promise<string> {
-  const normalizedPhone = phone.trim();
-  const { rows } = await pool.query("SELECT id FROM users WHERE phone = $1", [normalizedPhone]);
-  if (!rows[0]) throw new Error("No account was found for this mobile number.");
-  const otp = String(Math.floor(100000 + Math.random() * 900000));
-  await setOtp(normalizedPhone, "phone-login", otp);
+export async function requestEmailAuthOtp(email: string): Promise<string> {
+  const normalizedEmail = email.trim().toLowerCase();
+  const otp = generateOtp();
+  await setOtp(normalizedEmail, "email-auth", otp);
   return otp;
-}
-
-export async function verifyPhoneLoginOtp(phone: string, otp: string): Promise<PublicUser> {
-  const normalizedPhone = phone.trim();
-  if (!(await consumeOtp(normalizedPhone, "phone-login", otp))) throw new Error("Invalid or expired OTP. Please request a new OTP.");
-  const { rows } = await pool.query<UserRow>("SELECT * FROM users WHERE phone = $1", [normalizedPhone]);
-  if (!rows[0]) throw new Error("No account was found for this mobile number.");
-  return rowToPublicUser(rows[0]);
 }
 
 /**
- * Local-development email sign-in flow. A production app must deliver this
- * code through a verified email provider instead of returning it to the UI.
+ * Verifies the OTP and logs the user in if the email already has an account,
+ * otherwise creates a new one on the spot (name defaults to the email's local
+ * part until the onboarding step sets it) — one flow covers both login and signup.
  */
-export async function requestEmailLoginOtp(email: string): Promise<string> {
+export async function verifyEmailAuthOtp(email: string, otp: string): Promise<{ user: PublicUser; isNewUser: boolean }> {
   const normalizedEmail = email.trim().toLowerCase();
-  const { rows } = await pool.query("SELECT id FROM users WHERE email = $1", [normalizedEmail]);
-  if (!rows[0]) throw new Error("No account was found for this email address.");
-  const otp = String(Math.floor(100000 + Math.random() * 900000));
-  await setOtp(normalizedEmail, "email-login", otp);
-  return otp;
-}
-
-export async function verifyEmailLoginOtp(email: string, otp: string): Promise<PublicUser> {
-  const normalizedEmail = email.trim().toLowerCase();
-  if (!(await consumeOtp(normalizedEmail, "email-login", otp))) throw new Error("Invalid or expired OTP. Please request a new OTP.");
+  if (!(await consumeOtp(normalizedEmail, "email-auth", otp))) throw new Error("Invalid or expired OTP. Please request a new OTP.");
   const { rows } = await pool.query<UserRow>("SELECT * FROM users WHERE email = $1", [normalizedEmail]);
-  if (!rows[0]) throw new Error("No account was found for this email address.");
-  return rowToPublicUser(rows[0]);
-}
-
-export async function requestRegistrationOtp(input: { email: string; phone: string; password: string }) {
-  const email = input.email.trim().toLowerCase();
-  const phone = input.phone.trim();
-  const { rows } = await pool.query("SELECT email, phone FROM users WHERE email = $1 OR phone = $2", [email, phone]);
-  if (rows.some((row) => row.email === email)) throw new Error("Your account already exists. Please log in instead.");
-  if (rows.some((row) => row.phone === phone)) throw new Error("This mobile number already has an account. Please log in instead.");
-  const otp = String(Math.floor(100000 + Math.random() * 900000));
-  const name = email.split("@")[0] || "FlatFolks member";
-  await setOtp(email, "registration", otp, { name, email, phone, password: input.password });
-  return otp;
-}
-
-export async function verifyRegistrationOtp(input: { email: string; otp: string }): Promise<PublicUser> {
-  const email = input.email.trim().toLowerCase();
-  const pending = await consumeOtp<{ name: string; email: string; phone: string; password: string }>(email, "registration", input.otp);
-  if (!pending) throw new Error("Invalid or expired OTP. Please request a new OTP.");
-  return registerUser(pending);
+  if (rows[0]) return { user: rowToPublicUser(rows[0]), isNewUser: false };
+  const id = randomUUID();
+  const name = normalizedEmail.split("@")[0] || "FlatFolks member";
+  await pool.query("INSERT INTO users (id, name, email) VALUES ($1, $2, $3)", [id, name, normalizedEmail]);
+  return { user: { id, name, email: normalizedEmail }, isNewUser: true };
 }
 
 type FeedbackRow = { id: string; name: string; city: string; rating: number; message: string; created_at: string };
@@ -297,11 +243,22 @@ export async function addFeedback(input: { name: string; city: string; rating: n
   return { id, name: input.name.trim(), city: input.city.trim(), rating: input.rating, message: input.message.trim(), createdAt: new Date().toISOString() };
 }
 
-export async function updateUser(id: string, input: { name: string; email: string; phone: string }): Promise<PublicUser> {
-  const email = input.email.trim().toLowerCase();
-  const { rows: duplicate } = await pool.query("SELECT id FROM users WHERE email = $1 AND id <> $2", [email, id]);
-  if (duplicate[0]) throw new Error("Another account already uses this email.");
-  const result = await pool.query("UPDATE users SET name = $1, email = $2, phone = $3, updated_at = NOW() WHERE id = $4", [input.name.trim(), email, input.phone.trim(), id]);
+export async function updateUser(id: string, input: { name?: string; email?: string; phone?: string; location?: string; gender?: "Boy" | "Girl" }): Promise<PublicUser> {
+  if (input.email !== undefined) {
+    const email = input.email.trim().toLowerCase();
+    const { rows: duplicate } = await pool.query("SELECT id FROM users WHERE email = $1 AND id <> $2", [email, id]);
+    if (duplicate[0]) throw new Error("Another account already uses this email.");
+  }
+  const assignments: string[] = []; const values: unknown[] = []; let index = 1;
+  const set = (column: string, value: unknown) => { assignments.push(`${column} = $${index++}`); values.push(value); };
+  if (input.name !== undefined) set("name", input.name.trim());
+  if (input.email !== undefined) set("email", input.email.trim().toLowerCase());
+  if (input.phone !== undefined) set("phone", input.phone.trim());
+  if (input.location !== undefined) set("location", input.location.trim() || null);
+  if (input.gender !== undefined) set("gender", input.gender);
+  assignments.push("updated_at = NOW()");
+  values.push(id);
+  const result = await pool.query(`UPDATE users SET ${assignments.join(", ")} WHERE id = $${index}`, values);
   if (result.rowCount === 0) throw new Error("User not found. Please sign in again.");
   const { rows } = await pool.query<UserRow>("SELECT * FROM users WHERE id = $1", [id]);
   return rowToPublicUser(rows[0]);

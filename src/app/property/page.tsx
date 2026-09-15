@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Camera, CheckCircle2, MapPin, Phone, X } from "lucide-react";
+import { Camera, CheckCircle2, Loader2, MapPin, Phone, X } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
 import { searchLocations } from "@/data/indian-cities";
 import { compressImageFile } from "@/lib/compress-image";
@@ -17,7 +17,7 @@ function PostListing() {
   const [form, setForm] = useState<Form>({ title: "", description: "", location: "", budget: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "", bedrooms: "1", bathrooms: "1" });
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<{ id: string; preview: string; url?: string; uploading: boolean }[]>([]);
   const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
@@ -35,7 +35,9 @@ function PostListing() {
   }, []);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setStatus("saving"); setMessage("");
+    event.preventDefault();
+    if (images.some((image) => image.uploading)) { setStatus("error"); setMessage("Please wait for your photos to finish uploading."); return; }
+    setStatus("saving"); setMessage("");
     try {
       const storedUser = localStorage.getItem("flatfolks_user");
       if (!storedUser) throw new Error("Please log in before publishing a post.");
@@ -55,7 +57,7 @@ function PostListing() {
           bathrooms: isFlatRequirement ? undefined : Number(form.bathrooms),
           tags: selectedAmenities,
           preferences: selectedPreferences,
-          images: isFlatRequirement ? [] : images,
+          images: isFlatRequirement ? [] : images.map((image) => image.url).filter((url): url is string => Boolean(url)),
           listingKind: isFlatRequirement ? "flat-requirement" : "flat-offer",
           availableFrom: form.availableFrom,
           genderPreference: form.genderPreference,
@@ -74,14 +76,29 @@ function PostListing() {
 
   function selectImage(event: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files || []).slice(0, 3 - images.length);
-    files.forEach((file) => { compressImageFile(file).then((compressed) => setImages((current) => [...current, compressed].slice(0, 3))); });
     event.target.value = "";
+    files.forEach((file) => {
+      const id = crypto.randomUUID();
+      compressImageFile(file).then(async (compressed) => {
+        setImages((current) => [...current, { id, preview: compressed, uploading: true }].slice(0, 3));
+        try {
+          const response = await fetch("/api/upload", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: compressed }) });
+          const result = await response.json() as { url?: string; error?: string };
+          if (!response.ok || !result.url) throw new Error(result.error || "Could not upload photo.");
+          setImages((current) => current.map((image) => image.id === id ? { ...image, url: result.url, uploading: false } : image));
+        } catch (error) {
+          setImages((current) => current.filter((image) => image.id !== id));
+          setMessage(error instanceof Error ? error.message : "Could not upload photo.");
+          setStatus("error");
+        }
+      });
+    });
   }
 
-  function removeImage(event: React.MouseEvent, index: number) {
+  function removeImage(event: React.MouseEvent, id: string) {
     event.preventDefault();
     event.stopPropagation();
-    setImages((current) => current.filter((_, i) => i !== index));
+    setImages((current) => current.filter((image) => image.id !== id));
   }
 
   const heading = isFlatRequirement ? "Looking for a flat" : "Looking for a flatmate";
@@ -220,9 +237,10 @@ function PostListing() {
     </p>
   ) : null;
 
+  const imagesUploading = images.some((image) => image.uploading);
   const submitButton = (
-    <button disabled={status === "saving"} className="w-full rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-70">
-      {status === "saving" ? "Posting..." : "Publish post"}
+    <button disabled={status === "saving" || imagesUploading} className="w-full rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-70">
+      {status === "saving" ? "Posting..." : imagesUploading ? "Uploading photos..." : "Publish post"}
     </button>
   );
 
@@ -262,9 +280,10 @@ function PostListing() {
                 {images.length ? (
                   <div className="grid w-full grid-cols-3 gap-2">
                     {images.map((image, index) => (
-                      <div key={image} className="relative">
-                        <img src={image} alt={`Flat preview ${index + 1}`} className="aspect-video w-full rounded-xl object-cover" />
-                        <button type="button" onClick={(event) => removeImage(event, index)} aria-label="Remove photo" className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-slate-900 text-white shadow-sm hover:bg-red-600">
+                      <div key={image.id} className="relative">
+                        <img src={image.url || image.preview} alt={`Flat preview ${index + 1}`} className="aspect-video w-full rounded-xl object-cover" />
+                        {image.uploading && <div className="absolute inset-0 grid place-items-center rounded-xl bg-slate-900/40"><Loader2 className="h-5 w-5 animate-spin text-white" /></div>}
+                        <button type="button" onClick={(event) => removeImage(event, image.id)} aria-label="Remove photo" className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-slate-900 text-white shadow-sm hover:bg-red-600">
                           <X className="h-3 w-3" />
                         </button>
                       </div>
