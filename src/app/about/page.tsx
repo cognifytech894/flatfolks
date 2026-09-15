@@ -16,7 +16,7 @@ export default function AboutPage() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
       <div className="mx-auto max-w-4xl">
-        <BackLink label="Back to home" />
+        <BackLink />
 
         <article className="mt-5 rounded-[2rem] border border-slate-200 bg-white p-7 shadow-sm sm:p-12">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-blue-600">About FlatFolks</p>
