@@ -43,7 +43,7 @@ export function ProfilePreferences() {
                 type="button"
                 key={`${label}-${hint}`}
                 onMouseDown={(event) => event.preventDefault()}
-                onClick={() => { change("city", label); setShowSuggestions(false); }}
+                onClick={() => { change("city", hint.startsWith("PIN ") ? label : `${label}, ${hint}`); setShowSuggestions(false); }}
                 className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm hover:bg-blue-50"
               >
                 <span className="font-medium text-slate-800">{label}</span>
