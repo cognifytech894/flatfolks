@@ -7,7 +7,7 @@ import { indianCities, searchLocations } from "@/data/indian-cities";
 
 export function SearchCard() {
   const router = useRouter();
-  const [location, setLocation] = useState("Noida");
+  const [location, setLocation] = useState("");
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [minBudget, setMinBudget] = useState("");
   const [maxBudget, setMaxBudget] = useState("");
@@ -17,7 +17,7 @@ export function SearchCard() {
   const controlClass = "mt-1 w-full bg-transparent text-[11px] font-semibold text-slate-700 outline-none";
   const labelClass = "min-w-0 rounded-md border border-slate-200 px-3 py-2";
   const labelTextClass = "flex items-center gap-1.5 text-[10px] text-slate-500";
-  const citySuggestions = location.trim() ? searchLocations(location, 12) : indianCities.slice(0, 12).map(({ city, pincode }) => ({ label: city, hint: pincode }));
+  const citySuggestions = location.trim() ? searchLocations(location, 12) : indianCities.slice(0, 12).map(({ city, pincode }) => ({ label: city, hint: pincode, value: `${city} - ${pincode}` }));
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

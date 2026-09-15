@@ -159,12 +159,12 @@ function PostListing() {
         </div>
         {showLocationSuggestions && locationSuggestions.length > 0 && (
           <div className="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
-            {locationSuggestions.map(({ label, hint }) => (
+            {locationSuggestions.map(({ label, hint, value }) => (
               <button
                 type="button"
                 key={`${label}-${hint}`}
                 onMouseDown={(event) => event.preventDefault()}
-                onClick={() => { update("location", label); setShowLocationSuggestions(false); }}
+                onClick={() => { update("location", value); setShowLocationSuggestions(false); }}
                 className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm hover:bg-blue-50"
               >
                 <span className="font-medium text-slate-800">{label}</span>

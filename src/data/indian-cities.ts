@@ -35,13 +35,21 @@ export const indianLocalities: IndianLocality[] = [
   ["Gachibowli", "Hyderabad"], ["Hitech City", "Hyderabad"], ["Kondapur", "Hyderabad"], ["Madhapur", "Hyderabad"], ["Banjara Hills", "Hyderabad"],
 ].map(([area, city]) => ({ area, city }));
 
-export type LocationSuggestion = { label: string; hint: string };
+// label/hint are what the suggestion dropdown displays; `value` is the full
+// address (with city and PIN code) actually applied when a suggestion is
+// picked, so choosing "Sector 63" fills in "Sector 63, Noida - 201301".
+export type LocationSuggestion = { label: string; hint: string; value: string };
+
+const pincodeByCity = new Map(indianCities.map(({ city, pincode }) => [city, pincode]));
 
 /** Matches both localities (e.g. "Gaur City 1") and cities/PIN codes for a single location search box. */
 export function searchLocations(query: string, limit = 8): LocationSuggestion[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
-  const localityMatches = indianLocalities.filter(({ area }) => area.toLowerCase().includes(q)).map(({ area, city }) => ({ label: area, hint: city }));
-  const cityMatches = indianCities.filter(({ city, pincode }) => city.toLowerCase().includes(q) || pincode.startsWith(q)).map(({ city, pincode }) => ({ label: city, hint: `PIN ${pincode}` }));
+  const localityMatches = indianLocalities.filter(({ area }) => area.toLowerCase().includes(q)).map(({ area, city }) => {
+    const pincode = pincodeByCity.get(city);
+    return { label: area, hint: city, value: `${area}, ${city}${pincode ? ` - ${pincode}` : ""}` };
+  });
+  const cityMatches = indianCities.filter(({ city, pincode }) => city.toLowerCase().includes(q) || pincode.startsWith(q)).map(({ city, pincode }) => ({ label: city, hint: `PIN ${pincode}`, value: `${city} - ${pincode}` }));
   return [...localityMatches, ...cityMatches].slice(0, limit);
 }
