@@ -317,29 +317,25 @@ function PostListing() {
                 )}
                 <span className="mt-4 text-sm font-semibold text-blue-600">{images.length ? `Add another photo (${images.length}/3)` : "Choose photos"}</span>
               </label>
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-4">
-                  {titleField}
-                  <label className={labelClass}>
-                    Flat type
-                    <select value={form.propertyType} onChange={(event) => update("propertyType", event.target.value)} className={fieldClass}>
-                      <option>Flat</option>
-                      <option>Room</option>
-                      <option>Apartment</option>
-                      <option>PG</option>
-                    </select>
-                  </label>
-                  {roomCountsField}
-                  {dateField}
-                </div>
-                <div className="space-y-4">
-                  {locationField}
-                  {addressField}
-                  {budgetField}
-                  {depositField}
-                  {genderField}
-                  {contactField}
-                </div>
+              <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+                {titleField}
+                {addressField}
+                {locationField}
+                <label className={labelClass}>
+                  Flat type
+                  <select value={form.propertyType} onChange={(event) => update("propertyType", event.target.value)} className={fieldClass}>
+                    <option>Flat</option>
+                    <option>Room</option>
+                    <option>Apartment</option>
+                    <option>PG</option>
+                  </select>
+                </label>
+                {genderField}
+                {contactField}
+                {roomCountsField}
+                {budgetField}
+                {dateField}
+                {depositField}
               </div>
               {amenitiesField}
               <PreferencesField selected={selectedPreferences} onToggle={togglePreference} />
