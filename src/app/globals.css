@@ -3,6 +3,9 @@
 :root {
   --background: #ffffff;
   --foreground: #0f172a;
+  /* Light-only site — stops browsers from auto-dark-inverting dark-styled
+     sections (dark bg + white text) into unreadable black-on-black. */
+  color-scheme: light;
 }
 
 @theme inline {
