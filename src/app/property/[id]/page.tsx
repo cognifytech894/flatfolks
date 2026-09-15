@@ -83,6 +83,32 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
     ],
   };
 
+  const contactCard = (
+    <>
+      <div className="flex items-center gap-3">
+        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-blue-600 text-white">
+          {listing.ownerPhoto ? <img src={listing.ownerPhoto} alt={ownerName} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center">{ownerName.trim().charAt(0).toUpperCase() || "F"}</div>}
+        </div>
+        <div>
+          <p className="font-semibold text-slate-900">{ownerName}</p>
+          <p className="text-sm text-slate-600">{isRequirement ? "Looking for a flat" : "Owner"}</p>
+        </div>
+      </div>
+      {listing.contactPhone ? (
+        <>
+          <p className="flex items-center gap-2 text-sm font-medium text-slate-700"><Phone className="h-4 w-4 text-slate-400" /> {listing.contactPhone}</p>
+          <div className="flex gap-3">
+            <a href={`https://wa.me/${toWhatsAppNumber(listing.contactPhone)}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white"><MessageCircle className="h-4 w-4" /> WhatsApp</a>
+            <a href={`tel:${listing.contactPhone}`} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><Phone className="h-4 w-4" /> Call</a>
+          </div>
+        </>
+      ) : (
+        <p className="text-sm text-slate-500">No contact number was provided for this listing.</p>
+      )}
+      <SaveListingButton listingId={listing.id} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700" />
+    </>
+  );
+
   return (
     <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
@@ -101,17 +127,22 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
               <div className="relative mx-auto aspect-[9/16] w-full max-w-[220px] shrink-0 overflow-hidden rounded-2xl bg-slate-100 sm:mx-0">
                 {photos[0] ? <img src={photos[0]} alt={listing.title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-slate-300"><UserRound className="h-16 w-16" /></div>}
               </div>
-              <div className="flex-1">
-                {listing.verified && (
-                  <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
-                    <ShieldCheck className="h-4 w-4" /> Verified listing
+              <div className="flex flex-1 flex-col gap-6 sm:flex-row">
+                <div className="flex-1">
+                  {listing.verified && (
+                    <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
+                      <ShieldCheck className="h-4 w-4" /> Verified listing
+                    </div>
+                  )}
+                  <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">{listing.title}</h1>
+                  <p className="mt-3 flex items-center gap-2 text-slate-600"><MapPin className="h-4 w-4" /> {listing.location}</p>
+                  <div className="mt-6 inline-block rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm text-slate-500">Maximum budget</p>
+                    <p className="text-3xl font-semibold text-slate-900">₹{listing.rent.toLocaleString("en-IN")}</p>
                   </div>
-                )}
-                <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">{listing.title}</h1>
-                <p className="mt-3 flex items-center gap-2 text-slate-600"><MapPin className="h-4 w-4" /> {listing.location}</p>
-                <div className="mt-6 inline-block rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm text-slate-500">Maximum budget</p>
-                  <p className="text-3xl font-semibold text-slate-900">₹{listing.rent.toLocaleString("en-IN")}</p>
+                </div>
+                <div className="w-full shrink-0 space-y-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 sm:w-72">
+                  {contactCard}
                 </div>
               </div>
             </div>
@@ -139,7 +170,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
             </>
           )}
           <div className="px-6 pb-6 lg:px-8 lg:pb-8">
-            <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className={isRequirement ? "mt-8" : "mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]"}>
               <div className="space-y-6">
                 <div>
                   <h2 className="text-xl font-semibold text-slate-900">{isRequirement ? "About this requirement" : "About this place"}</h2>
@@ -191,29 +222,11 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                 )}
               </div>
 
-              <div className="space-y-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-blue-600 text-white">
-                    {listing.ownerPhoto ? <img src={listing.ownerPhoto} alt={ownerName} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center">{ownerName.trim().charAt(0).toUpperCase() || "F"}</div>}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-900">{ownerName}</p>
-                    <p className="text-sm text-slate-600">{isRequirement ? "Looking for a flat" : "Owner"}</p>
-                  </div>
+              {!isRequirement && (
+                <div className="space-y-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+                  {contactCard}
                 </div>
-                {listing.contactPhone ? (
-                  <>
-                    <p className="flex items-center gap-2 text-sm font-medium text-slate-700"><Phone className="h-4 w-4 text-slate-400" /> {listing.contactPhone}</p>
-                    <div className="flex gap-3">
-                      <a href={`https://wa.me/${toWhatsAppNumber(listing.contactPhone)}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white"><MessageCircle className="h-4 w-4" /> WhatsApp</a>
-                      <a href={`tel:${listing.contactPhone}`} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><Phone className="h-4 w-4" /> Call</a>
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-sm text-slate-500">No contact number was provided for this listing.</p>
-                )}
-                <SaveListingButton listingId={listing.id} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700" />
-              </div>
+              )}
             </div>
           </div>
         </div>
