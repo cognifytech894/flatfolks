@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Bath, Bed, ChevronRight, MapPin, MessageCircle, Phone, ShieldCheck } from "lucide-react";
+import { Bath, Bed, ChevronRight, Home as HomeIcon, MapPin, MessageCircle, Phone, ShieldCheck, UsersRound } from "lucide-react";
 import { SaveListingButton } from "@/components/listing/save-listing-button";
 import { PhotoCarousel } from "@/components/listing/photo-carousel";
 import { getListingById, recordListingView } from "@/lib/database";
@@ -23,7 +23,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!listing) return { title: "Listing not found | FlatFolks" };
 
   const description = listing.description?.trim().slice(0, 155)
-    || `${listing.propertyType} in ${listing.location} for ₹${listing.rent.toLocaleString("en-IN")}/month — ${listing.bedrooms} bedroom, ${listing.bathrooms} bathroom. Verified on FlatFolks.`;
+    || (listing.listingKind === "flat-requirement"
+      ? `Looking for a ${listing.propertyType} in ${listing.location}, budget up to ₹${listing.rent.toLocaleString("en-IN")}/month. Find them on FlatFolks.`
+      : `${listing.propertyType} in ${listing.location} for ₹${listing.rent.toLocaleString("en-IN")}/month — ${listing.bedrooms} bedroom, ${listing.bathrooms} bathroom. Verified on FlatFolks.`);
   const title = `${listing.title} in ${listing.location} | FlatFolks`;
 
   return {
@@ -99,25 +101,38 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                 <p className="mt-3 flex items-center gap-2 text-slate-600"><MapPin className="h-4 w-4" /> {listing.location}</p>
               </div>
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Monthly rent</p>
+                <p className="text-sm text-slate-500">{isRequirement ? "Maximum budget" : "Monthly rent"}</p>
                 <p className="text-3xl font-semibold text-slate-900">₹{listing.rent.toLocaleString("en-IN")}</p>
-                <p className="mt-2 text-sm font-medium text-slate-700">Security deposit: ₹{listing.deposit.toLocaleString("en-IN")}</p>
+                {!isRequirement && <p className="mt-2 text-sm font-medium text-slate-700">Security deposit: ₹{listing.deposit.toLocaleString("en-IN")}</p>}
               </div>
             </div>
 
             <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-slate-900">About this place</h2>
+                  <h2 className="text-xl font-semibold text-slate-900">{isRequirement ? "About this requirement" : "About this place"}</h2>
                   <p className="mt-3 text-sm leading-8 text-slate-600">{listing.description || "No description provided yet."}</p>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-3xl border border-slate-200 p-4">
-                    <div className="flex items-center gap-2 text-slate-700"><Bed className="h-4 w-4" /> {listing.bedrooms} Bedroom{listing.bedrooms === 1 ? "" : "s"}</div>
-                  </div>
-                  <div className="rounded-3xl border border-slate-200 p-4">
-                    <div className="flex items-center gap-2 text-slate-700"><Bath className="h-4 w-4" /> {listing.bathrooms} Bathroom{listing.bathrooms === 1 ? "" : "s"}</div>
-                  </div>
+                  {isRequirement ? (
+                    <>
+                      <div className="rounded-3xl border border-slate-200 p-4">
+                        <div className="flex items-center gap-2 text-slate-700"><HomeIcon className="h-4 w-4" /> Looking for: {listing.propertyType}</div>
+                      </div>
+                      <div className="rounded-3xl border border-slate-200 p-4">
+                        <div className="flex items-center gap-2 text-slate-700"><UsersRound className="h-4 w-4" /> Preferred gender: {listing.genderPreference || "Any"}</div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="rounded-3xl border border-slate-200 p-4">
+                        <div className="flex items-center gap-2 text-slate-700"><Bed className="h-4 w-4" /> {listing.bedrooms} Bedroom{listing.bedrooms === 1 ? "" : "s"}</div>
+                      </div>
+                      <div className="rounded-3xl border border-slate-200 p-4">
+                        <div className="flex items-center gap-2 text-slate-700"><Bath className="h-4 w-4" /> {listing.bathrooms} Bathroom{listing.bathrooms === 1 ? "" : "s"}</div>
+                      </div>
+                    </>
+                  )}
                 </div>
                 {listing.tags.length > 0 && (
                   <div>
@@ -146,10 +161,12 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
 
               <div className="space-y-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white">{ownerName.trim().charAt(0).toUpperCase() || "F"}</div>
+                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-blue-600 text-white">
+                    {listing.ownerPhoto ? <img src={listing.ownerPhoto} alt={ownerName} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center">{ownerName.trim().charAt(0).toUpperCase() || "F"}</div>}
+                  </div>
                   <div>
                     <p className="font-semibold text-slate-900">{ownerName}</p>
-                    <p className="text-sm text-slate-600">Owner</p>
+                    <p className="text-sm text-slate-600">{isRequirement ? "Looking for a flat" : "Owner"}</p>
                   </div>
                 </div>
                 {listing.contactPhone ? (
