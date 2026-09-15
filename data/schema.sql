@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   phone VARCHAR(20) UNIQUE,
   location VARCHAR(200),
   gender VARCHAR(10) CHECK (gender IN ('Male', 'Female')),
+  photo TEXT,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP
 );
@@ -16,6 +17,8 @@ ALTER TABLE users DROP COLUMN IF EXISTS password_hash;
 -- Adds onboarding fields on databases created before they existed.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS location VARCHAR(200);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(10);
+-- Adds the profile photo (a Supabase Storage URL) on databases created before it existed.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS photo TEXT;
 -- Renames the gender options from Boy/Girl to Male/Female (constraint must
 -- drop before the UPDATE, since the old constraint still only allows Boy/Girl).
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_gender_check;

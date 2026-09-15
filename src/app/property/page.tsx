@@ -221,6 +221,18 @@ function PostListing() {
     </label>
   );
 
+  const propertyTypeField = (
+    <label className={labelClass}>
+      {isFlatRequirement ? "Looking for" : "Flat type"}
+      <select value={form.propertyType} onChange={(event) => update("propertyType", event.target.value)} className={fieldClass}>
+        <option>Flat</option>
+        <option>Room</option>
+        <option>Apartment</option>
+        <option>PG</option>
+      </select>
+    </label>
+  );
+
   const amenitiesField = (
     <fieldset>
       <legend className="text-sm font-medium text-slate-700">Amenities</legend>
@@ -283,6 +295,7 @@ function PostListing() {
                 </div>
                 <div className="space-y-4">
                   {locationField}
+                  {propertyTypeField}
                   {budgetField}
                   {amenitiesField}
                 </div>
@@ -321,15 +334,7 @@ function PostListing() {
                 {titleField}
                 {addressField}
                 {locationField}
-                <label className={labelClass}>
-                  Flat type
-                  <select value={form.propertyType} onChange={(event) => update("propertyType", event.target.value)} className={fieldClass}>
-                    <option>Flat</option>
-                    <option>Room</option>
-                    <option>Apartment</option>
-                    <option>PG</option>
-                  </select>
-                </label>
+                {propertyTypeField}
                 {genderField}
                 {contactField}
                 {roomCountsField}

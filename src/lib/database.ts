@@ -23,6 +23,7 @@ export type Listing = {
   saves?: number;
   ownerId?: string;
   ownerName?: string;
+  ownerPhoto?: string;
   contactPhone?: string;
   /** Lifestyle-tag ids from src/data/preferences.ts, e.g. "night-owl". */
   preferences?: string[];
@@ -36,7 +37,7 @@ export type ListingReview = { id: string; listingId: string; author: string; rat
 
 export type Feedback = { id: string; name: string; city: string; rating: number; message: string; createdAt: string };
 
-export type PublicUser = { id: string; name: string; email: string; phone?: string; location?: string; gender?: "Male" | "Female" };
+export type PublicUser = { id: string; name: string; email: string; phone?: string; location?: string; gender?: "Male" | "Female"; photo?: string };
 
 // OTPs live in Postgres (not in-memory) because Vercel's serverless functions can run the
 // "request" and "verify" calls on two different instances that don't share process memory.
@@ -70,7 +71,7 @@ type ListingRow = {
   id: string; title: string; location: string; rent: number; deposit: number; bedrooms: number; bathrooms: number;
   property_type: Listing["propertyType"]; description: string | null; image: string; verified: boolean; tags: unknown;
   match_score: number; min_budget: number; max_budget: number; images: unknown; status: Listing["status"];
-  views: number; saves: number; owner_id: string | null; owner_name: string | null; owner_phone: string | null; available_from: string | null;
+  views: number; saves: number; owner_id: string | null; owner_name: string | null; owner_phone: string | null; owner_photo: string | null; available_from: string | null;
   gender_preference: Listing["genderPreference"]; listing_kind: Listing["listingKind"]; contact_phone: string | null; preferences: unknown;
 };
 
@@ -82,6 +83,7 @@ function rowToListing(row: ListingRow): Listing {
     tags: parseJsonField<string[]>(row.tags, []), matchScore: row.match_score, minBudget: row.min_budget, maxBudget: row.max_budget,
     images: parseJsonField<string[] | undefined>(row.images, undefined), status: row.status || undefined,
     views: row.views, saves: row.saves, ownerId: row.owner_id || undefined, ownerName: row.owner_name || undefined,
+    ownerPhoto: row.owner_photo || undefined,
     // Falls back to the owner's account phone for listings posted before contact_phone existed.
     contactPhone: row.contact_phone || row.owner_phone || undefined,
     preferences: parseJsonField<string[]>(row.preferences, []),
@@ -90,12 +92,12 @@ function rowToListing(row: ListingRow): Listing {
   };
 }
 
-const listingSelect = "SELECT listings.*, users.name AS owner_name, users.phone AS owner_phone FROM listings LEFT JOIN users ON users.id = listings.owner_id";
+const listingSelect = "SELECT listings.*, users.name AS owner_name, users.phone AS owner_phone, users.photo AS owner_photo FROM listings LEFT JOIN users ON users.id = listings.owner_id";
 
-type UserRow = { id: string; name: string; email: string; phone: string | null; location: string | null; gender: PublicUser["gender"] | null };
+type UserRow = { id: string; name: string; email: string; phone: string | null; location: string | null; gender: PublicUser["gender"] | null; photo: string | null };
 
 function rowToPublicUser(row: UserRow): PublicUser {
-  return { id: row.id, name: row.name, email: row.email, phone: row.phone || undefined, location: row.location || undefined, gender: row.gender || undefined };
+  return { id: row.id, name: row.name, email: row.email, phone: row.phone || undefined, location: row.location || undefined, gender: row.gender || undefined, photo: row.photo || undefined };
 }
 
 export async function getListings(): Promise<Listing[]> {
@@ -249,7 +251,7 @@ export async function addFeedback(input: { name: string; city: string; rating: n
   return { id, name: input.name.trim(), city: input.city.trim(), rating: input.rating, message: input.message.trim(), createdAt: new Date().toISOString() };
 }
 
-export async function updateUser(id: string, input: { name?: string; email?: string; phone?: string; location?: string; gender?: "Male" | "Female" }): Promise<PublicUser> {
+export async function updateUser(id: string, input: { name?: string; email?: string; phone?: string; location?: string; gender?: "Male" | "Female"; photo?: string }): Promise<PublicUser> {
   if (input.email !== undefined) {
     const email = input.email.trim().toLowerCase();
     const { rows: duplicate } = await pool.query("SELECT id FROM users WHERE email = $1 AND id <> $2", [email, id]);
@@ -262,6 +264,7 @@ export async function updateUser(id: string, input: { name?: string; email?: str
   if (input.phone !== undefined) set("phone", input.phone.trim());
   if (input.location !== undefined) set("location", input.location.trim() || null);
   if (input.gender !== undefined) set("gender", input.gender);
+  if (input.photo !== undefined) set("photo", input.photo || null);
   assignments.push("updated_at = NOW()");
   values.push(id);
   const result = await pool.query(`UPDATE users SET ${assignments.join(", ")} WHERE id = $${index}`, values);
