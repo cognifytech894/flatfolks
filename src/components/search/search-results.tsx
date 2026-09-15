@@ -29,10 +29,7 @@ export function SearchResults({ listings, mapView }: { listings: ResultListing[]
           <article key={listing.id} className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
             <img src={listing.image} alt={listing.title} className="h-40 w-full object-cover" />
             <div className="flex flex-1 flex-col p-4">
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-slate-900">{listing.title}</h2>
-                <span className="text-sm font-semibold text-blue-600">₹{listing.rent.toLocaleString("en-IN")}</span>
-              </div>
+              <h2 className="mb-2 text-lg font-semibold text-slate-900">{listing.title}</h2>
               <p className="text-sm text-slate-600">{listing.location}</p>
               {listing.description && <p className="mt-2 line-clamp-2 text-sm text-slate-500">{listing.description}</p>}
               <p className="mt-2 text-sm font-medium text-emerald-600">Rent: ₹{listing.rent.toLocaleString("en-IN")}</p>
