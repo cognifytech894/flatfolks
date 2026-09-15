@@ -14,10 +14,21 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: "FlatFolks | Find Rooms & Flatmates in India",
+  metadataBase: new URL(baseUrl),
+  title: { default: "FlatFolks | Find Rooms & Flatmates in India", template: "%s | FlatFolks" },
   description: "Find verified rooms, trusted flatmates, and shared accommodations across India with FlatFolks.",
-  openGraph: { title: "FlatFolks | Find Rooms & Flatmates in India", description: "Find verified rooms and compatible flatmates across India.", type: "website" },
+  openGraph: {
+    title: "FlatFolks | Find Rooms & Flatmates in India",
+    description: "Find verified rooms and compatible flatmates across India.",
+    type: "website",
+    siteName: "FlatFolks",
+    locale: "en_IN",
+    url: baseUrl,
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 // The site only ships a light theme; without this, some browsers apply an

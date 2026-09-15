@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { getSavedCity, sortByCity } from "@/lib/saved-city";
 
@@ -27,7 +28,9 @@ export function SearchResults({ listings, mapView }: { listings: ResultListing[]
       <div className="grid gap-4 md:grid-cols-2">
         {sorted.map((listing) => (
           <article key={listing.id} className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
-            <img src={listing.image} alt={listing.title} className="h-40 w-full object-cover" />
+            <div className="relative h-40 w-full shrink-0">
+              <Image src={listing.image} alt={listing.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 400px" />
+            </div>
             <div className="flex flex-1 flex-col p-4">
               <h2 className="mb-2 text-lg font-semibold text-slate-900">{listing.title}</h2>
               <p className="text-sm text-slate-600">{listing.location}</p>

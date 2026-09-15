@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -34,6 +35,17 @@ function Unsplash({ id, alt, className, priority }: { id: string; alt: string; c
 export const dynamic = "force-dynamic";
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
+const description = "Search verified rooms, PGs, and flatmates across India — filter by city, budget, and amenities. No brokerage, direct contact with owners.";
+
+// No `title` here on purpose: it inherits the root layout's `default` title
+// verbatim rather than going through the "%s | FlatFolks" template, which
+// would otherwise double up the brand name for the homepage specifically.
+export const metadata: Metadata = {
+  description,
+  alternates: { canonical: baseUrl },
+  openGraph: { description, url: baseUrl },
+};
+
 export default async function Home() {
   const [rooms, feedback] = await Promise.all([getFeaturedListings(), getFeedback()]);
   const jsonLd = {
@@ -69,7 +81,7 @@ export default async function Home() {
           <section className="mt-5">
             <div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-bold">Popular Cities</h2><Link href="/search" className="text-xs font-semibold text-blue-600">View all cities <ArrowRight className="inline h-3.5 w-3.5" /></Link></div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
-              {cities.map(([name, image], index) => <div key={name} className="group relative h-[86px] overflow-hidden rounded-lg bg-slate-200 shadow-sm"><Unsplash id={image} alt={name} priority={index < 4} className="object-cover transition duration-500 group-hover:scale-110" /><div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-transparent" /><b className="absolute bottom-2 left-2 right-2 text-center text-[11px] text-white">{name}</b></div>)}
+              {cities.map(([name, image], index) => <Link key={name} href={`/search?location=${encodeURIComponent(name)}`} className="group relative h-[86px] overflow-hidden rounded-lg bg-slate-200 shadow-sm"><Unsplash id={image} alt={`Rooms and flatmates in ${name}`} priority={index < 4} className="object-cover transition duration-500 group-hover:scale-110" /><div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-transparent" /><b className="absolute bottom-2 left-2 right-2 text-center text-[11px] text-white">{name}</b></Link>)}
             </div>
           </section>
           <section className="mt-5">

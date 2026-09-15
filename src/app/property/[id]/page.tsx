@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     || (listing.listingKind === "flat-requirement"
       ? `Looking for a ${listing.propertyType} in ${listing.location}, budget up to ₹${listing.rent.toLocaleString("en-IN")}/month. Find them on FlatFolks.`
       : `${listing.propertyType} in ${listing.location} for ₹${listing.rent.toLocaleString("en-IN")}/month — ${listing.bedrooms} bedroom, ${listing.bathrooms} bathroom. Verified on FlatFolks.`);
-  const title = `${listing.title} in ${listing.location} | FlatFolks`;
+  const title = `${listing.title} in ${listing.location}`;
   const shareImage = listing.listingKind === "flat-requirement" ? listing.ownerPhoto : listing.image;
 
   return {
@@ -60,10 +60,15 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "Product",
+        // Accommodation is the semantically correct schema.org type for a rental
+        // listing (Product/Offer is built for things you buy, not rent) — Google
+        // has no dedicated rich-result type for rentals yet, so this is mainly
+        // for machine-readable accuracy and future-proofing.
+        "@type": "Accommodation",
         name: listing.title,
         description: listing.description || `${listing.propertyType} in ${listing.location}`,
         image: photos.length ? photos : undefined,
+        address: { "@type": "PostalAddress", addressLocality: listing.location, addressCountry: "IN" },
         offers: {
           "@type": "Offer",
           price: listing.rent,

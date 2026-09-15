@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Headset, LockKeyhole, ShieldCheck } from "lucide-react";
 import { FlatFolksLogo } from "@/components/ui/flatfolks-logo";
+import { priorityLocations } from "@/data/priority-locations";
 
 const trust = [
   [ShieldCheck, "Verified listings", "bg-blue-50 text-blue-600"],
@@ -8,18 +9,10 @@ const trust = [
   [Headset, "24/7 support", "bg-amber-50 text-amber-500"],
 ] as const;
 
-const popularSearches = [
-  ["Sharing flat in Noida", "/search?location=Noida"],
-  ["Flatmate in Noida", "/flatmates?location=Noida"],
-  ["Sharing flat in Delhi", "/search?location=Delhi"],
-  ["Flatmate in Delhi", "/flatmates?location=Delhi"],
-  ["Sharing flat in Gaur City 1, Ghaziabad", "/search?location=Gaur City 1"],
-  ["Flatmate in Gaur City 2, Ghaziabad", "/flatmates?location=Gaur City 2"],
-  ["Sharing flat in Greater Noida", "/search?location=Greater Noida"],
-  ["Flatmate in Greater Noida", "/flatmates?location=Greater Noida"],
-  ["Sharing flat in Gurugram", "/search?location=Gurugram"],
-  ["Flatmate in Gurugram", "/flatmates?location=Gurugram"],
-] as const;
+const popularSearches = priorityLocations.flatMap(({ label, query }) => [
+  [`Sharing flat in ${label}`, `/search?location=${encodeURIComponent(query)}`],
+  [`Flatmate in ${label}`, `/flatmates?location=${encodeURIComponent(query)}`],
+]);
 
 export function Footer() {
   return (
@@ -43,7 +36,7 @@ export function Footer() {
           </Link>
         </div>
 
-        <div className="grid gap-10 border-t border-slate-200 pt-10 md:grid-cols-3">
+        <div className="grid gap-10 border-t border-slate-200 pt-10 md:grid-cols-[0.9fr_0.7fr_1.4fr]">
           <div>
             <FlatFolksLogo compact />
             <p className="mt-4 text-sm leading-7 text-slate-600">
@@ -64,12 +57,15 @@ export function Footer() {
                 </div>
               ))}
             </div>
+            <Link href="/guides" className="mt-4 inline-block text-sm font-medium text-blue-600 hover:underline">
+              Renting guides &amp; tips
+            </Link>
           </div>
           <div>
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
               Popular searches
             </p>
-            <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
               {popularSearches.map(([label, href]) => (
                 <Link key={label} href={href} className="text-sm text-slate-600 hover:text-blue-600 hover:underline">
                   {label}

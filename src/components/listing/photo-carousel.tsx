@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export function PhotoCarousel({ photos, title }: { photos: string[]; title: string }) {
@@ -9,7 +10,7 @@ export function PhotoCarousel({ photos, title }: { photos: string[]; title: stri
 
   return (
     <div className="relative h-80 overflow-hidden sm:h-96">
-      <img src={photos[index]} alt={`${title} photo ${index + 1}`} className="h-full w-full object-cover" />
+      <Image src={photos[index]} alt={`${title} photo ${index + 1}`} fill priority className="object-cover" sizes="(max-width: 768px) 100vw, 1000px" />
       {photos.length > 1 && (
         <>
           <button type="button" onClick={() => go(-1)} aria-label="Previous photo" className="absolute left-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-slate-700 shadow-md hover:bg-white">

@@ -4,9 +4,12 @@ import { ArrowRight, Handshake, LockKeyhole, MapPin, MessageCircle, Rocket, Shie
 import { BackLink } from "@/components/ui/back-link";
 import { StatsRow } from "@/components/home/stats-row";
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: "About FlatFolks | Verified Rooms & Flatmates in India",
+  title: "About Us",
   description: "FlatFolks helps you find verified rooms, flats, and compatible flatmates across India with no brokerage — smart search, secure messaging, and direct contact with owners.",
+  alternates: { canonical: `${baseUrl}/about` },
 };
 
 const offers = [
