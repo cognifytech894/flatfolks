@@ -24,6 +24,7 @@ export type Listing = {
   ownerId?: string;
   ownerName?: string;
   ownerPhoto?: string;
+  ownerGender?: "Male" | "Female";
   contactPhone?: string;
   /** Lifestyle-tag ids from src/data/preferences.ts, e.g. "night-owl". */
   preferences?: string[];
@@ -71,7 +72,7 @@ type ListingRow = {
   id: string; title: string; location: string; rent: number; deposit: number; bedrooms: number; bathrooms: number;
   property_type: Listing["propertyType"]; description: string | null; image: string; verified: boolean; tags: unknown;
   match_score: number; min_budget: number; max_budget: number; images: unknown; status: Listing["status"];
-  views: number; saves: number; owner_id: string | null; owner_name: string | null; owner_phone: string | null; owner_photo: string | null; available_from: string | null;
+  views: number; saves: number; owner_id: string | null; owner_name: string | null; owner_phone: string | null; owner_photo: string | null; owner_gender: Listing["ownerGender"] | null; available_from: string | null;
   gender_preference: Listing["genderPreference"]; listing_kind: Listing["listingKind"]; contact_phone: string | null; preferences: unknown;
 };
 
@@ -83,7 +84,7 @@ function rowToListing(row: ListingRow): Listing {
     tags: parseJsonField<string[]>(row.tags, []), matchScore: row.match_score, minBudget: row.min_budget, maxBudget: row.max_budget,
     images: parseJsonField<string[] | undefined>(row.images, undefined), status: row.status || undefined,
     views: row.views, saves: row.saves, ownerId: row.owner_id || undefined, ownerName: row.owner_name || undefined,
-    ownerPhoto: row.owner_photo || undefined,
+    ownerPhoto: row.owner_photo || undefined, ownerGender: row.owner_gender || undefined,
     // Falls back to the owner's account phone for listings posted before contact_phone existed.
     contactPhone: row.contact_phone || row.owner_phone || undefined,
     preferences: parseJsonField<string[]>(row.preferences, []),
@@ -92,7 +93,7 @@ function rowToListing(row: ListingRow): Listing {
   };
 }
 
-const listingSelect = "SELECT listings.*, users.name AS owner_name, users.phone AS owner_phone, users.photo AS owner_photo FROM listings LEFT JOIN users ON users.id = listings.owner_id";
+const listingSelect = "SELECT listings.*, users.name AS owner_name, users.phone AS owner_phone, users.photo AS owner_photo, users.gender AS owner_gender FROM listings LEFT JOIN users ON users.id = listings.owner_id";
 
 type UserRow = { id: string; name: string; email: string; phone: string | null; location: string | null; gender: PublicUser["gender"] | null; photo: string | null };
 
