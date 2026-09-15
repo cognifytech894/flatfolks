@@ -38,9 +38,9 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                 <p className="mt-3 flex items-center gap-2 text-slate-600"><MapPin className="h-4 w-4" /> {listing.location}</p>
               </div>
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Starts from</p>
+                <p className="text-sm text-slate-500">Monthly rent</p>
                 <p className="text-3xl font-semibold text-slate-900">₹{listing.rent.toLocaleString("en-IN")}</p>
-                <p className="mt-2 text-sm text-slate-600">Deposit: ₹{listing.deposit.toLocaleString("en-IN")}</p>
+                <p className="mt-2 text-sm font-medium text-slate-700">Security deposit: ₹{listing.deposit.toLocaleString("en-IN")}</p>
               </div>
             </div>
 
