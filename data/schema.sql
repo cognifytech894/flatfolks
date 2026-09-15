@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(190) NOT NULL UNIQUE,
   phone VARCHAR(20) UNIQUE,
   location VARCHAR(200),
-  gender VARCHAR(10) CHECK (gender IN ('Boy', 'Girl')),
+  gender VARCHAR(10) CHECK (gender IN ('Male', 'Female')),
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP
 );
@@ -15,7 +15,13 @@ CREATE TABLE IF NOT EXISTS users (
 ALTER TABLE users DROP COLUMN IF EXISTS password_hash;
 -- Adds onboarding fields on databases created before they existed.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS location VARCHAR(200);
-ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(10) CHECK (gender IN ('Boy', 'Girl'));
+ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(10);
+-- Renames the gender options from Boy/Girl to Male/Female (constraint must
+-- drop before the UPDATE, since the old constraint still only allows Boy/Girl).
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_gender_check;
+UPDATE users SET gender = 'Male' WHERE gender = 'Boy';
+UPDATE users SET gender = 'Female' WHERE gender = 'Girl';
+ALTER TABLE users ADD CONSTRAINT users_gender_check CHECK (gender IN ('Male', 'Female'));
 
 CREATE TABLE IF NOT EXISTS listings (
   id UUID PRIMARY KEY,
@@ -39,7 +45,7 @@ CREATE TABLE IF NOT EXISTS listings (
   saves INT NOT NULL DEFAULT 0,
   owner_id UUID,
   available_from DATE,
-  gender_preference VARCHAR(10) NOT NULL DEFAULT 'Any' CHECK (gender_preference IN ('Boy', 'Girl', 'Any')),
+  gender_preference VARCHAR(10) NOT NULL DEFAULT 'Any',
   listing_kind VARCHAR(20) NOT NULL DEFAULT 'flat-offer' CHECK (listing_kind IN ('flat-offer', 'flat-requirement')),
   contact_phone VARCHAR(20),
   preferences JSONB NOT NULL DEFAULT '[]',
@@ -54,6 +60,14 @@ ALTER TABLE listings ALTER COLUMN image TYPE TEXT;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(20);
 -- Adds lifestyle-preference tags on databases created before they existed.
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS preferences JSONB NOT NULL DEFAULT '[]';
+-- Renames the gender preference options from Boy/Girl to Male/Female, and
+-- (for databases created before it existed) allows the 'Family' option.
+-- Constraint must drop before the UPDATE, since the old constraint (if any)
+-- still only allows Boy/Girl/Any.
+ALTER TABLE listings DROP CONSTRAINT IF EXISTS listings_gender_preference_check;
+UPDATE listings SET gender_preference = 'Male' WHERE gender_preference = 'Boy';
+UPDATE listings SET gender_preference = 'Female' WHERE gender_preference = 'Girl';
+ALTER TABLE listings ADD CONSTRAINT listings_gender_preference_check CHECK (gender_preference IN ('Male', 'Female', 'Family', 'Any'));
 
 CREATE TABLE IF NOT EXISTS listing_reviews (
   id UUID PRIMARY KEY,

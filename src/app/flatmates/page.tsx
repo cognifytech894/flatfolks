@@ -7,9 +7,9 @@ import { BackLink } from "@/components/ui/back-link";
 import { lifestylePreferences } from "@/data/preferences";
 import { getSavedCity, sortByCity } from "@/lib/saved-city";
 
-type Requirement = { id: string; title: string; description?: string; location: string; rent: number; tags: string[]; listingKind?: string; ownerName?: string; contactPhone?: string; preferences?: string[]; genderPreference?: "Boy" | "Girl" | "Family" | "Any" };
+type Requirement = { id: string; title: string; description?: string; location: string; rent: number; tags: string[]; listingKind?: string; ownerName?: string; contactPhone?: string; preferences?: string[]; genderPreference?: "Male" | "Female" | "Family" | "Any" };
 
-const genderOptions = ["Any", "Boy", "Girl", "Family"];
+const genderOptions = ["Any", "Male", "Female", "Family"];
 
 export default function FlatmatesPage() {
   const [requirements, setRequirements] = useState<Requirement[]>([]);

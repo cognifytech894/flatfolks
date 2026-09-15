@@ -5,7 +5,7 @@ import { LockKeyhole, Mail, MapPin, UserRound, UsersRound } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
 import { searchLocations } from "@/data/indian-cities";
 
-type PublicUser = { id: string; name: string; email: string; phone?: string; location?: string; gender?: "Boy" | "Girl" };
+type PublicUser = { id: string; name: string; email: string; phone?: string; location?: string; gender?: "Male" | "Female" };
 type Step = "email" | "otp" | "onboarding";
 const fieldClass = "mt-1.5 flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-3 focus-within:border-blue-500";
 const inputClass = "w-full bg-transparent outline-none";
@@ -21,7 +21,7 @@ export default function AuthPage() {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
-  const [gender, setGender] = useState<"Boy" | "Girl" | "">("");
+  const [gender, setGender] = useState<"Male" | "Female" | "">("");
   const locationSuggestions = searchLocations(location);
 
   function finish(user: PublicUser) {
@@ -151,7 +151,7 @@ export default function AuthPage() {
               <fieldset>
                 <legend className="text-sm font-medium text-slate-700">You are a</legend>
                 <div className="mt-2 grid grid-cols-2 gap-2">
-                  {(["Boy", "Girl"] as const).map((option) => (
+                  {(["Male", "Female"] as const).map((option) => (
                     <button
                       type="button"
                       key={option}

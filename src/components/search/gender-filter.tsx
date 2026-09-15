@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { UsersRound } from "lucide-react";
 
-const options = ["Any", "Boy", "Girl", "Family"];
+const options = ["Any", "Male", "Female", "Family"];
 
 export function GenderFilter({ filters }: { filters: Record<string, string | undefined> }) {
   const router = useRouter();

@@ -27,7 +27,7 @@ export type Listing = {
   /** Lifestyle-tag ids from src/data/preferences.ts, e.g. "night-owl". */
   preferences?: string[];
   availableFrom?: string;
-  genderPreference?: "Boy" | "Girl" | "Family" | "Any";
+  genderPreference?: "Male" | "Female" | "Family" | "Any";
   /** A flat offer is shown to people looking for a flat; a requirement is shown to flat owners. */
   listingKind?: "flat-offer" | "flat-requirement";
 };
@@ -36,7 +36,7 @@ export type ListingReview = { id: string; listingId: string; author: string; rat
 
 export type Feedback = { id: string; name: string; city: string; rating: number; message: string; createdAt: string };
 
-export type PublicUser = { id: string; name: string; email: string; phone?: string; location?: string; gender?: "Boy" | "Girl" };
+export type PublicUser = { id: string; name: string; email: string; phone?: string; location?: string; gender?: "Male" | "Female" };
 
 // OTPs live in Postgres (not in-memory) because Vercel's serverless functions can run the
 // "request" and "verify" calls on two different instances that don't share process memory.
@@ -108,7 +108,7 @@ export async function getFeaturedListings(limit = 4): Promise<Listing[]> {
   return rows.map(rowToListing);
 }
 
-export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { bedrooms?: number; bathrooms?: number; description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; contactPhone?: string; preferences?: string[]; availableFrom?: string; genderPreference?: "Boy" | "Girl" | "Family" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement" };
+export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { bedrooms?: number; bathrooms?: number; description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; contactPhone?: string; preferences?: string[]; availableFrom?: string; genderPreference?: "Male" | "Female" | "Family" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement" };
 
 export async function createListing(input: NewListing): Promise<Listing> {
   const listing: Listing = {
@@ -243,7 +243,7 @@ export async function addFeedback(input: { name: string; city: string; rating: n
   return { id, name: input.name.trim(), city: input.city.trim(), rating: input.rating, message: input.message.trim(), createdAt: new Date().toISOString() };
 }
 
-export async function updateUser(id: string, input: { name?: string; email?: string; phone?: string; location?: string; gender?: "Boy" | "Girl" }): Promise<PublicUser> {
+export async function updateUser(id: string, input: { name?: string; email?: string; phone?: string; location?: string; gender?: "Male" | "Female" }): Promise<PublicUser> {
   if (input.email !== undefined) {
     const email = input.email.trim().toLowerCase();
     const { rows: duplicate } = await pool.query("SELECT id FROM users WHERE email = $1 AND id <> $2", [email, id]);
