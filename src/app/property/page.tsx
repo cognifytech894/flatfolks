@@ -9,12 +9,12 @@ import { compressImageFile } from "@/lib/compress-image";
 import { PreferencesField } from "@/components/listing/preferences-field";
 
 const amenities = ["WiFi", "AC", "Parking", "Kitchen", "Lift", "Power Backup"];
-type Form = { title: string; description: string; location: string; budget: string; deposit: string; availableFrom: string; genderPreference: "Male" | "Female" | "Family" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string };
+type Form = { title: string; description: string; location: string; address: string; budget: string; deposit: string; availableFrom: string; genderPreference: "Male" | "Female" | "Family" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string };
 
 function PostListing() {
   const params = useSearchParams();
   const isFlatRequirement = params.get("intent") === "flat";
-  const [form, setForm] = useState<Form>({ title: "", description: "", location: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "", bedrooms: "1", bathrooms: "1" });
+  const [form, setForm] = useState<Form>({ title: "", description: "", location: "", address: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "", bedrooms: "1", bathrooms: "1" });
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
   const [images, setImages] = useState<{ id: string; preview: string; url?: string; uploading: boolean }[]>([]);
@@ -49,7 +49,7 @@ function PostListing() {
         body: JSON.stringify({
           title: form.title || (isFlatRequirement ? "Looking for a flat" : "Flat available for a flatmate"),
           description: form.description,
-          location: form.location,
+          location: form.address.trim() ? `${form.address.trim()}, ${form.location}` : form.location,
           rent: Number(form.budget),
           deposit: isFlatRequirement ? 0 : Number(form.deposit) || 0,
           propertyType: form.propertyType,
@@ -70,7 +70,7 @@ function PostListing() {
       if (!response.ok) throw new Error(result.error || "Could not publish your post.");
       setStatus("success");
       setMessage(isFlatRequirement ? "Requirement posted! Flat owners can now find it under Find Flatmates." : "Flat posted! People looking for a flat can now find it under Find Flats.");
-      setForm((current) => ({ title: "", description: "", location: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: current.contactPhone, bedrooms: "1", bathrooms: "1" })); setSelectedAmenities([]); setSelectedPreferences([]); setImages([]);
+      setForm((current) => ({ title: "", description: "", location: "", address: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: current.contactPhone, bedrooms: "1", bathrooms: "1" })); setSelectedAmenities([]); setSelectedPreferences([]); setImages([]);
     } catch (error) { setStatus("error"); setMessage(error instanceof Error ? error.message : "Could not publish your post."); }
   }
 
@@ -192,6 +192,18 @@ function PostListing() {
           </div>
         )}
       </div>
+    </label>
+  );
+
+  const addressField = (
+    <label className={labelClass}>
+      Exact address / landmark <span className="font-normal text-slate-400">(optional)</span>
+      <input
+        value={form.address}
+        onChange={(event) => update("address", event.target.value)}
+        className={fieldClass}
+        placeholder="House/flat no., street, building name, nearby landmark"
+      />
     </label>
   );
 
@@ -322,6 +334,7 @@ function PostListing() {
                 </div>
                 <div className="space-y-4">
                   {locationField}
+                  {addressField}
                   {budgetField}
                   {depositField}
                   {genderField}
