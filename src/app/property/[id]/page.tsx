@@ -97,11 +97,11 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
         </nav>
         <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
           {isRequirement ? (
-            <div className="grid sm:grid-cols-2">
-              <div className="relative aspect-[9/16] w-full overflow-hidden bg-slate-100">
-                {photos[0] ? <img src={photos[0]} alt={listing.title} className="h-full w-full object-cover" /> : <div className="grid h-full min-h-72 place-items-center text-slate-300"><UserRound className="h-20 w-20" /></div>}
+            <div className="flex flex-col gap-6 p-6 sm:flex-row lg:p-8">
+              <div className="relative mx-auto aspect-[9/16] w-full max-w-[220px] shrink-0 overflow-hidden rounded-2xl bg-slate-100 sm:mx-0">
+                {photos[0] ? <img src={photos[0]} alt={listing.title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-slate-300"><UserRound className="h-16 w-16" /></div>}
               </div>
-              <div className="p-6 lg:p-8">
+              <div className="flex-1">
                 {listing.verified && (
                   <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
                     <ShieldCheck className="h-4 w-4" /> Verified listing
