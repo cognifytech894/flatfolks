@@ -35,7 +35,7 @@ export function SearchResults({ listings, mapView }: { listings: ResultListing[]
               </div>
               <p className="text-sm text-slate-600">{listing.location}</p>
               {listing.description && <p className="mt-2 line-clamp-2 text-sm text-slate-500">{listing.description}</p>}
-              <p className="mt-2 text-sm font-medium text-emerald-600">Budget: ₹{listing.rent.toLocaleString("en-IN")}</p>
+              <p className="mt-2 text-sm font-medium text-emerald-600">Rent: ₹{listing.rent.toLocaleString("en-IN")}</p>
               <div className="mt-auto flex items-center justify-between pt-4">
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{listing.propertyType}</span>
                 <div className="flex items-center gap-2">
