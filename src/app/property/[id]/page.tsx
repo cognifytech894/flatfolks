@@ -27,13 +27,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       ? `Looking for a ${listing.propertyType} in ${listing.location}, budget up to ₹${listing.rent.toLocaleString("en-IN")}/month. Find them on FlatFolks.`
       : `${listing.propertyType} in ${listing.location} for ₹${listing.rent.toLocaleString("en-IN")}/month — ${listing.bedrooms} bedroom, ${listing.bathrooms} bathroom. Verified on FlatFolks.`);
   const title = `${listing.title} in ${listing.location} | FlatFolks`;
+  const shareImage = listing.listingKind === "flat-requirement" ? listing.ownerPhoto : listing.image;
 
   return {
     title,
     description,
     alternates: { canonical: `${baseUrl}/property/${id}` },
-    openGraph: { title, description, images: [listing.image], type: "website", url: `${baseUrl}/property/${id}` },
-    twitter: { card: "summary_large_image", title, description, images: [listing.image] },
+    openGraph: { title, description, images: shareImage ? [shareImage] : undefined, type: "website", url: `${baseUrl}/property/${id}` },
+    twitter: { card: "summary_large_image", title, description, images: shareImage ? [shareImage] : undefined },
   };
 }
 
@@ -43,8 +44,15 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   if (!listing) notFound();
 
   const ownerName = listing.ownerName || "FlatFolks member";
-  const photos = listing.images?.length ? listing.images : [listing.image];
   const isRequirement = listing.listingKind === "flat-requirement";
+  // A flat-requirement listing has no real property photos (it's a person's
+  // need, not a place) — show their own profile photo instead of the generic
+  // stock image createListing falls back to, or no hero photo at all.
+  const photos = listing.images?.length
+    ? listing.images
+    : isRequirement
+      ? (listing.ownerPhoto ? [listing.ownerPhoto] : [])
+      : [listing.image];
   const listingUrl = `${baseUrl}/property/${id}`;
   const hubHref = isRequirement ? "/flatmates" : "/search";
   const hubLabel = isRequirement ? "Find Flatmates" : "Find Room";
@@ -55,7 +63,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
         "@type": "Product",
         name: listing.title,
         description: listing.description || `${listing.propertyType} in ${listing.location}`,
-        image: photos,
+        image: photos.length ? photos : undefined,
         offers: {
           "@type": "Offer",
           price: listing.rent,
@@ -88,7 +96,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           <span className="truncate text-slate-700">{listing.title}</span>
         </nav>
         <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
-          <PhotoCarousel photos={photos} title={listing.title} />
+          {photos.length > 0 && <PhotoCarousel photos={photos} title={listing.title} />}
           <div className="p-6 lg:p-8">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
