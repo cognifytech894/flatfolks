@@ -8,6 +8,19 @@ const trust = [
   [Headset, "24/7 support", "bg-amber-50 text-amber-500"],
 ] as const;
 
+const popularSearches = [
+  ["Sharing flat in Noida", "/search?location=Noida"],
+  ["Flatmate in Noida", "/flatmates?location=Noida"],
+  ["Sharing flat in Delhi", "/search?location=Delhi"],
+  ["Flatmate in Delhi", "/flatmates?location=Delhi"],
+  ["Sharing flat in Gaur City 1, Ghaziabad", "/search?location=Gaur City 1"],
+  ["Flatmate in Gaur City 2, Ghaziabad", "/flatmates?location=Gaur City 2"],
+  ["Sharing flat in Greater Noida", "/search?location=Greater Noida"],
+  ["Flatmate in Greater Noida", "/flatmates?location=Greater Noida"],
+  ["Sharing flat in Gurugram", "/search?location=Gurugram"],
+  ["Flatmate in Gurugram", "/flatmates?location=Gurugram"],
+] as const;
+
 export function Footer() {
   return (
     <footer className="border-t border-slate-200 bg-slate-50/80">
@@ -30,7 +43,7 @@ export function Footer() {
           </Link>
         </div>
 
-        <div className="grid gap-10 border-t border-slate-200 pt-10 md:grid-cols-2">
+        <div className="grid gap-10 border-t border-slate-200 pt-10 md:grid-cols-3">
           <div>
             <FlatFolksLogo compact />
             <p className="mt-4 text-sm leading-7 text-slate-600">
@@ -49,6 +62,18 @@ export function Footer() {
                   </span>
                   {label}
                 </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
+              Popular searches
+            </p>
+            <div className="flex flex-col gap-2">
+              {popularSearches.map(([label, href]) => (
+                <Link key={label} href={href} className="text-sm text-slate-600 hover:text-blue-600 hover:underline">
+                  {label}
+                </Link>
               ))}
             </div>
           </div>
