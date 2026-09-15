@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Bath, Bed, MapPin, MessageCircle, Phone, ShieldCheck } from "lucide-react";
+import { Bath, Bed, ChevronRight, MapPin, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import { SaveListingButton } from "@/components/listing/save-listing-button";
 import { PhotoCarousel } from "@/components/listing/photo-carousel";
 import { getListingById, recordListingView } from "@/lib/database";
@@ -41,19 +42,35 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
 
   const ownerName = listing.ownerName || "FlatFolks member";
   const photos = listing.images?.length ? listing.images : [listing.image];
+  const isRequirement = listing.listingKind === "flat-requirement";
+  const listingUrl = `${baseUrl}/property/${id}`;
+  const hubHref = isRequirement ? "/flatmates" : "/search";
+  const hubLabel = isRequirement ? "Find Flatmates" : "Find Room";
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Product",
-    name: listing.title,
-    description: listing.description || `${listing.propertyType} in ${listing.location}`,
-    image: photos,
-    offers: {
-      "@type": "Offer",
-      price: listing.rent,
-      priceCurrency: "INR",
-      availability: "https://schema.org/InStock",
-      url: `${baseUrl}/property/${id}`,
-    },
+    "@graph": [
+      {
+        "@type": "Product",
+        name: listing.title,
+        description: listing.description || `${listing.propertyType} in ${listing.location}`,
+        image: photos,
+        offers: {
+          "@type": "Offer",
+          price: listing.rent,
+          priceCurrency: "INR",
+          availability: "https://schema.org/InStock",
+          url: listingUrl,
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: baseUrl },
+          { "@type": "ListItem", position: 2, name: hubLabel, item: `${baseUrl}${hubHref}` },
+          { "@type": "ListItem", position: 3, name: listing.title, item: listingUrl },
+        ],
+      },
+    ],
   };
 
   return (
@@ -61,6 +78,13 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-1.5 text-sm text-slate-500">
+          <Link href="/" className="hover:text-blue-600 hover:underline">Home</Link>
+          <ChevronRight className="h-3.5 w-3.5" />
+          <Link href={hubHref} className="hover:text-blue-600 hover:underline">{hubLabel}</Link>
+          <ChevronRight className="h-3.5 w-3.5" />
+          <span className="truncate text-slate-700">{listing.title}</span>
+        </nav>
         <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
           <PhotoCarousel photos={photos} title={listing.title} />
           <div className="p-6 lg:p-8">
