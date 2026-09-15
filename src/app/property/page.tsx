@@ -9,12 +9,12 @@ import { compressImageFile } from "@/lib/compress-image";
 import { PreferencesField } from "@/components/listing/preferences-field";
 
 const amenities = ["WiFi", "AC", "Parking", "Kitchen", "Lift", "Power Backup"];
-type Form = { title: string; description: string; location: string; budget: string; availableFrom: string; genderPreference: "Male" | "Female" | "Family" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string };
+type Form = { title: string; description: string; location: string; budget: string; deposit: string; availableFrom: string; genderPreference: "Male" | "Female" | "Family" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string };
 
 function PostListing() {
   const params = useSearchParams();
   const isFlatRequirement = params.get("intent") === "flat";
-  const [form, setForm] = useState<Form>({ title: "", description: "", location: "", budget: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "", bedrooms: "1", bathrooms: "1" });
+  const [form, setForm] = useState<Form>({ title: "", description: "", location: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "", bedrooms: "1", bathrooms: "1" });
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
   const [images, setImages] = useState<{ id: string; preview: string; url?: string; uploading: boolean }[]>([]);
@@ -51,7 +51,7 @@ function PostListing() {
           description: form.description,
           location: form.location,
           rent: Number(form.budget),
-          deposit: 0,
+          deposit: isFlatRequirement ? 0 : Number(form.deposit) || 0,
           propertyType: form.propertyType,
           bedrooms: isFlatRequirement ? undefined : Number(form.bedrooms),
           bathrooms: isFlatRequirement ? undefined : Number(form.bathrooms),
@@ -70,7 +70,7 @@ function PostListing() {
       if (!response.ok) throw new Error(result.error || "Could not publish your post.");
       setStatus("success");
       setMessage(isFlatRequirement ? "Requirement posted! Flat owners can now find it under Find Flatmates." : "Flat posted! People looking for a flat can now find it under Find Flats.");
-      setForm((current) => ({ title: "", description: "", location: "", budget: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: current.contactPhone, bedrooms: "1", bathrooms: "1" })); setSelectedAmenities([]); setSelectedPreferences([]); setImages([]);
+      setForm((current) => ({ title: "", description: "", location: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: current.contactPhone, bedrooms: "1", bathrooms: "1" })); setSelectedAmenities([]); setSelectedPreferences([]); setImages([]);
     } catch (error) { setStatus("error"); setMessage(error instanceof Error ? error.message : "Could not publish your post."); }
   }
 
@@ -202,6 +202,13 @@ function PostListing() {
     </label>
   );
 
+  const depositField = (
+    <label className={labelClass}>
+      Security deposit
+      <input min="0" type="number" value={form.deposit} onChange={(event) => update("deposit", event.target.value)} className={fieldClass} placeholder="₹ 20,000" />
+    </label>
+  );
+
   const amenitiesField = (
     <fieldset>
       <legend className="text-sm font-medium text-slate-700">Amenities</legend>
@@ -316,6 +323,7 @@ function PostListing() {
                 <div className="space-y-4">
                   {locationField}
                   {budgetField}
+                  {depositField}
                   {genderField}
                   {contactField}
                 </div>

@@ -5,8 +5,8 @@ import Link from "next/link";
 import { getSavedCity, sortByCity } from "@/lib/saved-city";
 
 type ResultListing = {
-  id: string; title: string; location: string; rent: number; image: string; description?: string;
-  minBudget: number; maxBudget: number; propertyType: string;
+  id: string; title: string; location: string; rent: number; deposit: number; image: string; description?: string;
+  propertyType: string;
 };
 
 export function SearchResults({ listings, mapView }: { listings: ResultListing[]; mapView: boolean }) {
@@ -35,7 +35,7 @@ export function SearchResults({ listings, mapView }: { listings: ResultListing[]
               </div>
               <p className="text-sm text-slate-600">{listing.location}</p>
               {listing.description && <p className="mt-2 line-clamp-2 text-sm text-slate-500">{listing.description}</p>}
-              <p className="mt-2 text-sm font-medium text-emerald-600">Budget: ₹{listing.minBudget.toLocaleString("en-IN")} - ₹{listing.maxBudget.toLocaleString("en-IN")}</p>
+              <p className="mt-2 text-sm font-medium text-emerald-600">Deposit: ₹{listing.deposit.toLocaleString("en-IN")}</p>
               <div className="mt-4 flex items-center justify-between">
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{listing.propertyType}</span>
                 <div className="flex items-center gap-2">
