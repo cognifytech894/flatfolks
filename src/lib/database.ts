@@ -239,6 +239,22 @@ export async function verifyEmailAuthOtp(email: string, otp: string): Promise<{ 
   return { user: { id, name, email: normalizedEmail }, isNewUser: true };
 }
 
+export type UserSignup = { id: string; name: string; email: string; createdAt: string };
+
+export async function getUserStats(recentLimit = 8): Promise<{ total: number; recent: UserSignup[] }> {
+  const [{ rows: countRows }, { rows: recentRows }] = await Promise.all([
+    pool.query<{ count: string }>("SELECT COUNT(*) FROM users"),
+    pool.query<{ id: string; name: string; email: string; created_at: string }>(
+      "SELECT id, name, email, created_at FROM users ORDER BY created_at DESC LIMIT $1",
+      [recentLimit],
+    ),
+  ]);
+  return {
+    total: Number(countRows[0]?.count || 0),
+    recent: recentRows.map((row) => ({ id: row.id, name: row.name, email: row.email, createdAt: row.created_at })),
+  };
+}
+
 type FeedbackRow = { id: string; name: string; city: string; rating: number; message: string; created_at: string };
 
 export async function getFeedback(limit = 12): Promise<Feedback[]> {
