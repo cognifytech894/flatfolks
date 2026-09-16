@@ -9,16 +9,25 @@ const trust = [
   [Headset, "24/7 support", "bg-amber-50 text-amber-500"],
 ] as const;
 
-const popularSearches = [
-  ...priorityLocations.flatMap(({ label, query }) => [
+// Kept short on purpose — this is what every visitor sees without clicking
+// anything. Home-market cities only; everything else lives in "more searches"
+// below so the footer doesn't turn into a wall of links for real visitors.
+const primarySearches = priorityLocations.slice(0, 4).flatMap(({ label, query }) => [
+  [`Sharing flat in ${label}`, `/search?location=${encodeURIComponent(query)}`],
+  [`Flatmate in ${label}`, `/flatmates?location=${encodeURIComponent(query)}`],
+]);
+
+// Still real links in the actual page HTML (crawlable, same as the primary
+// list) — just tucked behind a native <details> disclosure instead of shown
+// by default. That's the legitimate way to keep a long link list out of a
+// visitor's way: the content is genuinely one click away, not hidden from
+// users while still served to crawlers (which is what gets sites penalized).
+const moreSearches = [
+  ...priorityLocations.slice(4).flatMap(({ label, query }) => [
     [`Sharing flat in ${label}`, `/search?location=${encodeURIComponent(query)}`],
     [`Flatmate in ${label}`, `/flatmates?location=${encodeURIComponent(query)}`],
   ]),
   ...noidaSubLocalities.map(({ label, query }) => [`Sharing flat in ${label}`, `/search?location=${encodeURIComponent(query)}`]),
-  // Different anchor-text phrasings pointing at pages that already exist above —
-  // this is deliberate keyword-variant coverage, not duplicate targeting: each
-  // of these still resolves to exactly one canonical page, it just gives that
-  // page a few more of the real phrases people actually search for.
   ["Flat and Flatmates", "/search"],
   ["Flats and Flatmates in Noida", "/search?location=Noida"],
   ["Flat and Flatmates in Greater Noida", "/search?location=Greater%20Noida"],
@@ -79,12 +88,24 @@ export function Footer() {
               Popular searches
             </p>
             <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
-              {popularSearches.map(([label, href]) => (
+              {primarySearches.map(([label, href]) => (
                 <Link key={label} href={href} className="text-sm text-slate-600 hover:text-blue-600 hover:underline">
                   {label}
                 </Link>
               ))}
             </div>
+            <details className="mt-3 group">
+              <summary className="cursor-pointer list-none text-sm font-medium text-blue-600 hover:underline [&::-webkit-details-marker]:hidden">
+                More searches <span className="inline-block transition group-open:rotate-180">▾</span>
+              </summary>
+              <div className="mt-3 grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+                {moreSearches.map(([label, href]) => (
+                  <Link key={label} href={href} className="text-sm text-slate-600 hover:text-blue-600 hover:underline">
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </details>
           </div>
         </div>
 
