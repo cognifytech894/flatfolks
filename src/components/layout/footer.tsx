@@ -33,6 +33,12 @@ const moreSearches = [
   ["Flat and Flatmates in Greater Noida", "/search?location=Greater%20Noida"],
   ["Single Room for Rent in Noida Under ₹5,000", "/search?location=Noida"],
   ["Pre-Occupied Flats in Noida for Female", "/flatmates?location=Noida"],
+  ["Room for Rent in Noida", "/search?location=Noida"],
+  ["PG in Noida", "/search?location=Noida"],
+  ["Low Budget Sharing Flat in Noida", "/search?location=Noida"],
+  ["Bachelor Roommate in Noida", "/flatmates?location=Noida"],
+  ["2 BHK Flat for Rent in Noida Extension", "/search?location=Noida%20Extension"],
+  ["Flats and Flatmates in Noida Sector 137", "/search?location=Sector%20137%2C%20Noida"],
   ["Flatmates in Noida, Uttar Pradesh", "/flatmates?location=Noida"],
 ];
 
