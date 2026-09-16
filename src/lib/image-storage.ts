@@ -21,12 +21,28 @@ function storageClient() {
 // vector), so it's simplest to not accept the format at all.
 const ALLOWED_IMAGE_TYPES = /^(jpe?g|png|webp|gif)$/;
 
+// The `data:` prefix only says what the browser *claims* the file is — nothing
+// upstream actually decodes these as images, so without this a non-image file
+// could be stored and served from the bucket under an image content-type.
+// Checking the real magic bytes catches that regardless of the claimed type.
+function matchesImageMagicBytes(buffer: Buffer, subtype: string): boolean {
+  if (buffer.length < 12) return false;
+  switch (subtype) {
+    case "png": return buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    case "jpg": case "jpeg": return buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+    case "gif": return buffer.subarray(0, 4).toString("ascii") === "GIF8";
+    case "webp": return buffer.subarray(0, 4).toString("ascii") === "RIFF" && buffer.subarray(8, 12).toString("ascii") === "WEBP";
+    default: return false;
+  }
+}
+
 export async function uploadImage(dataUrl: string): Promise<string> {
   const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
   if (!match || !ALLOWED_IMAGE_TYPES.test(match[1].split("/")[1] || "")) throw new Error("A valid image is required.");
   const [, contentType, base64] = match;
   const buffer = Buffer.from(base64, "base64");
   if (buffer.byteLength > MAX_IMAGE_BYTES) throw new Error(`Image must be ${MAX_IMAGE_BYTES / (1024 * 1024)}MB or smaller.`);
+  if (!matchesImageMagicBytes(buffer, contentType.split("/")[1] || "")) throw new Error("A valid image is required.");
 
   const extension = contentType.split("/")[1] || "jpg";
   const path = `${randomUUID()}.${extension}`;
