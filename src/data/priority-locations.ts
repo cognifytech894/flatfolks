@@ -27,6 +27,7 @@ export const priorityLocations: PriorityLocation[] = [
 export const noidaSubLocalities: PriorityLocation[] = [
   { label: "Sector 62, Noida", query: "Sector 62, Noida" },
   { label: "Sector 76, Noida", query: "Sector 76, Noida" },
+  { label: "Sector 135, Noida", query: "Sector 135, Noida" },
   { label: "Sector 137, Noida", query: "Sector 137, Noida" },
   { label: "Noida Extension", query: "Noida Extension" },
 ];

@@ -28,16 +28,17 @@ export default function Image() {
               width: 68,
               height: 68,
               borderRadius: 20,
-              background: "linear-gradient(135deg,#2563eb,#4f46e5)",
+              background: "linear-gradient(135deg,#2563eb,#7c3aed)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "white",
-              fontSize: 34,
-              fontWeight: 800,
             }}
           >
-            F
+            <svg width="38" height="38" viewBox="0 0 24 24" fill="none">
+              <path d="M4 11 L12 4 L20 11" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="9.5" cy="16" r="3.2" fill="white" fillOpacity="0.95" />
+              <circle cx="14.5" cy="16" r="3.2" fill="white" fillOpacity="0.65" />
+            </svg>
           </div>
           <div style={{ display: "flex", fontSize: 32, fontWeight: 700, color: "white" }}>FlatFolks</div>
         </div>

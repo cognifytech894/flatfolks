@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Headset, LockKeyhole, ShieldCheck } from "lucide-react";
 import { FlatFolksLogo } from "@/components/ui/flatfolks-logo";
-import { priorityLocations } from "@/data/priority-locations";
+import { noidaSubLocalities, priorityLocations } from "@/data/priority-locations";
 
 const trust = [
   [ShieldCheck, "Verified listings", "bg-blue-50 text-blue-600"],
@@ -9,10 +9,23 @@ const trust = [
   [Headset, "24/7 support", "bg-amber-50 text-amber-500"],
 ] as const;
 
-const popularSearches = priorityLocations.flatMap(({ label, query }) => [
-  [`Sharing flat in ${label}`, `/search?location=${encodeURIComponent(query)}`],
-  [`Flatmate in ${label}`, `/flatmates?location=${encodeURIComponent(query)}`],
-]);
+const popularSearches = [
+  ...priorityLocations.flatMap(({ label, query }) => [
+    [`Sharing flat in ${label}`, `/search?location=${encodeURIComponent(query)}`],
+    [`Flatmate in ${label}`, `/flatmates?location=${encodeURIComponent(query)}`],
+  ]),
+  ...noidaSubLocalities.map(({ label, query }) => [`Sharing flat in ${label}`, `/search?location=${encodeURIComponent(query)}`]),
+  // Different anchor-text phrasings pointing at pages that already exist above —
+  // this is deliberate keyword-variant coverage, not duplicate targeting: each
+  // of these still resolves to exactly one canonical page, it just gives that
+  // page a few more of the real phrases people actually search for.
+  ["Flat and Flatmates", "/search"],
+  ["Flats and Flatmates in Noida", "/search?location=Noida"],
+  ["Flat and Flatmates in Greater Noida", "/search?location=Greater%20Noida"],
+  ["Single Room for Rent in Noida Under ₹5,000", "/search?location=Noida"],
+  ["Pre-Occupied Flats in Noida for Female", "/flatmates?location=Noida"],
+  ["Flatmates in Noida, Uttar Pradesh", "/flatmates?location=Noida"],
+];
 
 export function Footer() {
   return (
