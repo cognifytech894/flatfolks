@@ -5,6 +5,7 @@ import { Bath, Bed, ChevronRight, Home as HomeIcon, MapPin, MessageCircle, Phone
 import { SaveListingButton } from "@/components/listing/save-listing-button";
 import { PhotoCarousel } from "@/components/listing/photo-carousel";
 import { getListingById, recordListingView } from "@/lib/database";
+import { safeJsonLd } from "@/lib/json-ld";
 import { lifestylePreferences } from "@/data/preferences";
 
 export const dynamic = "force-dynamic";
@@ -116,7 +117,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
 
   return (
     <>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-1.5 text-sm text-slate-500">

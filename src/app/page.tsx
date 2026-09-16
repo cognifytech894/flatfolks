@@ -17,6 +17,7 @@ import { SearchCard } from "@/components/home/search-card";
 import { StatsRow } from "@/components/home/stats-row";
 import { Testimonials } from "@/components/home/testimonials";
 import { getFeaturedListings, getFeedback } from "@/lib/database";
+import { safeJsonLd } from "@/lib/json-ld";
 
 const cities = [
   ["Noida", "photo-1486406146926-c627a92ad1ab"],
@@ -57,7 +58,7 @@ export default async function Home() {
   };
   return (
     <div className="min-h-screen bg-white text-[#10162d]">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <main>
         <section className="relative border-b border-slate-100 bg-[#f9fbff]">
           <div className="relative mx-auto max-w-[1600px] px-5 pb-8 pt-8 sm:px-8 lg:px-12 lg:pb-10 lg:pt-9 xl:px-16">

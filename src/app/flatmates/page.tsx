@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { FlatmatesView } from "@/components/flatmates/flatmates-view";
 import { getListings } from "@/lib/database";
+import { safeJsonLd } from "@/lib/json-ld";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -33,7 +34,7 @@ export default async function FlatmatesPage({ searchParams }: { searchParams: Pr
   };
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <FlatmatesView initialLocation={location || ""} />
     </>
   );

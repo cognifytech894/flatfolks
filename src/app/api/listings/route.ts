@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { createListing, deleteListing, getListingOwnerId, getListings, updateListing, type NewListing } from "@/lib/database";
 import { lifestylePreferences } from "@/data/preferences";
 import { ADMIN_SESSION_COOKIE, isValidAdminSessionToken } from "@/lib/admin-auth";
+import { isRateLimited } from "@/lib/rate-limit";
+import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -19,12 +21,13 @@ function isValidCount(value: unknown) {
   return value === undefined || (Number.isInteger(Number(value)) && Number(value) >= 1 && Number(value) <= 10);
 }
 
-const requests = new Map<string, { count: number; resetAt: number }>();
 function rateLimited(request: Request) {
-  const key = request.headers.get("x-forwarded-for") || "local";
-  const now = Date.now(); const record = requests.get(key);
-  if (!record || record.resetAt < now) { requests.set(key, { count: 1, resetAt: now + 60_000 }); return false; }
-  record.count += 1; return record.count > 30;
+  return isRateLimited(request, "listings", 30);
+}
+
+async function getSessionUserId() {
+  const cookieStore = await cookies();
+  return verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
 }
 
 export async function GET(request: Request) {
@@ -35,6 +38,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   if (rateLimited(request)) return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });
+  const sessionUserId = await getSessionUserId();
+  if (!sessionUserId) return NextResponse.json({ error: "Please log in again before publishing a post." }, { status: 401 });
   const body = await request.json() as Partial<NewListing>;
   if (!body.title?.trim() || !body.location?.trim() || !body.rent || !body.propertyType) {
     return NextResponse.json({ error: "Title, location, budget, and property type are required." }, { status: 400 });
@@ -62,7 +67,7 @@ export async function POST(request: Request) {
     image: body.image,
     images,
     tags: body.tags?.filter((tag) => typeof tag === "string").slice(0, 12),
-    ownerId: body.ownerId,
+    ownerId: sessionUserId,
     contactPhone: body.contactPhone.trim(),
     preferences: sanitizePreferences(body.preferences),
     availableFrom: body.availableFrom,
@@ -77,6 +82,16 @@ export async function PATCH(request: Request) {
   if (rateLimited(request)) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   const body = await request.json() as Partial<NewListing> & { id?: string };
   if (!body.id) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });
+
+  const cookieStore = await cookies();
+  const isAdmin = isValidAdminSessionToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+  if (!isAdmin) {
+    const sessionUserId = verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
+    const actualOwnerId = await getListingOwnerId(body.id);
+    if (actualOwnerId === undefined) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
+    if (!sessionUserId || actualOwnerId !== sessionUserId) return NextResponse.json({ error: "You can only edit your own listings." }, { status: 403 });
+  }
+
   if (body.description && body.description.length > 2000) return NextResponse.json({ error: "Description must be 2000 characters or fewer." }, { status: 400 });
   if (body.contactPhone !== undefined && body.contactPhone.trim() && !isValidPhone(body.contactPhone.trim())) return NextResponse.json({ error: "A valid contact number is required." }, { status: 400 });
   if (!isValidCount(body.bedrooms) || !isValidCount(body.bathrooms)) return NextResponse.json({ error: "Bedrooms and bathrooms must be between 1 and 10." }, { status: 400 });
@@ -90,15 +105,18 @@ export async function DELETE(request: Request) {
   if (rateLimited(request)) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
-  const ownerId = url.searchParams.get("ownerId");
   if (!id) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });
 
   const cookieStore = await cookies();
   const isAdmin = isValidAdminSessionToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
   if (!isAdmin) {
+    // Authorization comes from the signed session cookie, not the `ownerId` query
+    // param — a caller could otherwise read another user's real ownerId off any
+    // public listing and replay it here to delete listings they don't own.
+    const sessionUserId = verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
     const actualOwnerId = await getListingOwnerId(id);
     if (actualOwnerId === undefined) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
-    if (!ownerId || actualOwnerId !== ownerId) return NextResponse.json({ error: "You can only delete your own listings." }, { status: 403 });
+    if (!sessionUserId || actualOwnerId !== sessionUserId) return NextResponse.json({ error: "You can only delete your own listings." }, { status: 403 });
   }
 
   try { await deleteListing(id); return new NextResponse(null, { status: 204 }); }
