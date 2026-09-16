@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getListings } from "@/lib/database";
-import { priorityLocations } from "@/data/priority-locations";
+import { priorityLocations, noidaSubLocalities } from "@/data/priority-locations";
 import { guides } from "@/data/guides";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -24,6 +24,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/flatmates?location=${encodeURIComponent(query)}`, lastModified: now, changeFrequency: "daily" as const, priority: 0.7 },
   ]);
 
+  const noidaSectorPages: MetadataRoute.Sitemap = noidaSubLocalities.map(({ query }) => ({
+    url: `${baseUrl}/search?location=${encodeURIComponent(query)}`, lastModified: now, changeFrequency: "weekly", priority: 0.5,
+  }));
+
   const listings = await getListings().catch(() => []);
   const listingPages: MetadataRoute.Sitemap = listings
     .filter((listing) => listing.status !== "draft" && listing.listingKind !== "flat-requirement")
@@ -33,5 +37,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${baseUrl}/guides/${guide.slug}`, lastModified: now, changeFrequency: "monthly", priority: 0.4,
   }));
 
-  return [...staticPages, ...cityPages, ...listingPages, ...guidePages];
+  return [...staticPages, ...cityPages, ...noidaSectorPages, ...listingPages, ...guidePages];
 }

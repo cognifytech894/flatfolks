@@ -25,7 +25,8 @@ export type IndianLocality = { area: string; city: string };
 // Popular neighborhoods and residential societies used for finer-grained location suggestions.
 export const indianLocalities: IndianLocality[] = [
   ["Gaur City 1", "Greater Noida West"], ["Gaur City 2", "Greater Noida West"], ["Gaur City 4th Avenue", "Greater Noida West"], ["Gaur City Center", "Greater Noida West"],
-  ["Sector 18", "Noida"], ["Sector 62", "Noida"], ["Sector 63", "Noida"], ["Sector 137", "Noida"], ["Sector 150", "Noida"],
+  ["Sector 18", "Noida"], ["Sector 62", "Noida"], ["Sector 63", "Noida"], ["Sector 76", "Noida"], ["Sector 137", "Noida"], ["Sector 150", "Noida"],
+  ["Noida Extension", "Greater Noida West"],
   ["Indirapuram", "Ghaziabad"], ["Vaishali", "Ghaziabad"], ["Raj Nagar Extension", "Ghaziabad"],
   ["DLF Phase 1", "Gurugram"], ["DLF Phase 2", "Gurugram"], ["Sushant Lok", "Gurugram"], ["Sector 56", "Gurugram"], ["Golf Course Road", "Gurugram"],
   ["Dwarka", "Delhi"], ["Rohini", "Delhi"], ["Lajpat Nagar", "Delhi"], ["Saket", "Delhi"],

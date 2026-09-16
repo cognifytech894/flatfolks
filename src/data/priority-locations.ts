@@ -19,3 +19,14 @@ export const priorityLocations: PriorityLocation[] = [
   { label: "Kolkata", query: "Kolkata" },
   { label: "Ahmedabad", query: "Ahmedabad" },
 ];
+
+// Sector-level long-tail pages for Noida/Greater Noida specifically — this is
+// FlatFolks' home market with real listing inventory, so these hyper-local
+// searches (low competition, high intent) are worth their own sitemap
+// entries even though the city-wide list above stays at the city level.
+export const noidaSubLocalities: PriorityLocation[] = [
+  { label: "Sector 62, Noida", query: "Sector 62, Noida" },
+  { label: "Sector 76, Noida", query: "Sector 76, Noida" },
+  { label: "Sector 137, Noida", query: "Sector 137, Noida" },
+  { label: "Noida Extension", query: "Noida Extension" },
+];

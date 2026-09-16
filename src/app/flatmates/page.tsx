@@ -9,9 +9,10 @@ type SearchParams = { location?: string };
 export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParams> }): Promise<Metadata> {
   const { location } = await searchParams;
   const canonical = location ? `${baseUrl}/flatmates?location=${encodeURIComponent(location)}` : `${baseUrl}/flatmates`;
-  const title = location ? `Flatmate in ${location} | People Looking for a Flat` : "Find Flatmates | People Looking for a Flat";
+  const year = new Date().getFullYear();
+  const title = location ? `Flatmates & Roommates in ${location} for Male & Female (${year})` : "Find Flatmates & Roommates Near You";
   const description = location
-    ? `Looking to be someone's flatmate in ${location}? Browse people looking for a flat in ${location} and offer them a match on FlatFolks.`
+    ? `Looking for a roommate or flatmate in ${location}? Browse people looking for a flat — male, female, bachelor, and family-friendly matches on FlatFolks.`
     : "Browse people looking for a flat across India and offer them a match — filter by preferred gender on FlatFolks.";
   return { title, description, alternates: { canonical } };
 }
