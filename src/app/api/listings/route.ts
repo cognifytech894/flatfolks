@@ -30,10 +30,22 @@ async function getSessionUserId() {
   return verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
 }
 
+function withoutContactPhone<T extends { contactPhone?: string }>(listing: T): Omit<T, "contactPhone"> {
+  const clone: Partial<T> = { ...listing };
+  delete clone.contactPhone;
+  return clone as Omit<T, "contactPhone">;
+}
+
 export async function GET(request: Request) {
   const ownerId = new URL(request.url).searchParams.get("ownerId");
   const listings = await getListings();
-  return NextResponse.json(ownerId ? listings.filter((listing) => listing.ownerId === ownerId) : listings);
+  const filtered = ownerId ? listings.filter((listing) => listing.ownerId === ownerId) : listings;
+  // Mirrors the login gate on the property detail page — without this, the
+  // phone number would still be visible to anyone calling this endpoint
+  // directly (e.g. via devtools) even though the page itself hides it.
+  const sessionUserId = await getSessionUserId();
+  const withGatedContact = sessionUserId ? filtered : filtered.map(withoutContactPhone);
+  return NextResponse.json(withGatedContact);
 }
 
 export async function POST(request: Request) {

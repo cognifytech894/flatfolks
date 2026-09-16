@@ -1,11 +1,13 @@
 "use client";
 
 import { Heart } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const storageKey = "flatfolks_saved_listings";
 
 export function SaveListingButton({ listingId, className = "" }: { listingId: string; className?: string }) {
+  const router = useRouter();
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -17,6 +19,7 @@ export function SaveListingButton({ listingId, className = "" }: { listingId: st
   }, [listingId]);
 
   function toggle() {
+    if (!localStorage.getItem("flatfolks_user")) { router.push("/auth"); return; }
     const savedListings = JSON.parse(localStorage.getItem(storageKey) || "[]") as string[];
     const next = savedListings.includes(listingId) ? savedListings.filter((id) => id !== listingId) : [...savedListings, listingId];
     localStorage.setItem(storageKey, JSON.stringify(next));

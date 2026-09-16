@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
-import { Bath, Bed, ChevronRight, Home as HomeIcon, MapPin, MessageCircle, Phone, ShieldCheck, UserRound, UsersRound, Wallet } from "lucide-react";
+import { Bath, Bed, ChevronRight, Home as HomeIcon, Lock, MapPin, MessageCircle, Phone, ShieldCheck, UserRound, UsersRound, Wallet } from "lucide-react";
 import { SaveListingButton } from "@/components/listing/save-listing-button";
 import { PhotoCarousel } from "@/components/listing/photo-carousel";
 import { getListingById, recordListingView } from "@/lib/database";
 import { safeJsonLd } from "@/lib/json-ld";
+import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 import { lifestylePreferences } from "@/data/preferences";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +45,9 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   const { id } = await params;
   const listing = await recordListingView(id);
   if (!listing) notFound();
+
+  const cookieStore = await cookies();
+  const isLoggedIn = Boolean(verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value));
 
   const ownerName = listing.ownerName || "FlatFolks member";
   const isRequirement = listing.listingKind === "flat-requirement";
@@ -89,6 +94,15 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
     ],
   };
 
+  const contactGate = (
+    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-center">
+      <Lock className="mx-auto h-5 w-5 text-slate-400" />
+      <p className="mt-2 text-sm font-semibold text-slate-800">Login to view contact details</p>
+      <p className="mt-1 text-xs text-slate-500">Sign in to see the phone number and message {isRequirement ? "them" : "the owner"} directly.</p>
+      <Link href="/auth" className="mt-3 flex items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white">Login to continue</Link>
+    </div>
+  );
+
   const contactCard = (
     <>
       <div className="flex items-center gap-3">
@@ -100,7 +114,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           <p className="text-sm text-slate-600">{isRequirement ? "Looking for a flat" : "Owner"}</p>
         </div>
       </div>
-      {listing.contactPhone ? (
+      {!isLoggedIn ? contactGate : listing.contactPhone ? (
         <>
           <p className="flex items-center gap-2 text-sm font-medium text-slate-700"><Phone className="h-4 w-4 text-slate-400" /> {listing.contactPhone}</p>
           <div className="flex gap-3">
@@ -142,7 +156,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                     </div>
                   )}
                 </div>
-                {listing.contactPhone ? (
+                {!isLoggedIn ? contactGate : listing.contactPhone ? (
                   <>
                     <p className="flex items-center justify-center gap-2 text-sm font-medium text-slate-700"><Phone className="h-4 w-4 text-slate-400" /> {listing.contactPhone}</p>
                     <div className="flex gap-3">
