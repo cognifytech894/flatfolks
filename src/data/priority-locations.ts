@@ -11,6 +11,7 @@ export const priorityLocations: PriorityLocation[] = [
   { label: "Gaur City 2, Ghaziabad", query: "Gaur City 2" },
   { label: "Delhi", query: "Delhi" },
   { label: "Gurugram", query: "Gurugram" },
+  { label: "Ghaziabad", query: "Ghaziabad" },
   { label: "Mumbai", query: "Mumbai" },
   { label: "Bangalore", query: "Bangalore" },
   { label: "Pune", query: "Pune" },
