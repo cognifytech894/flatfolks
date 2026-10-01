@@ -1,13 +1,10 @@
-// Reads the "Preferred city" saved on the profile's Preferences & settings
-// section (src/components/profile/profile-preferences.tsx), so Find Flats
+// The last city the visitor searched (see rememberCity below), so Find Flats
 // and Find Flatmates can show matching posts first.
 export function getSavedCity(): string {
-  if (typeof window === "undefined") return "";
+  if (typeof document === "undefined") return "";
+  const entry = document.cookie.split("; ").find((part) => part.startsWith(`${featuredCityCookie}=`));
   try {
-    const raw = window.localStorage.getItem("flatfolks_preferences");
-    if (!raw) return "";
-    const preferences = JSON.parse(raw) as { city?: string };
-    return preferences.city?.trim() || "";
+    return entry ? normalizeCity(decodeURIComponent(entry.slice(featuredCityCookie.length + 1))) : "";
   } catch {
     return "";
   }
@@ -26,9 +23,8 @@ export function sortByCity<T extends { location: string }>(items: T[], city: str
   });
 }
 
-// The home page is server-rendered, so it can't read localStorage — the last
-// city a visitor searched (or saved as their preferred city) is mirrored into
-// this cookie so "Featured Rooms" can show properties from that city.
+// Kept in a cookie (not localStorage) so the server-rendered home page can read
+// it too and show that city's properties under "Featured Rooms".
 export const featuredCityCookie = "flatfolks_city";
 
 // "Noida - 201301" (search suggestion value) and "Noida" both become "Noida".
