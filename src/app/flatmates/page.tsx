@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { FlatmatesView } from "@/components/flatmates/flatmates-view";
 import { getListings } from "@/lib/database";
 import { safeJsonLd } from "@/lib/json-ld";
+import { flatmatesPageTitle } from "@/lib/city-titles";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -11,7 +12,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const { location } = await searchParams;
   const canonical = location ? `${baseUrl}/flatmates?location=${encodeURIComponent(location)}` : `${baseUrl}/flatmates`;
   const year = new Date().getFullYear();
-  const title = location ? `Find Perfect Male & Female Flatmates in ${location} (${year})` : "Find Flatmates & Roommates Near You";
+  const title = location ? `${flatmatesPageTitle(location)} (${year})` : "Find Flatmates & Roommates Near You";
   const description = location
     ? `Roommates in ${location} for male & female — browse female and male flatmates, bachelor roommates, and pre-occupied flats looking for one more flatmate on FlatFolks.`
     : "Browse people looking for a flat across India and offer them a match — filter by preferred gender on FlatFolks.";

@@ -18,10 +18,10 @@ const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
-  title: { default: "FlatFolks | Find Flatmates, Rooms & PGs in India", template: "%s | FlatFolks" },
+  title: { default: "FlatFolks | Find Rooms & Flatmates", template: "%s | FlatFolks" },
   description: "FlatFolks (Flat Folks) helps you find verified rooms, trusted flatmates, and shared accommodations across India.",
   openGraph: {
-    title: "FlatFolks | Find Flatmates, Rooms & PGs in India",
+    title: "FlatFolks | Find Rooms & Flatmates",
     description: "Find verified rooms and compatible flatmates across India.",
     type: "website",
     siteName: "FlatFolks",

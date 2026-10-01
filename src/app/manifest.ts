@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "FlatFolks | Find Rooms & Flatmates in India",
+    name: "FlatFolks | Find Rooms & Flatmates",
     short_name: "FlatFolks",
     description: "Find verified rooms, trusted flatmates, and shared accommodations across India.",
     start_url: "/",
