@@ -13,7 +13,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const year = new Date().getFullYear();
   const title = location ? `Find Perfect Male & Female Flatmates in ${location} (${year})` : "Find Flatmates & Roommates Near You";
   const description = location
-    ? `Looking for a roommate or flatmate in ${location}? Browse female and male flatmates, bachelor roommates, and pre-occupied flats looking for one more flatmate on FlatFolks.`
+    ? `Roommates in ${location} for male & female — browse female and male flatmates, bachelor roommates, and pre-occupied flats looking for one more flatmate on FlatFolks.`
     : "Browse people looking for a flat across India and offer them a match — filter by preferred gender on FlatFolks.";
   return { title, description, alternates: { canonical } };
 }
