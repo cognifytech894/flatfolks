@@ -33,7 +33,7 @@ export default function AboutPage() {
             Finding the Right Room Shouldn&apos;t Be Difficult.
           </h1>
           <p className="mt-6 text-lg leading-8 text-slate-600">
-            At <b>FlatFolks</b>, we believe that finding a room or the right flatmate should be simple, safe, and
+            At <b>FlatFolks</b> (Flat Folks), we believe that finding a room or the right flatmate should be simple, safe, and
             stress-free. Whether you&apos;re a student moving to a new city, a working professional relocating for a
             job, or someone looking to share a home, FlatFolks helps you connect with verified listings and compatible
             roommates&mdash;all in one place.

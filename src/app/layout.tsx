@@ -19,7 +19,7 @@ const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: { default: "FlatFolks | Find Rooms & Flatmates in India", template: "%s | FlatFolks" },
-  description: "Find verified rooms, trusted flatmates, and shared accommodations across India with FlatFolks.",
+  description: "FlatFolks (Flat Folks) helps you find verified rooms, trusted flatmates, and shared accommodations across India.",
   openGraph: {
     title: "FlatFolks | Find Rooms & Flatmates in India",
     description: "Find verified rooms and compatible flatmates across India.",

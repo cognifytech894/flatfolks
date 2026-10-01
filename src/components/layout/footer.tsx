@@ -116,7 +116,7 @@ export function Footer() {
         </div>
 
         <div className="flex flex-col gap-3 border-t border-slate-200 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} FlatFolks. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} FlatFolks (Flat Folks). All rights reserved.</p>
           <p>Made with care in India.</p>
         </div>
       </div>

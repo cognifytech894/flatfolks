@@ -38,7 +38,7 @@ function Unsplash({ id, alt, className, priority }: { id: string; alt: string; c
 export const dynamic = "force-dynamic";
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-const description = "Search verified rooms, PGs, and flatmates across India — filter by city, budget, and amenities. No brokerage, direct contact with owners.";
+const description = "FlatFolks (Flat Folks): verified rooms, PGs, and flatmates across India — filter by city, budget, and amenities. No brokerage, direct contact with owners.";
 
 // No `title` here on purpose: it inherits the root layout's `default` title
 // verbatim rather than going through the "%s | FlatFolks" template, which
