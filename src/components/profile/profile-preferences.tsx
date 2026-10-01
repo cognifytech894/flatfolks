@@ -3,6 +3,7 @@
 import { MapPin, SlidersHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { searchLocations } from "@/data/indian-cities";
+import { rememberCity } from "@/lib/saved-city";
 
 type Preferences = { city: string; notifications: boolean };
 const initial: Preferences = { city: "", notifications: true };
@@ -15,7 +16,7 @@ export function ProfilePreferences() {
 
   useEffect(() => { const raw = localStorage.getItem("flatfolks_preferences"); if (raw) setPreferences(JSON.parse(raw) as Preferences); }, []);
   function change(key: keyof Preferences, value: string | boolean) { setSaved(false); setPreferences((current) => ({ ...current, [key]: value })); }
-  function save() { localStorage.setItem("flatfolks_preferences", JSON.stringify(preferences)); setSaved(true); }
+  function save() { localStorage.setItem("flatfolks_preferences", JSON.stringify(preferences)); rememberCity(preferences.city); setSaved(true); }
 
   return (
     <section className="mt-7 rounded-2xl border border-slate-200 bg-slate-50 p-5">

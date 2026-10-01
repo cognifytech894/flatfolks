@@ -106,8 +106,16 @@ export async function getListings(): Promise<Listing[]> {
   return rows.map(rowToListing);
 }
 
-export async function getFeaturedListings(limit = 4): Promise<Listing[]> {
-  const { rows } = await pool.query<ListingRow>(`${listingSelect} ORDER BY listings.created_at DESC LIMIT $1`, [limit]);
+export async function getFeaturedListings(limit = 4, city = ""): Promise<Listing[]> {
+  // Only properties people are offering — "need a flat" requirements belong on /flatmates, not the home page.
+  const offers = `${listingSelect} WHERE listings.listing_kind IS DISTINCT FROM 'flat-requirement' AND listings.status IS DISTINCT FROM 'draft'`;
+  if (city) {
+    // Same "location contains the city" match the search page uses; % and _ are escaped so they match literally.
+    const pattern = `%${city.replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
+    const { rows } = await pool.query<ListingRow>(`${offers} AND listings.location ILIKE $2 ORDER BY listings.created_at DESC LIMIT $1`, [limit, pattern]);
+    if (rows.length) return rows.map(rowToListing);
+  }
+  const { rows } = await pool.query<ListingRow>(`${offers} ORDER BY listings.created_at DESC LIMIT $1`, [limit]);
   return rows.map(rowToListing);
 }
 

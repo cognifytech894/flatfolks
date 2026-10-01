@@ -16,7 +16,9 @@ import {
 import { SearchCard } from "@/components/home/search-card";
 import { StatsRow } from "@/components/home/stats-row";
 import { Testimonials } from "@/components/home/testimonials";
+import { cookies } from "next/headers";
 import { getFeaturedListings, getFeedback } from "@/lib/database";
+import { featuredCityCookie, normalizeCity } from "@/lib/saved-city";
 import { safeJsonLd } from "@/lib/json-ld";
 
 const cities = [
@@ -48,7 +50,12 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const [rooms, feedback] = await Promise.all([getFeaturedListings(), getFeedback()]);
+  const cookieStore = await cookies();
+  let city = "";
+  try { city = normalizeCity(decodeURIComponent(cookieStore.get(featuredCityCookie)?.value || "")); } catch {}
+  const [rooms, feedback] = await Promise.all([getFeaturedListings(4, city), getFeedback()]);
+  // Only label the section with the city when the listings really came from it (the query falls back to all cities).
+  const featuredCity = city && rooms.length && rooms.every((room) => room.location.toLowerCase().includes(city.toLowerCase())) ? city : "";
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -86,7 +93,7 @@ export default async function Home() {
             </div>
           </section>
           <section className="mt-5">
-            <div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-bold">Featured Rooms For You</h2><Link href="/search" className="text-xs font-semibold text-blue-600">View all rooms <ArrowRight className="inline h-3.5 w-3.5" /></Link></div>
+            <div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-bold">{featuredCity ? `Featured Rooms in ${featuredCity}` : "Featured Rooms For You"}</h2><Link href={featuredCity ? `/search?location=${encodeURIComponent(featuredCity)}` : "/search"} className="text-xs font-semibold text-blue-600">View all rooms <ArrowRight className="inline h-3.5 w-3.5" /></Link></div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {rooms.map((room, index) => <article key={room.id} className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"><div className="relative h-28"><Image src={room.image} alt={room.title} fill priority={index < 2} className="object-cover" sizes="(max-width: 768px) 100vw, 320px" /><span className="absolute bottom-2 left-2 rounded bg-blue-600 px-2 py-1 text-[10px] font-bold text-white">{room.verified ? "Verified" : "New"}</span><button aria-label="Save listing" className="absolute right-2 top-2 z-10 rounded-full bg-white p-1.5 text-slate-600"><Heart className="h-3.5 w-3.5" /></button></div><div className="p-3"><h3 className="truncate text-xs font-bold"><Link href={`/property/${room.id}`} className="after:absolute after:inset-0">{room.title}</Link></h3><p className="mt-1 text-[10px] text-slate-500">{room.location}</p><p className="mt-2 text-sm font-extrabold text-[#161b32]">₹{room.rent.toLocaleString("en-IN")} <span className="text-[10px] font-medium text-slate-500">/month</span></p><div className="mt-2 flex gap-2 text-[10px] text-slate-500">{room.tags.slice(0, 3).map((tag) => <span key={tag} className="flex gap-1"><Wifi className="h-3 w-3" />{tag}</span>)}</div></div></article>)}
             </div>

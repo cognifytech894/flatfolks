@@ -3,15 +3,16 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { getSavedCity, sortByCity } from "@/lib/saved-city";
+import { getSavedCity, rememberCity, sortByCity } from "@/lib/saved-city";
 
 type ResultListing = {
   id: string; title: string; location: string; rent: number; image: string; description?: string;
   propertyType: string;
 };
 
-export function SearchResults({ listings, mapView }: { listings: ResultListing[]; mapView: boolean }) {
+export function SearchResults({ listings, mapView, searchedLocation }: { listings: ResultListing[]; mapView: boolean; searchedLocation?: string }) {
   const [sorted, setSorted] = useState(listings);
+  useEffect(() => { if (searchedLocation) rememberCity(searchedLocation); }, [searchedLocation]);
   useEffect(() => { setSorted(sortByCity(listings, getSavedCity())); }, [listings]);
 
   return (

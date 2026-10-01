@@ -25,3 +25,19 @@ export function sortByCity<T extends { location: string }>(items: T[], city: str
     return aMatches - bMatches;
   });
 }
+
+// The home page is server-rendered, so it can't read localStorage — the last
+// city a visitor searched (or saved as their preferred city) is mirrored into
+// this cookie so "Featured Rooms" can show properties from that city.
+export const featuredCityCookie = "flatfolks_city";
+
+// "Noida - 201301" (search suggestion value) and "Noida" both become "Noida".
+export function normalizeCity(value: string): string {
+  return value.split(",")[0].split(" - ")[0].trim().slice(0, 60);
+}
+
+export function rememberCity(value: string) {
+  const city = normalizeCity(value);
+  if (!city || typeof document === "undefined") return;
+  document.cookie = `${featuredCityCookie}=${encodeURIComponent(city)}; path=/; max-age=${60 * 60 * 24 * 90}; samesite=lax`;
+}
