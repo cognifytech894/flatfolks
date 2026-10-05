@@ -1,8 +1,8 @@
 import type { BlogPost } from "@/data/blog";
 
 // City articles. Links use [text](/path) and are rendered as internal links.
-// Rent figures are rough ranges to orient a newcomer, not quotes; every
-// article points to the live listings for current prices.
+// No rent figures: ranges we can't verify aren't stated as fact. Articles
+// explain what drives rent and point to the live listings for real prices.
 export const cityPosts: BlogPost[] = [
   {
     slug: "sharing-flat-in-noida",
@@ -19,7 +19,7 @@ export const cityPosts: BlogPost[] = [
         "If budget matters more than commute, look across the border in [Greater Noida West](/greater-noida/noida-extension), where newer 2 and 3 BHK flats in societies like Gaur City are noticeably cheaper. Our guide to the [best areas to live in Noida](/blog/best-areas-to-live-in-noida) compares the main options.",
       ] },
       { heading: "What it costs", paragraphs: [
-        "As a rough guide, a private room in a shared 2 or 3 BHK in Noida usually costs somewhere between ₹6,000 and ₹15,000 a month, depending on the sector, how new the society is and whether the room is furnished. Rooms in Expressway high-rises and near Sector 18 cost more, and older sectors and Noida Extension cost less.",
+        "What a room in a shared 2 or 3 BHK costs depends on the sector, how new the society is, whether the room is furnished, whether it has an attached bathroom and how many people share the flat. The rent on each listing is set by the person posting it, so compare a few in the sectors you're considering.",
         "Expect a security deposit of one to two months' rent for your share, plus a split of electricity, WiFi, maid and society maintenance. See [cost of living in Noida](/blog/cost-of-living-in-noida) for a fuller breakdown, and check [live sharing flat listings in Noida](/noida/sharing-flat) for current prices.",
       ] },
       { heading: "Before you pay a deposit", paragraphs: [
@@ -65,7 +65,7 @@ export const cityPosts: BlogPost[] = [
     description: "A rough monthly budget for living in Noida: rent for a whole flat vs. a sharing flat, utility bills, food, commute and the one-time costs of moving in.",
     sections: [
       { heading: "Rent is the biggest number", paragraphs: [
-        "Rent varies more with sector and building age than with anything else. As a rough guide, a private room in a sharing flat often costs ₹6,000–₹15,000 a month, and a whole 1 BHK often ₹10,000–₹20,000. 2 and 3 BHKs in newer Expressway societies cost more. Treat these as starting points and check [current flats for rent in Noida](/noida/flats-for-rent) for real prices.",
+        "Rent depends mostly on the sector, the age of the building, the furnishing and whether you rent a whole flat or a room in a shared one. Check [current flats for rent in Noida](/noida/flats-for-rent) and [sharing flats in Noida](/noida/sharing-flat) for the prices people are actually asking.",
         "Sharing a 2 or 3 BHK is usually the cheapest way to live in a good society. Two or three people splitting the rent of a modern flat typically pay less each than one person renting an older 1 BHK alone.",
       ] },
       { heading: "Bills you split", paragraphs: [
@@ -123,7 +123,7 @@ export const cityPosts: BlogPost[] = [
         "Greater Noida West is popular with people working in Noida because flats there are newer and more affordable for the space. Check the daily commute at the hours you'll actually travel before committing, since much of it is by road.",
       ] },
       { heading: "What it costs", paragraphs: [
-        "As a rough guide, a room in a sharing flat in Greater Noida is often cheaper than a comparable one in Noida, roughly ₹5,000–₹12,000 a month depending on the area and furnishing. Check [live sharing flats in Greater Noida](/greater-noida/sharing-flat) for current prices.",
+        "The rent for a room in a sharing flat in Greater Noida depends on the area, the society, the furnishing and how many people share the flat. Check [live sharing flats in Greater Noida](/greater-noida/sharing-flat) for the prices people are actually asking.",
       ] },
       { heading: "Find your place", paragraphs: [
         "Browse [sharing flats](/greater-noida/sharing-flat), [flats for rent](/greater-noida/flats-for-rent) and [people looking for flatmates in Greater Noida](/greater-noida/flatmates). To compare neighbourhoods, read our guide to the [best areas to live in Greater Noida](/blog/best-areas-to-live-in-greater-noida).",
@@ -167,7 +167,7 @@ export const cityPosts: BlogPost[] = [
         "[Sohna Road](/gurgaon/sohna-road) and [Golf Course Extension Road](/gurgaon/golf-course-extension-road) have newer societies with better value, but you'll mostly be commuting by road.",
       ] },
       { heading: "What it costs", paragraphs: [
-        "As a rough guide, a private room in a sharing flat in Gurgaon often costs ₹10,000–₹25,000 a month, at the higher end near Cyber City and Golf Course Road. Builder floors in the DLF phases are often cheaper than high-rise societies. See [cost of living in Gurgaon](/blog/cost-of-living-in-gurgaon) and check [live sharing flats in Gurgaon](/gurgaon/sharing-flat).",
+        "The rent for a room in a sharing flat in Gurgaon depends on the area, whether it's a builder floor or a high-rise society, the furnishing and how many people share the flat. See [cost of living in Gurgaon](/blog/cost-of-living-in-gurgaon) and check [live sharing flats in Gurgaon](/gurgaon/sharing-flat) for the prices people are actually asking.",
       ] },
       { heading: "Builder floor or society?", paragraphs: [
         "Builder floors are independent floors in a house, common in the DLF phases and older sectors. They are usually cheaper and closer to offices but have fewer amenities. High-rise societies have security, power backup, gyms and sometimes pools, at a higher rent. Decide which matters more to you before you start visiting.",
@@ -210,7 +210,7 @@ export const cityPosts: BlogPost[] = [
     description: "A rough monthly budget for living in Gurgaon: rent for a sharing flat vs. a whole flat, utilities, food, commute and moving-in costs.",
     sections: [
       { heading: "Rent", paragraphs: [
-        "Rent is the largest cost in Gurgaon and varies sharply by area. As a rough guide, a private room in a sharing flat often costs ₹10,000–₹25,000 a month, and a whole 1 BHK often starts around ₹15,000 and goes much higher in premium societies. Check [current flats for rent in Gurgaon](/gurgaon/flats-for-rent) for real prices.",
+        "Rent is usually the largest monthly cost, and it depends on the area, the type of building, the furnishing and whether you rent a whole flat or a room in a shared one. Check [current flats for rent in Gurgaon](/gurgaon/flats-for-rent) for the prices people are actually asking.",
         "Sharing a 2 or 3 BHK in a good society is usually far cheaper per person than renting alone, which is why [sharing flats in Gurgaon](/gurgaon/sharing-flat) are so popular.",
       ] },
       { heading: "Utilities and maintenance", paragraphs: [
@@ -238,7 +238,7 @@ export const cityPosts: BlogPost[] = [
         "[Raj Nagar Extension](/ghaziabad/raj-nagar-extension) and [Crossings Republik](/ghaziabad/crossings-republik) have newer, more affordable societies, but you'll rely more on road transport.",
       ] },
       { heading: "What it costs", paragraphs: [
-        "As a rough guide, a room in a sharing flat in Ghaziabad often costs ₹5,000–₹12,000 a month, depending on the area and the society. See [cost of living in Ghaziabad](/blog/cost-of-living-in-ghaziabad) and the [live sharing flats in Ghaziabad](/ghaziabad/sharing-flat) for current prices.",
+        "The rent for a room in a sharing flat in Ghaziabad depends on the area, the society, the furnishing and how many people share the flat. See [cost of living in Ghaziabad](/blog/cost-of-living-in-ghaziabad) and the [live sharing flats in Ghaziabad](/ghaziabad/sharing-flat) for the prices people are actually asking.",
       ] },
       { heading: "Before you move in", paragraphs: [
         "Check the commute at the time you'll actually travel, the power backup and water supply, and whether your name will be on the rent agreement. The [documents you need to rent a flat](/blog/documents-to-rent-a-flat-in-india) are the same as anywhere in India.",
@@ -278,7 +278,7 @@ export const cityPosts: BlogPost[] = [
     description: "A rough monthly budget for living in Ghaziabad: sharing flat and whole-flat rents, utility bills, food, commute and moving-in costs.",
     sections: [
       { heading: "Rent", paragraphs: [
-        "Ghaziabad is generally one of the more affordable parts of NCR. As a rough guide, a room in a sharing flat often costs ₹5,000–₹12,000 a month and a whole 1 BHK often ₹8,000–₹15,000, higher in Indirapuram's newer societies and lower in the newer townships. Check [current flats for rent in Ghaziabad](/ghaziabad/flats-for-rent) for real prices.",
+        "Rent depends on the area, the age of the society, the furnishing and whether you rent a whole flat or a room in a shared one. Check [current flats for rent in Ghaziabad](/ghaziabad/flats-for-rent) for the prices people are actually asking.",
       ] },
       { heading: "Utilities", paragraphs: [
         "Budget for electricity, power backup charges in societies, WiFi, gas and maintenance. Split them with your flatmates using one of the methods in [how to split rent and bills with flatmates](/blog/split-rent-with-flatmates).",

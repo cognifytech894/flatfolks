@@ -1,7 +1,7 @@
 import type { Listing } from "@/lib/database";
 import { cities, childPlaces, resolvePlace, type City, type IntentSlug, type Place } from "@/lib/seo/locations";
 
-export const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+export { siteUrl as baseUrl } from "@/lib/site-url";
 
 export type Intent = { slug: IntentSlug; label: string; matches: (listing: Listing) => boolean };
 
@@ -93,21 +93,51 @@ export function inScope(listing: Listing, scope: Scope): boolean {
   return (scope.trail || []).every((item, index) => place.trail[index]?.slug === item.slug);
 }
 
-/** Genuine listings a place page (hub or intent) needs before it's indexed. */
-export const placeIndexThreshold = 2;
+type PageLevel = "city" | "locality" | "society" | "avenue";
 
 /**
- * Whether a landing page has enough real content to be worth indexing:
- * city hubs always do (they carry hand-written copy), city intent pages need
- * at least one genuine listing, and place pages need a few, unless the place
- * is marked alwaysIndex and this is its hub.
+ * Genuine listings a page needs before it's indexed, by level and page type.
+ * Hubs carry written copy plus every intent, so they need less of their own;
+ * avenues are subdivisions of a society, so they need more before they say
+ * anything the society page doesn't.
+ */
+const indexMinimum: Record<PageLevel, { hub: number; intent: number }> = {
+  city: { hub: 0, intent: 1 },
+  locality: { hub: 2, intent: 2 },
+  society: { hub: 2, intent: 2 },
+  avenue: { hub: 3, intent: 3 },
+};
+
+/** An intent page with this many listings is worth its own result even if its hub shows the same ones. */
+const standaloneIntentMinimum = 4;
+
+function levelOf(trail: Place[]): PageLevel {
+  const place = trail[trail.length - 1];
+  return !place ? "city" : place.kind === "avenue" ? "avenue" : place.kind === "society" ? "society" : "locality";
+}
+
+function genuineIds(listings: Listing[], scope: Scope): string[] {
+  return listings.filter((listing) => isGenuine(listing) && inScope(listing, scope)).map((listing) => listing.id).sort();
+}
+
+const sameSet = (a: string[], b: string[]) => a.length === b.length && a.every((id, index) => id === b[index]);
+
+/**
+ * Whether a landing page has enough real, non-duplicate content to be worth
+ * indexing (see indexMinimum). On top of the minimum, a place's intent page
+ * whose listings are exactly its hub's isn't indexed until it has
+ * standaloneIntentMinimum of them, and an avenue whose listings are exactly
+ * its society's isn't indexed at all, since the parent page already covers them.
  */
 export function isScopeIndexable(listings: Listing[], scope: Scope): boolean {
   const trail = scope.trail || [];
-  if (!trail.length && !scope.intent) return true;
+  const level = levelOf(trail);
   if (!scope.intent && trail[trail.length - 1]?.alwaysIndex) return true;
-  const genuine = listings.filter((listing) => isGenuine(listing) && inScope(listing, scope)).length;
-  return genuine >= (trail.length ? placeIndexThreshold : 1);
+  const ids = genuineIds(listings, scope);
+  if (ids.length < indexMinimum[level][scope.intent ? "intent" : "hub"]) return false;
+  if (scope.intent && level !== "city" && ids.length < standaloneIntentMinimum && sameSet(ids, genuineIds(listings, { ...scope, intent: undefined }))) return false;
+  if (level === "avenue" && sameSet(ids, genuineIds(listings, { ...scope, trail: trail.slice(0, -1) }))) return false;
+  return true;
 }
 
 /** Child places with their live-listing counts, places with listings first. */

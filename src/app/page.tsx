@@ -21,6 +21,7 @@ import { getFeaturedListings, getFeedback } from "@/lib/database";
 import { featuredCityCookie, normalizeCity } from "@/lib/saved-city";
 import { safeJsonLd } from "@/lib/json-ld";
 import { listingPath } from "@/lib/seo/listings";
+import { siteUrl as baseUrl } from "@/lib/site-url";
 
 // Target cities link to their city hub; Delhi has no hub, so it uses search.
 const cities = [
@@ -35,7 +36,6 @@ function Unsplash({ id, alt, className, priority }: { id: string; alt: string; c
 }
 
 export const dynamic = "force-dynamic";
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 const description = "FlatFolks (Flat Folks): verified rooms, PGs, and flatmates across India — filter by city, budget, and amenities. No brokerage, direct contact with owners.";
 

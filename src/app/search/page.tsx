@@ -9,10 +9,9 @@ import { getListings } from "@/lib/database";
 import { safeJsonLd } from "@/lib/json-ld";
 import { searchPageIntro, searchPageTitle } from "@/lib/city-titles";
 import { listingPath } from "@/lib/seo/listings";
+import { siteUrl as baseUrl } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
-
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 type SearchParams = { location?: string; budget?: string; minBudget?: string; maxBudget?: string; propertyType?: string; gender?: string; moveIn?: string; amenity?: string; map?: string };
 

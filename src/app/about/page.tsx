@@ -3,8 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Handshake, LockKeyhole, MapPin, MessageCircle, Rocket, ShieldCheck, Target, UsersRound } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
 import { StatsRow } from "@/components/home/stats-row";
-
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+import { siteUrl as baseUrl } from "@/lib/site-url";
 
 export const metadata: Metadata = {
   title: "About Us",

@@ -23,6 +23,8 @@ export type Place = {
    * place, so they only match once the listing's parent place is known.
    */
   needsCity?: boolean;
+  /** Phrases that identify this place on their own even when `needsCity` is set, e.g. "Gaur City 12th Avenue". */
+  globalAliases?: string[];
   /** Hand-written description, left out where we have no verified detail. */
   about?: string;
   /** Short area name appended to titles of places below this one, e.g. "Greater Noida West". */
@@ -58,9 +60,25 @@ function society(name: string, extra: Partial<Place> = {}): Place {
   return { slug: slugify(name), name, kind: "society", ...extra };
 }
 
+// Each avenue number belongs to exactly one Gaur City, so "Gaur City 12th
+// Avenue" identifies the society and avenue even without "Gaur City 2".
 function avenue(parent: string, ordinal: string): Place {
   const name = `${ordinal} Avenue`;
-  return { slug: slugify(name), name, kind: "avenue", displayName: `${name}, ${parent}`, aliases: [`${ordinal} ave`], needsCity: true };
+  return {
+    slug: slugify(name), name, kind: "avenue", displayName: `${name}, ${parent}`, aliases: [`${ordinal} ave`], needsCity: true,
+    globalAliases: [`gaur city ${ordinal} avenue`, `gaur city ${ordinal} ave`],
+  };
+}
+
+/** Description built only from the confirmed avenue list, no other claims. */
+function gaurCity(name: string, ordinals: string[], extra: Partial<Place>): Place {
+  const avenues = ordinals.map((ordinal) => avenue(name, ordinal));
+  const list = avenues.map((item) => item.name);
+  return society(name, {
+    ...extra,
+    about: `${name} is a residential society in Greater Noida West (Noida Extension), made up of ${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}. These pages list sharing flats, flats for rent and people looking for flatmates in ${name}, posted directly by the people living or moving there.`,
+    children: avenues,
+  });
 }
 
 // Greater Noida West / Noida Extension is the highest-priority market, so it
@@ -74,17 +92,13 @@ const noidaExtension: Place = {
   alwaysIndex: true,
   about: "Greater Noida West, also called Noida Extension, is a large cluster of newer high-rise societies between Noida and Greater Noida, including the Gaur City townships. Flats here are usually newer and more affordable for the space than in Noida, which is why so many young professionals working in Noida share a 2 or 3 BHK here instead of renting alone.",
   children: [
-    society("Gaur City 1", {
+    gaurCity("Gaur City 1", ["6th", "7th"], {
       aliases: ["gaur city i", "gaur city one"],
-      about: "Gaur City 1 is one of the two big Gaur City townships in Greater Noida West, built by Gaursons as numbered avenues of high-rise towers with shops and services inside. Its size means there is nearly always someone looking for a flatmate or offering a room in a shared 2 or 3 BHK.",
       seo: { h1: "Flats & Flatmates in Gaur City 1", title: "Flats & Flatmates in Gaur City 1, Greater Noida West", description: "Find flats, flatmates and sharing flats in Gaur City 1, Greater Noida West. Browse available rooms and rental flats on FlatFolks." },
-      children: ["6th", "7th", "11th", "12th"].map((ordinal) => avenue("Gaur City 1", ordinal)),
     }),
-    society("Gaur City 2", {
+    gaurCity("Gaur City 2", ["10th", "11th", "12th", "14th", "16th"], {
       aliases: ["gaur city ii", "gaur city two"],
-      about: "Gaur City 2 is the second large Gaur City township in Greater Noida West, a dense set of numbered avenues of high-rise towers with everyday shopping close by. Many of its 2 and 3 BHK flats are shared by working professionals.",
       seo: { h1: "Flats & Flatmates in Gaur City 2", title: "Flats & Flatmates in Gaur City 2, Greater Noida West", description: "Find flats, flatmates and sharing flats in Gaur City 2, Greater Noida West. Explore available rooms and rental flats on FlatFolks." },
-      children: ["14th", "16th"].map((ordinal) => avenue("Gaur City 2", ordinal)),
     }),
     society("Mahagun Mywoods", { aliases: ["mahagun my woods", "mywoods"] }),
     society("Nirala Estate"),
@@ -282,7 +296,7 @@ export function resolvePlace(location: string): { city: City; trail: Place[] } |
   const visit = (city: City, trail: Place[]) => {
     for (const place of childPlaces(city, trail)) {
       const path = [...trail, place];
-      const length = place.needsCity ? 0 : longestMention(haystack, phrasesOf(place));
+      const length = longestMention(haystack, place.needsCity ? place.globalAliases || [] : phrasesOf(place));
       const score = length ? path.length * 1000 + length : 0;
       if (score && (!best || score > best.score)) best = { city, trail: path, score };
       visit(city, path);
