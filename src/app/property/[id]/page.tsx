@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       ? `Looking for a ${listing.propertyType} in ${listing.location}, budget up to ₹${listing.rent.toLocaleString("en-IN")}/month. Find them on FlatFolks.`
       : `${listing.propertyType} in ${listing.location} for ₹${listing.rent.toLocaleString("en-IN")}/month — ${listing.bedrooms} bedroom, ${listing.bathrooms} bathroom. Verified on FlatFolks.`);
   const title = `${listing.title} in ${listing.location}`;
-  const shareImage = listing.listingKind === "flat-requirement" ? listing.ownerPhoto : listing.image;
+  const shareImage = listing.listingKind === "flat-requirement" ? listing.ownerPhoto : listing.image || undefined;
 
   return {
     title,
@@ -52,13 +52,12 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   const ownerName = listing.ownerName || "FlatFolks member";
   const isRequirement = listing.listingKind === "flat-requirement";
   // A flat-requirement listing has no real property photos (it's a person's
-  // need, not a place) — show their own profile photo instead of the generic
-  // stock image createListing falls back to, or no hero photo at all.
+  // need, not a place) — show their own profile photo, or no hero photo at all.
   const photos = listing.images?.length
     ? listing.images
     : isRequirement
       ? (listing.ownerPhoto ? [listing.ownerPhoto] : [])
-      : [listing.image];
+      : listing.image ? [listing.image] : [];
   const listingUrl = `${baseUrl}/property/${id}`;
   const hubHref = isRequirement ? "/flatmates" : "/search";
   const hubLabel = isRequirement ? "Find Flatmates" : "Find Room";

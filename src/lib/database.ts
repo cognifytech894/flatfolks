@@ -76,11 +76,14 @@ type ListingRow = {
   gender_preference: Listing["genderPreference"]; listing_kind: Listing["listingKind"]; contact_phone: string | null; preferences: unknown;
 };
 
+// Stock photo createListing used to save for member listings posted without photos.
+const legacyStockImage = "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=80";
+
 function rowToListing(row: ListingRow): Listing {
   return {
     id: row.id, title: row.title, location: row.location, rent: row.rent, deposit: row.deposit,
     bedrooms: row.bedrooms, bathrooms: row.bathrooms, propertyType: row.property_type,
-    description: row.description || undefined, image: row.image, verified: !!row.verified,
+    description: row.description || undefined, image: row.owner_id && row.image === legacyStockImage ? "" : row.image, verified: !!row.verified,
     tags: parseJsonField<string[]>(row.tags, []), matchScore: row.match_score, minBudget: row.min_budget, maxBudget: row.max_budget,
     images: parseJsonField<string[] | undefined>(row.images, undefined), status: row.status || undefined,
     views: row.views, saves: row.saves, ownerId: row.owner_id || undefined, ownerName: row.owner_name || undefined,
@@ -126,7 +129,8 @@ export async function createListing(input: NewListing): Promise<Listing> {
     id: randomUUID(), title: input.title.trim(), location: input.location.trim(), rent: input.rent, deposit: input.deposit,
     bedrooms: input.bedrooms || 1, bathrooms: input.bathrooms || 1, propertyType: input.propertyType,
     description: input.description?.trim() || undefined,
-    image: input.image || input.images?.[0] || "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=80",
+    // No stock fallback — a listing posted without photos stays photo-less.
+    image: input.image || input.images?.[0] || "",
     verified: false, tags: input.tags?.length ? input.tags : [], matchScore: 0,
     minBudget: Math.max(0, input.rent - 2000), maxBudget: input.rent + 2000,
     images: input.images?.slice(0, 3), status: input.status || "published", views: 0, saves: 0, ownerId: input.ownerId,
@@ -165,7 +169,7 @@ export async function updateListing(id: string, input: Partial<NewListing>): Pro
   if (input.images !== undefined) {
     const images = input.images.slice(0, 6);
     set("images", JSON.stringify(images));
-    if (images[0]) set("image", images[0]);
+    set("image", images[0] || "");
   }
   if (input.status) set("status", input.status);
   if (input.listingKind) set("listing_kind", input.listingKind);
