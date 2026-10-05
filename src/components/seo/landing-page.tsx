@@ -206,9 +206,6 @@ function FilterBar({ path, filters }: { path: string; filters: LandingFilters })
       </form>
       <span className="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />
       {["Any", "Male", "Female"].map((gender) => <Link rel="nofollow" key={gender} href={href({ gender: gender === "Any" ? undefined : gender })} className={chip((filters.gender || "Any") === gender)}>{gender === "Any" ? "Any gender" : gender}</Link>)}
-      <span className="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />
-      <Link rel="nofollow" href={href({ furnishing: undefined })} className={chip(!filters.furnishing)}>Any furnishing</Link>
-      {furnishingOptions.map((option) => <Link rel="nofollow" key={option.value} href={href({ furnishing: option.value })} className={chip(filters.furnishing === option.value)}>{option.label}</Link>)}
     </div>
   );
 }
