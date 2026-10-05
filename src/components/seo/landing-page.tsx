@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Plus } from "lucide-react";
+import { ArrowRight, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { Breadcrumbs, breadcrumbJsonLd, type Crumb } from "@/components/seo/breadcrumbs";
 import { ListingCard } from "@/components/seo/listing-card";
 import { RichText } from "@/components/seo/rich-text";
@@ -185,8 +185,6 @@ export function landingMetadata(scope: Scope, listings: Listing[], filters: Land
   };
 }
 
-const budgets = [8000, 12000, 18000];
-
 function FilterBar({ path, filters }: { path: string; filters: LandingFilters }) {
   const href = (next: LandingFilters) => {
     const query = new URLSearchParams(Object.entries({ ...filters, ...next }).filter(([, value]) => value) as [string, string][]);
@@ -196,8 +194,16 @@ function FilterBar({ path, filters }: { path: string; filters: LandingFilters })
   // rel="nofollow" keeps crawlers from walking every filter combination.
   return (
     <div className="mt-6 flex flex-wrap items-center gap-2">
-      <Link rel="nofollow" href={href({ budget: undefined })} className={chip(!filters.budget)}>Any budget</Link>
-      {budgets.map((budget) => <Link rel="nofollow" key={budget} href={href({ budget: String(budget) })} className={chip(filters.budget === String(budget))}>Under {rupees(budget)}</Link>)}
+      {/* A plain GET form so the budget works without JavaScript; the other active filters ride along as hidden fields. */}
+      <form action={path} method="get" className="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-3 pr-1 focus-within:border-blue-400">
+        <SlidersHorizontal className="h-4 w-4 shrink-0 text-blue-600" />
+        <label htmlFor="budget-filter" className="text-sm font-medium text-slate-700">Budget</label>
+        <input id="budget-filter" name="budget" type="number" min="1" inputMode="numeric" defaultValue={filters.budget} placeholder="Max ₹" className="w-24 bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400" />
+        {filters.gender && <input type="hidden" name="gender" value={filters.gender} />}
+        {filters.furnishing && <input type="hidden" name="furnishing" value={filters.furnishing} />}
+        {filters.budget && <Link rel="nofollow" href={href({ budget: undefined })} aria-label="Clear budget" className="grid h-7 w-7 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"><X className="h-3.5 w-3.5" /></Link>}
+        <button type="submit" aria-label="Search with this budget" className="grid h-7 w-7 place-items-center rounded-full bg-blue-600 text-white hover:bg-blue-700"><Search className="h-3.5 w-3.5" /></button>
+      </form>
       <span className="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />
       {["Any", "Male", "Female"].map((gender) => <Link rel="nofollow" key={gender} href={href({ gender: gender === "Any" ? undefined : gender })} className={chip((filters.gender || "Any") === gender)}>{gender === "Any" ? "Any gender" : gender}</Link>)}
       <span className="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />
