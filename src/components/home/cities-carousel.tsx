@@ -5,9 +5,6 @@ const cities = [
   { name: "Greater Noida", img: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=800&q=80" },
   { name: "Delhi", img: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=800&q=80" },
   { name: "Gurugram", img: "https://images.unsplash.com/photo-1523413651479-597eb2da0ad6?auto=format&fit=crop&w=800&q=80" },
-  { name: "Bangalore", img: "https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=800&q=80" },
-  { name: "Pune", img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80" },
-  { name: "Hyderabad", img: "https://images.unsplash.com/photo-1520975698516-9a5c4b8bff58?auto=format&fit=crop&w=800&q=80" },
 ];
 
 export function CitiesCarousel() {

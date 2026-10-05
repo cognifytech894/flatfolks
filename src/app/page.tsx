@@ -26,9 +26,6 @@ const cities = [
   ["Greater Noida", "photo-1449824913935-59a10b8d2000"],
   ["Delhi", "photo-1587474260584-136574528ed5"],
   ["Gurugram", "photo-1511818966892-d7d671e672a2"],
-  ["Bangalore", "photo-1494526585095-c41746248156"],
-  ["Pune", "photo-1477959858617-67f85cf4f1df"],
-  ["Hyderabad", "photo-1524230572899-a752b3835840"],
 ];
 
 function Unsplash({ id, alt, className, priority }: { id: string; alt: string; className?: string; priority?: boolean }) {
@@ -88,7 +85,7 @@ export default async function Home() {
           <StatsRow />
           <section className="mt-5">
             <div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-bold">Popular Cities</h2><Link href="/search" className="text-xs font-semibold text-blue-600">View all cities <ArrowRight className="inline h-3.5 w-3.5" /></Link></div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {cities.map(([name, image], index) => <Link key={name} href={`/search?location=${encodeURIComponent(name)}`} className="group relative h-[86px] overflow-hidden rounded-lg bg-slate-200 shadow-sm"><Unsplash id={image} alt={`Rooms and flatmates in ${name}`} priority={index < 4} className="object-cover transition duration-500 group-hover:scale-110" /><div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-transparent" /><b className="absolute bottom-2 left-2 right-2 text-center text-[11px] text-white">{name}</b></Link>)}
             </div>
           </section>

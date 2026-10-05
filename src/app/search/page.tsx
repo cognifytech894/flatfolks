@@ -8,6 +8,7 @@ import { GenderFilter } from "@/components/search/gender-filter";
 import { getListings } from "@/lib/database";
 import { safeJsonLd } from "@/lib/json-ld";
 import { searchPageIntro, searchPageTitle } from "@/lib/city-titles";
+import { isUnindexedCity } from "@/data/priority-locations";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,9 @@ type SearchParams = { location?: string; budget?: string; minBudget?: string; ma
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParams> }): Promise<Metadata> {
   const filters = await searchParams;
+  if (filters.location && isUnindexedCity(filters.location)) {
+    return { title: "Find Rooms & Flatmates", robots: { index: false, follow: true } };
+  }
   // Only the location narrows down to genuinely distinct, worth-indexing content;
   // budget/type/amenity/etc. just filter the same page, so they're dropped from the
   // canonical to avoid a combinatorial explosion of near-duplicate indexed URLs.

@@ -12,14 +12,17 @@ export const priorityLocations: PriorityLocation[] = [
   { label: "Delhi", query: "Delhi" },
   { label: "Gurugram", query: "Gurugram" },
   { label: "Ghaziabad", query: "Ghaziabad" },
-  { label: "Mumbai", query: "Mumbai" },
-  { label: "Bangalore", query: "Bangalore" },
-  { label: "Pune", query: "Pune" },
-  { label: "Hyderabad", query: "Hyderabad" },
-  { label: "Chennai", query: "Chennai" },
-  { label: "Kolkata", query: "Kolkata" },
-  { label: "Ahmedabad", query: "Ahmedabad" },
 ];
+
+// Cities FlatFolks deliberately doesn't target: their search/flatmates pages
+// still work for visitors but are kept out of Google (noindex, no city
+// keywords in the title or description).
+const unindexedCities = ["mumbai", "bangalore", "bengaluru", "pune", "hyderabad", "chennai", "kolkata", "ahmedabad"];
+
+export function isUnindexedCity(location: string): boolean {
+  const value = location.toLowerCase();
+  return unindexedCities.some((city) => value.includes(city));
+}
 
 // Sector-level long-tail pages for Noida/Greater Noida specifically — this is
 // FlatFolks' home market with real listing inventory, so these hyper-local

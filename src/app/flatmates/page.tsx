@@ -3,6 +3,7 @@ import { FlatmatesView } from "@/components/flatmates/flatmates-view";
 import { getListings } from "@/lib/database";
 import { safeJsonLd } from "@/lib/json-ld";
 import { flatmatesPageTitle } from "@/lib/city-titles";
+import { isUnindexedCity } from "@/data/priority-locations";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -10,6 +11,9 @@ type SearchParams = { location?: string };
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParams> }): Promise<Metadata> {
   const { location } = await searchParams;
+  if (location && isUnindexedCity(location)) {
+    return { title: "Find Flatmates & Roommates", robots: { index: false, follow: true } };
+  }
   const canonical = location ? `${baseUrl}/flatmates?location=${encodeURIComponent(location)}` : `${baseUrl}/flatmates`;
   const year = new Date().getFullYear();
   const title = location ? `${flatmatesPageTitle(location)} (${year})` : "Find Flatmates & Roommates Near You";
