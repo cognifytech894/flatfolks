@@ -66,7 +66,7 @@ export const cityPosts: BlogPost[] = [
     sections: [
       { heading: "Rent is the biggest number", paragraphs: [
         "Rent depends mostly on the sector, the age of the building, the furnishing and whether you rent a whole flat or a room in a shared one. Check [current flats for rent in Noida](/noida/flats-for-rent) and [sharing flats in Noida](/noida/sharing-flat) for the prices people are actually asking.",
-        "Sharing a 2 or 3 BHK is usually the cheapest way to live in a good society. Two or three people splitting the rent of a modern flat typically pay less each than one person renting an older 1 BHK alone.",
+        "Sharing a 2 or 3 BHK splits the rent between two or three people, so compare what your share would be with the rent of a flat on your own before deciding.",
       ] },
       { heading: "Bills you split", paragraphs: [
         "On top of rent, budget for electricity (which rises sharply in summer with AC use), WiFi, cooking gas, a maid or cook if you hire one, and society maintenance if the owner doesn't include it in the rent. In a sharing flat these are normally split equally. Agree on how before you move in, as covered in [how to split rent and bills with flatmates](/blog/split-rent-with-flatmates).",
@@ -120,7 +120,7 @@ export const cityPosts: BlogPost[] = [
         "Agree with your flatmates on how long everyone plans to stay. Student groups often break up at the end of an academic year, and whoever holds the rent agreement is left looking for replacements.",
       ] },
       { heading: "For working professionals", paragraphs: [
-        "Greater Noida West is popular with people working in Noida because flats there are newer and more affordable for the space. Check the daily commute at the hours you'll actually travel before committing, since much of it is by road.",
+        "Greater Noida West is popular with people working in Noida. Check the daily commute at the hours you'll actually travel before committing, since much of it is by road.",
       ] },
       { heading: "What it costs", paragraphs: [
         "The rent for a room in a sharing flat in Greater Noida depends on the area, the society, the furnishing and how many people share the flat. Check [live sharing flats in Greater Noida](/greater-noida/sharing-flat) for the prices people are actually asking.",
@@ -160,17 +160,17 @@ export const cityPosts: BlogPost[] = [
     description: "A guide to sharing a flat in Gurgaon: the main areas people look in, what drives the rent, and how to choose based on your commute.",
     sections: [
       { heading: "Why sharing is so common in Gurgaon", paragraphs: [
-        "Gurgaon has some of the highest rents in NCR, driven by its corporate offices, such as those in Cyber City. For a single professional, sharing a flat is often the only way to live close to work without spending a big part of your salary on rent.",
+        "Gurgaon has many corporate offices, such as those in Cyber City. For a single professional, sharing a flat is a way to live close to work and split the rent.",
       ] },
       { heading: "Choose by commute first", paragraphs: [
         "Traffic makes commute the most important factor in Gurgaon. If you work in Cyber City, [DLF Phase 2](/gurgaon/dlf-phase-2) and [DLF Phase 3](/gurgaon/dlf-phase-3) are a short Rapid Metro ride away. For offices along Golf Course Road, look at [Golf Course Road](/gurgaon/golf-course-road) itself.",
-        "[Sohna Road](/gurgaon/sohna-road) and [Golf Course Extension Road](/gurgaon/golf-course-extension-road) have newer societies with better value, but you'll mostly be commuting by road.",
+        "[Sohna Road](/gurgaon/sohna-road) and [Golf Course Extension Road](/gurgaon/golf-course-extension-road) have newer societies, but you'll mostly be commuting by road.",
       ] },
       { heading: "What it costs", paragraphs: [
         "The rent for a room in a sharing flat in Gurgaon depends on the area, whether it's a builder floor or a high-rise society, the furnishing and how many people share the flat. See [cost of living in Gurgaon](/blog/cost-of-living-in-gurgaon) and check [live sharing flats in Gurgaon](/gurgaon/sharing-flat) for the prices people are actually asking.",
       ] },
       { heading: "Builder floor or society?", paragraphs: [
-        "Builder floors are independent floors in a house, common in the DLF phases and older sectors. They are usually cheaper and closer to offices but have fewer amenities. High-rise societies have security, power backup, gyms and sometimes pools, at a higher rent. Decide which matters more to you before you start visiting.",
+        "Builder floors are independent floors in a house, common in the DLF phases and older sectors. They usually have fewer amenities than high-rise societies, which often have security, power backup, gyms and sometimes pools. Decide which matters more to you before you start visiting.",
       ] },
       { heading: "Find your flat or flatmate", paragraphs: [
         "Browse [sharing flats in Gurgaon](/gurgaon/sharing-flat), [flats for rent](/gurgaon/flats-for-rent) and [people looking for flatmates](/gurgaon/flatmates). Our guide to the [best areas to live in Gurgaon](/blog/best-areas-to-live-in-gurgaon) compares the main neighbourhoods.",
@@ -190,13 +190,13 @@ export const cityPosts: BlogPost[] = [
         "[Cyber City](/gurgaon/cyber-city) itself is a business district rather than a residential area. People who work there often share flats in the DLF phases, including DLF Phase 2 right next to it.",
       ] },
       { heading: "Golf Course Road and Golf Course Extension Road", paragraphs: [
-        "[Golf Course Road](/gurgaon/golf-course-road) is Gurgaon's premium high-rise corridor, served by the Rapid Metro. [Golf Course Extension Road](/gurgaon/golf-course-extension-road) has newer societies at lower rents. Both are popular for sharing among professionals.",
+        "[Golf Course Road](/gurgaon/golf-course-road) is a high-rise corridor served by the Rapid Metro. [Golf Course Extension Road](/gurgaon/golf-course-extension-road) has newer societies. Both are popular for sharing among professionals.",
       ] },
       { heading: "Sohna Road", paragraphs: [
-        "[Sohna Road](/gurgaon/sohna-road) has a lot of newer residential projects and generally better value than Golf Course Road.",
+        "[Sohna Road](/gurgaon/sohna-road) has a lot of newer residential projects.",
       ] },
       { heading: "Older sectors", paragraphs: [
-        "Sectors such as [Sector 14](/gurgaon/sector-14) and [Sector 21](/gurgaon/sector-21) are established parts of the city with independent houses, often cheaper than the newer corridors.",
+        "Sectors such as [Sector 14](/gurgaon/sector-14) and [Sector 21](/gurgaon/sector-21) are established parts of the city with independent houses.",
       ] },
       { heading: "Next steps", paragraphs: [
         "Compare [sharing flats](/gurgaon/sharing-flat) and [flats for rent in Gurgaon](/gurgaon/flats-for-rent), and read [sharing flat in Gurgaon](/blog/sharing-flat-in-gurgaon) for what to check before moving in.",
@@ -211,7 +211,7 @@ export const cityPosts: BlogPost[] = [
     sections: [
       { heading: "Rent", paragraphs: [
         "Rent is usually the largest monthly cost, and it depends on the area, the type of building, the furnishing and whether you rent a whole flat or a room in a shared one. Check [current flats for rent in Gurgaon](/gurgaon/flats-for-rent) for the prices people are actually asking.",
-        "Sharing a 2 or 3 BHK in a good society is usually far cheaper per person than renting alone, which is why [sharing flats in Gurgaon](/gurgaon/sharing-flat) are so popular.",
+        "Sharing a 2 or 3 BHK splits the rent between flatmates, which is why [sharing flats in Gurgaon](/gurgaon/sharing-flat) are so popular.",
       ] },
       { heading: "Utilities and maintenance", paragraphs: [
         "Budget for electricity (power backup in societies is often billed separately and costs more per unit), WiFi, gas, a maid or cook and society maintenance if it isn't included in the rent. Split them fairly using one of the methods in [how to split rent and bills with flatmates](/blog/split-rent-with-flatmates).",
@@ -220,7 +220,7 @@ export const cityPosts: BlogPost[] = [
         "Commute costs depend heavily on where you live. Being within walking distance of the Rapid Metro or Yellow Line keeps them low, while daily cabs through Gurgaon traffic get expensive. Our guide to the [best areas to live in Gurgaon](/blog/best-areas-to-live-in-gurgaon) is organised by commute.",
       ] },
       { heading: "Moving-in costs", paragraphs: [
-        "Expect a security deposit (often one to three months' rent, higher in premium societies), the first month's rent and any furniture if the place isn't furnished. A furnished room in a sharing flat avoids most of this.",
+        "Expect a security deposit (often one to three months' rent), the first month's rent and any furniture if the place isn't furnished. A furnished room in a sharing flat avoids most of this.",
       ] },
     ],
   },
@@ -228,14 +228,14 @@ export const cityPosts: BlogPost[] = [
     slug: "sharing-flat-in-ghaziabad",
     city: "ghaziabad",
     title: "Sharing Flat in Ghaziabad: Indirapuram, Vaishali and Beyond",
-    description: "A guide to sharing a flat in Ghaziabad: the popular areas, the metro, newer affordable townships, what drives the rent and what to check.",
+    description: "A guide to sharing a flat in Ghaziabad: the popular areas, the metro, newer townships, what drives the rent and what to check.",
     sections: [
       { heading: "Why share in Ghaziabad", paragraphs: [
-        "Ghaziabad borders Delhi and Noida and usually gives you more space for the money than either. For people working in east Delhi or Noida, sharing a flat here can mean a bigger room and a lower rent with a reasonable commute.",
+        "Ghaziabad borders Delhi and Noida, so people who work in either often look for a sharing flat here.",
       ] },
       { heading: "The popular areas", paragraphs: [
         "[Indirapuram](/ghaziabad/indirapuram) is a popular area with professionals, with dense high-rise societies. [Vaishali](/ghaziabad/vaishali) and [Kaushambi](/ghaziabad/kaushambi) are on the Blue Line, which makes commuting into Delhi straightforward. [Vasundhara](/ghaziabad/vasundhara) has apartments and builder floors.",
-        "[Raj Nagar Extension](/ghaziabad/raj-nagar-extension) and [Crossings Republik](/ghaziabad/crossings-republik) have newer, more affordable societies, but you'll rely more on road transport.",
+        "[Raj Nagar Extension](/ghaziabad/raj-nagar-extension) and [Crossings Republik](/ghaziabad/crossings-republik) have newer societies, but you'll rely more on road transport.",
       ] },
       { heading: "What it costs", paragraphs: [
         "The rent for a room in a sharing flat in Ghaziabad depends on the area, the society, the furnishing and how many people share the flat. See [cost of living in Ghaziabad](/blog/cost-of-living-in-ghaziabad) and the [live sharing flats in Ghaziabad](/ghaziabad/sharing-flat) for the prices people are actually asking.",
@@ -264,7 +264,7 @@ export const cityPosts: BlogPost[] = [
         "[Vasundhara](/ghaziabad/vasundhara) has sectors of apartments and builder floors.",
       ] },
       { heading: "Raj Nagar Extension and Crossings Republik", paragraphs: [
-        "[Raj Nagar Extension](/ghaziabad/raj-nagar-extension) and [Crossings Republik](/ghaziabad/crossings-republik) are newer high-rise areas with affordable modern flats. They suit people who want more space for less and are comfortable commuting by road.",
+        "[Raj Nagar Extension](/ghaziabad/raj-nagar-extension) and [Crossings Republik](/ghaziabad/crossings-republik) are newer high-rise areas. They suit people who are comfortable commuting by road.",
       ] },
       { heading: "Next steps", paragraphs: [
         "Compare [sharing flats](/ghaziabad/sharing-flat) and [flats for rent in Ghaziabad](/ghaziabad/flats-for-rent), and read [sharing flat in Ghaziabad](/blog/sharing-flat-in-ghaziabad) before you start visiting.",

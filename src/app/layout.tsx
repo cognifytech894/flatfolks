@@ -25,7 +25,8 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "FlatFolks",
     locale: "en_IN",
-    url: baseUrl,
+    // No url here: pages without their own openGraph would inherit it and
+    // report the homepage as their og:url.
   },
   twitter: { card: "summary_large_image" },
 };

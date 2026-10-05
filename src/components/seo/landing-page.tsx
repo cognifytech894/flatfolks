@@ -18,7 +18,7 @@ const nationalCopy: Record<IntentSlug, { h1: string; title: string; intro: strin
   "sharing-flat": {
     h1: "Sharing Flats in Noida, Greater Noida, Gurgaon & Ghaziabad",
     title: "Sharing Flat: Rooms in Shared Flats in Noida, Gurgaon & Ghaziabad",
-    intro: "A sharing flat gives you your own room in a 2 or 3 BHK while you share the kitchen, living room and bills with one or two flatmates. It's the most affordable way to live in a good society close to work. Browse rooms posted by current tenants and owners, and contact them directly with no brokerage.",
+    intro: "A sharing flat gives you your own room in a 2 or 3 BHK while you share the kitchen, living room and bills with one or two flatmates. Splitting the rent this way lets you live in a good society close to work. Browse rooms posted by current tenants and owners, and contact them directly with no brokerage.",
   },
   "flats-for-rent": {
     h1: "Flats for Rent in Noida, Greater Noida, Gurgaon & Ghaziabad",

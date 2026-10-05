@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "About Us",
   description: "FlatFolks helps you find verified rooms, flats, and compatible flatmates across India with no brokerage — smart search, secure messaging, and direct contact with owners.",
   alternates: { canonical: `${baseUrl}/about` },
+  openGraph: { title: "About FlatFolks", description: "FlatFolks helps you find verified rooms, flats, and compatible flatmates across India with no brokerage.", type: "website", siteName: "FlatFolks", url: `${baseUrl}/about` },
 };
 
 const offers = [

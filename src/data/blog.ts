@@ -60,7 +60,7 @@ const generalPosts: BlogPost[] = [
       {
         heading: "The rent agreement",
         paragraphs: [
-          "This is the actual contract — it should state the monthly rent, the security deposit amount and how it's refunded, the notice period for either side to end the tenancy, and who pays for maintenance and repairs. In most states, agreements for 11 months or less can be done without mandatory registration, which is why 11-month agreements (renewed annually) are the norm — but it's still a binding contract, so read every clause before signing.",
+          "This is the actual contract — it should state the monthly rent, the security deposit amount and how it's refunded, the notice period for either side to end the tenancy, and who pays for maintenance and repairs. It's a binding contract, so read every clause before signing, and check your state's current rules on registering the agreement and paying stamp duty.",
           "Ask for a signed copy for yourself, not just a photo of the owner's copy.",
         ],
       },

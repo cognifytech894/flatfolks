@@ -7,10 +7,14 @@ import { safeJsonLd } from "@/lib/json-ld";
 import { baseUrl } from "@/lib/seo/listings";
 import { cities } from "@/lib/seo/locations";
 
+const title = "Sharing Flat & Renting Guides for Noida, Gurgaon and Ghaziabad";
+const description = "Guides to sharing a flat and renting in Noida, Greater Noida, Gurgaon and Ghaziabad: the best areas to live, cost of living, finding flatmates and the paperwork you need.";
+
 export const metadata: Metadata = {
-  title: "Sharing Flat & Renting Guides for Noida, Gurgaon and Ghaziabad",
-  description: "Guides to sharing a flat and renting in Noida, Greater Noida, Gurgaon and Ghaziabad: the best areas to live, cost of living, finding flatmates and the paperwork you need.",
+  title,
+  description,
   alternates: { canonical: `${baseUrl}/blog` },
+  openGraph: { title, description, type: "website", siteName: "FlatFolks", url: `${baseUrl}/blog` },
 };
 
 function PostCard({ post }: { post: BlogPost }) {
