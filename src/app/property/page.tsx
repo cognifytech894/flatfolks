@@ -7,14 +7,15 @@ import { BackLink } from "@/components/ui/back-link";
 import { searchLocations } from "@/data/indian-cities";
 import { compressImageFile } from "@/lib/compress-image";
 import { PreferencesField } from "@/components/listing/preferences-field";
+import { furnishingOptions, nearbyMetroMaxLength, type Furnishing } from "@/data/furnishing";
 
 const amenities = ["WiFi", "AC", "Parking", "Kitchen", "Lift", "Power Backup"];
-type Form = { title: string; description: string; location: string; address: string; budget: string; deposit: string; availableFrom: string; genderPreference: "Male" | "Female" | "Family" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string };
+type Form = { title: string; description: string; location: string; address: string; budget: string; deposit: string; availableFrom: string; genderPreference: "Male" | "Female" | "Family" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string; furnishing: "" | Furnishing; nearbyMetro: string };
 
 function PostListing() {
   const params = useSearchParams();
   const isFlatRequirement = params.get("intent") === "flat";
-  const [form, setForm] = useState<Form>({ title: "", description: "", location: "", address: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "", bedrooms: "1", bathrooms: "1" });
+  const [form, setForm] = useState<Form>({ title: "", description: "", location: "", address: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "", bedrooms: "1", bathrooms: "1", furnishing: "", nearbyMetro: "" });
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
   const [images, setImages] = useState<{ id: string; preview: string; url?: string; uploading: boolean }[]>([]);
@@ -63,6 +64,8 @@ function PostListing() {
           genderPreference: form.genderPreference,
           ownerId: owner.id,
           contactPhone: form.contactPhone,
+          furnishing: form.furnishing || undefined,
+          nearbyMetro: isFlatRequirement ? undefined : form.nearbyMetro.trim() || undefined,
           status: "published",
         }),
       });
@@ -70,7 +73,7 @@ function PostListing() {
       if (!response.ok) throw new Error(result.error || "Could not publish your post.");
       setStatus("success");
       setMessage(isFlatRequirement ? "Requirement posted! Flat owners can now find it under Find Flatmates." : "Flat posted! People looking for a flat can now find it under Find Flats.");
-      setForm((current) => ({ title: "", description: "", location: "", address: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: current.contactPhone, bedrooms: "1", bathrooms: "1" })); setSelectedAmenities([]); setSelectedPreferences([]); setImages([]);
+      setForm((current) => ({ title: "", description: "", location: "", address: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: current.contactPhone, bedrooms: "1", bathrooms: "1", furnishing: "", nearbyMetro: "" })); setSelectedAmenities([]); setSelectedPreferences([]); setImages([]);
     } catch (error) { setStatus("error"); setMessage(error instanceof Error ? error.message : "Could not publish your post."); }
   }
 
@@ -233,6 +236,23 @@ function PostListing() {
     </label>
   );
 
+  const furnishingField = (
+    <label className={labelClass}>
+      {isFlatRequirement ? "Preferred furnishing" : "Furnishing"} <span className="font-normal text-slate-400">(optional)</span>
+      <select value={form.furnishing} onChange={(event) => update("furnishing", event.target.value)} className={fieldClass}>
+        <option value="">{isFlatRequirement ? "No preference" : "Not specified"}</option>
+        {furnishingOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select>
+    </label>
+  );
+
+  const nearbyMetroField = (
+    <label className={labelClass}>
+      Nearest metro station <span className="font-normal text-slate-400">(optional)</span>
+      <input value={form.nearbyMetro} onChange={(event) => update("nearbyMetro", event.target.value)} maxLength={nearbyMetroMaxLength} className={fieldClass} placeholder="Name of the nearest metro station" />
+    </label>
+  );
+
   const amenitiesField = (
     <fieldset>
       <legend className="text-sm font-medium text-slate-700">Amenities</legend>
@@ -296,6 +316,7 @@ function PostListing() {
                 <div className="space-y-4">
                   {locationField}
                   {propertyTypeField}
+                  {furnishingField}
                   {budgetField}
                   {amenitiesField}
                 </div>
@@ -341,6 +362,8 @@ function PostListing() {
                 {budgetField}
                 {dateField}
                 {depositField}
+                {furnishingField}
+                {nearbyMetroField}
               </div>
               {amenitiesField}
               <PreferencesField selected={selectedPreferences} onToggle={togglePreference} />

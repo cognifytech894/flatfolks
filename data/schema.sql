@@ -71,6 +71,19 @@ ALTER TABLE listings DROP CONSTRAINT IF EXISTS listings_gender_preference_check;
 UPDATE listings SET gender_preference = 'Male' WHERE gender_preference = 'Boy';
 UPDATE listings SET gender_preference = 'Female' WHERE gender_preference = 'Girl';
 ALTER TABLE listings ADD CONSTRAINT listings_gender_preference_check CHECK (gender_preference IN ('Male', 'Female', 'Family', 'Any'));
+-- Furnishing and nearest metro, both optional (NULL on listings posted before
+-- they existed). For a flat-requirement post, furnishing is the preference.
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS furnishing VARCHAR(20);
+ALTER TABLE listings DROP CONSTRAINT IF EXISTS listings_furnishing_check;
+ALTER TABLE listings ADD CONSTRAINT listings_furnishing_check CHECK (furnishing IS NULL OR furnishing IN ('furnished', 'semi-furnished', 'unfurnished'));
+-- nearby_metro is the station name exactly as shown on the listing, typed in
+-- free text for now. nearby_metro_station_id is reserved for a future, verified
+-- metro_stations master table (id, name, line, city, source): the form will
+-- then pick a station, set the id and copy its name into nearby_metro, so
+-- display code never changes, and existing free-text rows can be matched to
+-- stations and backfilled without losing what the poster wrote.
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS nearby_metro VARCHAR(120);
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS nearby_metro_station_id VARCHAR(64);
 
 CREATE TABLE IF NOT EXISTS listing_reviews (
   id UUID PRIMARY KEY,

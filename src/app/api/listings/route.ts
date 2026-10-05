@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createListing, deleteListing, getListingOwnerId, getListings, updateListing, type NewListing } from "@/lib/database";
 import { lifestylePreferences } from "@/data/preferences";
+import { cleanNearbyMetro, isFurnishing } from "@/data/furnishing";
 import { ADMIN_SESSION_COOKIE, isValidAdminSessionToken } from "@/lib/admin-auth";
 import { isRateLimited } from "@/lib/rate-limit";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
@@ -11,6 +12,13 @@ export const runtime = "nodejs";
 const validPreferenceIds = new Set(lifestylePreferences.map((preference) => preference.id));
 function sanitizePreferences(preferences: unknown) {
   return Array.isArray(preferences) ? preferences.filter((id) => typeof id === "string" && validPreferenceIds.has(id)).slice(0, 12) : undefined;
+}
+
+/** Empty clears the field (null); anything else must be one of the furnishing options. */
+function parseFurnishing(value: unknown): { ok: true; value: NewListing["furnishing"] } | { ok: false } {
+  if (value === undefined) return { ok: true, value: undefined };
+  if (value === null || value === "") return { ok: true, value: null };
+  return isFurnishing(value) ? { ok: true, value } : { ok: false };
 }
 
 function isValidPhone(phone: string) {
@@ -65,6 +73,8 @@ export async function POST(request: Request) {
   if (body.availableFrom && !/^\d{4}-\d{2}-\d{2}$/.test(body.availableFrom)) return NextResponse.json({ error: "Availability date must be valid." }, { status: 400 });
   if (body.genderPreference && !["Male", "Female", "Family", "Any"].includes(body.genderPreference)) return NextResponse.json({ error: "Invalid gender preference." }, { status: 400 });
   if (body.description && body.description.length > 2000) return NextResponse.json({ error: "Description must be 2000 characters or fewer." }, { status: 400 });
+  const furnishing = parseFurnishing(body.furnishing);
+  if (!furnishing.ok) return NextResponse.json({ error: "Invalid furnishing option." }, { status: 400 });
   const images = body.images?.filter((image) => typeof image === "string" && image.length < 2_000_000).slice(0, 3);
   if (body.listingKind === "flat-requirement" && images?.length) return NextResponse.json({ error: "Flat requirements cannot include images." }, { status: 400 });
   const listing = await createListing({
@@ -86,6 +96,8 @@ export async function POST(request: Request) {
     genderPreference: body.genderPreference,
     status: body.status === "draft" ? "draft" : "published",
     listingKind: body.listingKind,
+    furnishing: furnishing.value,
+    nearbyMetro: cleanNearbyMetro(body.nearbyMetro),
   });
   return NextResponse.json(listing, { status: 201 });
 }
@@ -109,7 +121,10 @@ export async function PATCH(request: Request) {
   if (!isValidCount(body.bedrooms) || !isValidCount(body.bathrooms)) return NextResponse.json({ error: "Bedrooms and bathrooms must be between 1 and 10." }, { status: 400 });
   const images = body.images ? body.images.filter((image) => typeof image === "string" && image.length < 2_000_000).slice(0, 3) : undefined;
   const preferences = sanitizePreferences(body.preferences);
-  try { return NextResponse.json(await updateListing(body.id, { ...body, images, preferences })); }
+  const furnishing = parseFurnishing(body.furnishing);
+  if (!furnishing.ok) return NextResponse.json({ error: "Invalid furnishing option." }, { status: 400 });
+  const nearbyMetro = body.nearbyMetro === undefined ? undefined : cleanNearbyMetro(body.nearbyMetro) ?? null;
+  try { return NextResponse.json(await updateListing(body.id, { ...body, images, preferences, furnishing: furnishing.value, nearbyMetro })); }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Could not update listing." }, { status: 404 }); }
 }
 

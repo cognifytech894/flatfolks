@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, Bath, Bed, CalendarDays, Clock, Home as HomeIcon, Lock, MapPin, MessageCircle, Phone, ShieldAlert, ShieldCheck, UserRound, UsersRound, Wallet } from "lucide-react";
+import { AlertTriangle, Armchair, Bath, Bed, CalendarDays, Clock, Home as HomeIcon, Lock, MapPin, MessageCircle, Phone, ShieldAlert, ShieldCheck, TrainFront, UserRound, UsersRound, Wallet } from "lucide-react";
 import { SaveListingButton } from "@/components/listing/save-listing-button";
 import { PhotoCarousel } from "@/components/listing/photo-carousel";
 import { Breadcrumbs, breadcrumbJsonLd, type Crumb } from "@/components/seo/breadcrumbs";
@@ -7,6 +7,7 @@ import { ListingCard } from "@/components/seo/listing-card";
 import type { Listing } from "@/lib/database";
 import { safeJsonLd } from "@/lib/json-ld";
 import { lifestylePreferences } from "@/data/preferences";
+import { furnishingLabel } from "@/data/furnishing";
 
 // Assumes an Indian mobile number when no country code was entered.
 function toWhatsAppNumber(phone: string) {
@@ -50,6 +51,8 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, backLinks, rel
       : listing.image ? [listing.image] : [];
   const posted = formatDate(listing.createdAt);
   const available = formatDate(listing.availableFrom);
+  // Optional fields: listings posted before they existed simply don't show them.
+  const furnishing = furnishingLabel(listing.furnishing);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -117,6 +120,7 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, backLinks, rel
       { icon: HomeIcon, label: "Looking for", value: listing.propertyType },
       { icon: UsersRound, label: "Flatmate gender", value: listing.genderPreference || "Any" },
       ...(available ? [{ icon: CalendarDays, label: "Move-in", value: available }] : []),
+      ...(furnishing ? [{ icon: Armchair, label: "Preferred furnishing", value: furnishing }] : []),
     ]
     : [
       { icon: HomeIcon, label: "Room type", value: listing.propertyType },
@@ -124,6 +128,7 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, backLinks, rel
       { icon: Bath, label: "Bathrooms", value: String(listing.bathrooms) },
       { icon: UsersRound, label: "Flatmate preference", value: listing.genderPreference || "Any" },
       { icon: CalendarDays, label: "Available from", value: available || "Now" },
+      ...(furnishing ? [{ icon: Armchair, label: "Furnishing", value: furnishing }] : []),
     ];
 
   const factGrid = (
@@ -183,6 +188,7 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, backLinks, rel
                   {listing.verified && <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700"><ShieldCheck className="h-4 w-4" /> Verified listing</div>}
                   <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{listing.title}</h1>
                   <p className="mt-3 flex items-start gap-2 text-slate-600"><MapPin className="mt-1 h-4 w-4 shrink-0" /> {listing.location}</p>
+                  {!isRequirement && listing.nearbyMetro && <p className="mt-2 flex items-start gap-2 text-sm text-slate-600"><TrainFront className="mt-0.5 h-4 w-4 shrink-0" /> Nearest metro: {listing.nearbyMetro} <span className="text-slate-400">(as given by the poster)</span></p>}
                   {posted && <p className="mt-2 flex items-center gap-2 text-sm text-slate-500"><Clock className="h-4 w-4" /> Posted {posted}</p>}
                 </div>
                 {!isRequirement && (

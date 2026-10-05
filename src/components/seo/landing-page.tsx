@@ -5,12 +5,13 @@ import { Breadcrumbs, breadcrumbJsonLd, type Crumb } from "@/components/seo/brea
 import { ListingCard } from "@/components/seo/listing-card";
 import { RichText } from "@/components/seo/rich-text";
 import { postsForCity } from "@/data/blog";
+import { furnishingLabel, furnishingOptions, isFurnishing } from "@/data/furnishing";
 import type { Listing } from "@/lib/database";
 import { safeJsonLd } from "@/lib/json-ld";
 import { baseUrl, childPlacesByListings, inScope, intents, isScopeIndexable, listingPath, placePath, type Scope } from "@/lib/seo/listings";
 import { cities, placeLabel, type City, type IntentSlug, type Place } from "@/lib/seo/locations";
 
-export type LandingFilters = { gender?: string; budget?: string };
+export type LandingFilters = { gender?: string; budget?: string; furnishing?: string };
 
 // Copy for the national intent hubs (/sharing-flat, /flats-for-rent, /flatmates).
 const nationalCopy: Record<IntentSlug, { h1: string; title: string; intro: string }> = {
@@ -148,6 +149,7 @@ function applyFilters(listings: Listing[], filters: LandingFilters): Listing[] {
   const budget = Number(filters.budget) || 0;
   return listings.filter((listing) =>
     (!budget || listing.rent <= budget)
+    && (!filters.furnishing || listing.furnishing === filters.furnishing)
     && (!filters.gender || filters.gender === "Any" || (listing.genderPreference || "Any") === "Any" || listing.genderPreference === filters.gender));
 }
 
@@ -157,7 +159,8 @@ export function pickFilters(searchParams: Record<string, string | string[] | und
     const raw = searchParams[key];
     return (Array.isArray(raw) ? raw[0] : raw) || undefined;
   };
-  return { gender: value("gender"), budget: value("budget") };
+  const furnishing = value("furnishing");
+  return { gender: value("gender"), budget: value("budget"), furnishing: isFurnishing(furnishing) ? furnishing : undefined };
 }
 
 function hasFilters(filters: LandingFilters) {
@@ -196,6 +199,9 @@ function FilterBar({ path, filters }: { path: string; filters: LandingFilters })
       {budgets.map((budget) => <Link rel="nofollow" key={budget} href={href({ budget: String(budget) })} className={chip(filters.budget === String(budget))}>Under {rupees(budget)}</Link>)}
       <span className="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />
       {["Any", "Male", "Female"].map((gender) => <Link rel="nofollow" key={gender} href={href({ gender: gender === "Any" ? undefined : gender })} className={chip((filters.gender || "Any") === gender)}>{gender === "Any" ? "Any gender" : gender}</Link>)}
+      <span className="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />
+      <Link rel="nofollow" href={href({ furnishing: undefined })} className={chip(!filters.furnishing)}>Any furnishing</Link>
+      {furnishingOptions.map((option) => <Link rel="nofollow" key={option.value} href={href({ furnishing: option.value })} className={chip(filters.furnishing === option.value)}>{option.label}</Link>)}
     </div>
   );
 }
@@ -225,6 +231,15 @@ function LinkPills({ title: sectionTitle, links, more }: { title: string; links:
   );
 }
 
+/** Furnishing mix of the listings that state one, e.g. "2 furnished, 1 semi-furnished". */
+function furnishingSummary(listings: Listing[]): string {
+  return furnishingOptions
+    .map((option) => [option, listings.filter((listing) => listing.furnishing === option.value).length] as const)
+    .filter(([, count]) => count > 0)
+    .map(([option, count]) => `${count} ${furnishingLabel(option.value)!.toLowerCase()}`)
+    .join(", ");
+}
+
 function AtAGlance({ matches }: { matches: Listing[] }) {
   const offers = matches.filter((listing) => listing.listingKind !== "flat-requirement");
   if (!matches.length) return null;
@@ -233,6 +248,7 @@ function AtAGlance({ matches }: { matches: Listing[] }) {
     ...intents.map((intent) => [intent.label, String(matches.filter((listing) => intent.matches(listing)).length)] as const),
     ...(rents.length ? [["Rent range", rents.length > 1 && Math.min(...rents) !== Math.max(...rents) ? `${rupees(Math.min(...rents))} – ${rupees(Math.max(...rents))}` : rupees(rents[0])] as const] : []),
     ...(bhkSummary(matches) ? [["BHK options", bhkSummary(matches)] as const] : []),
+    ...(furnishingSummary(offers) ? [["Furnishing", furnishingSummary(offers)] as const] : []),
   ];
   return (
     <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">

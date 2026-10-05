@@ -3,6 +3,7 @@ import Link from "next/link";
 import { MapPin, UserRound } from "lucide-react";
 import type { Listing } from "@/lib/database";
 import { listingPath } from "@/lib/seo/listings";
+import { furnishingLabel } from "@/data/furnishing";
 
 // Server-rendered so search engines see every card in the page HTML. Only
 // display fields are read here — never contactPhone.
@@ -41,7 +42,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
         <h3 className="font-semibold text-slate-900"><Link href={href} className="after:absolute after:inset-0">{listing.title}</Link></h3>
         <p className="mt-1 flex items-center gap-1 text-sm text-slate-500"><MapPin className="h-3.5 w-3.5 shrink-0" />{listing.location}</p>
         <p className="mt-auto pt-3 text-sm text-slate-600">
-          <span className="text-base font-semibold text-slate-900">₹{listing.rent.toLocaleString("en-IN")}</span>/month · {listing.propertyType}{listing.bedrooms > 1 ? ` · ${listing.bedrooms} BHK` : ""}
+          <span className="text-base font-semibold text-slate-900">₹{listing.rent.toLocaleString("en-IN")}</span>/month · {listing.propertyType}{listing.bedrooms > 1 ? ` · ${listing.bedrooms} BHK` : ""}{listing.furnishing ? ` · ${furnishingLabel(listing.furnishing)}` : ""}
         </p>
       </div>
     </article>

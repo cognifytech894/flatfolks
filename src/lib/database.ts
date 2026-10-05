@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import pool from "@/lib/db";
+import type { Furnishing } from "@/data/furnishing";
 
 export type Listing = {
   id: string;
@@ -34,6 +35,12 @@ export type Listing = {
   listingKind?: "flat-offer" | "flat-requirement";
   /** ISO timestamp of when the listing was posted. */
   createdAt?: string;
+  /** How the flat is furnished; for a flat-requirement post, the furnishing they'd prefer. */
+  furnishing?: Furnishing;
+  /** Nearest metro station as the poster wrote it (or, later, a verified station's name). */
+  nearbyMetro?: string;
+  /** Reserved for the future verified metro_stations master table; unset for free-text entries. */
+  nearbyMetroStationId?: string;
 };
 
 export type ListingReview = { id: string; listingId: string; author: string; rating: number; comment: string; createdAt: string };
@@ -77,6 +84,7 @@ type ListingRow = {
   views: number; saves: number; owner_id: string | null; owner_name: string | null; owner_phone: string | null; owner_photo: string | null; owner_gender: Listing["ownerGender"] | null; available_from: string | null;
   gender_preference: Listing["genderPreference"]; listing_kind: Listing["listingKind"]; contact_phone: string | null; preferences: unknown;
   created_at?: Date | string | null;
+  furnishing?: Furnishing | null; nearby_metro?: string | null; nearby_metro_station_id?: string | null;
 };
 
 // Stock photo createListing used to save for member listings posted without photos.
@@ -97,6 +105,7 @@ function rowToListing(row: ListingRow): Listing {
     availableFrom: row.available_from || undefined,
     genderPreference: row.gender_preference || undefined, listingKind: row.listing_kind || undefined,
     createdAt: row.created_at ? new Date(row.created_at).toISOString() : undefined,
+    furnishing: row.furnishing || undefined, nearbyMetro: row.nearby_metro || undefined, nearbyMetroStationId: row.nearby_metro_station_id || undefined,
   };
 }
 
@@ -126,7 +135,7 @@ export async function getFeaturedListings(limit = 4, city = ""): Promise<Listing
   return rows.map(rowToListing);
 }
 
-export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { bedrooms?: number; bathrooms?: number; description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; contactPhone?: string; preferences?: string[]; availableFrom?: string; genderPreference?: "Male" | "Female" | "Family" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement" };
+export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { bedrooms?: number; bathrooms?: number; description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; contactPhone?: string; preferences?: string[]; availableFrom?: string; genderPreference?: "Male" | "Female" | "Family" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement"; furnishing?: Furnishing | null; nearbyMetro?: string | null };
 
 export async function createListing(input: NewListing): Promise<Listing> {
   const listing: Listing = {
@@ -143,14 +152,17 @@ export async function createListing(input: NewListing): Promise<Listing> {
     availableFrom: input.availableFrom,
     genderPreference: input.genderPreference || "Any",
     listingKind: input.listingKind || "flat-offer",
+    furnishing: input.furnishing || undefined,
+    nearbyMetro: input.nearbyMetro || undefined,
   };
   await pool.query(
-    `INSERT INTO listings (id, title, location, rent, deposit, bedrooms, bathrooms, property_type, description, image, verified, tags, match_score, min_budget, max_budget, images, status, views, saves, owner_id, available_from, gender_preference, listing_kind, contact_phone, preferences)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)`,
+    `INSERT INTO listings (id, title, location, rent, deposit, bedrooms, bathrooms, property_type, description, image, verified, tags, match_score, min_budget, max_budget, images, status, views, saves, owner_id, available_from, gender_preference, listing_kind, contact_phone, preferences, furnishing, nearby_metro)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)`,
     [listing.id, listing.title, listing.location, listing.rent, listing.deposit, listing.bedrooms, listing.bathrooms, listing.propertyType,
       listing.description || null, listing.image, listing.verified, JSON.stringify(listing.tags), listing.matchScore, listing.minBudget, listing.maxBudget,
       listing.images ? JSON.stringify(listing.images) : null, listing.status, listing.views, listing.saves, listing.ownerId || null,
-      listing.availableFrom || null, listing.genderPreference, listing.listingKind, listing.contactPhone || null, JSON.stringify(listing.preferences)],
+      listing.availableFrom || null, listing.genderPreference, listing.listingKind, listing.contactPhone || null, JSON.stringify(listing.preferences),
+      listing.furnishing || null, listing.nearbyMetro || null],
   );
   return listing;
 }
@@ -180,6 +192,9 @@ export async function updateListing(id: string, input: Partial<NewListing>): Pro
   if (input.availableFrom !== undefined) set("available_from", input.availableFrom || null);
   if (input.genderPreference) set("gender_preference", input.genderPreference);
   if (input.contactPhone !== undefined) set("contact_phone", input.contactPhone.trim() || null);
+  // null clears the field; undefined leaves it as it is.
+  if (input.furnishing !== undefined) set("furnishing", input.furnishing || null);
+  if (input.nearbyMetro !== undefined) set("nearby_metro", input.nearbyMetro || null);
 
   if (sets.length) {
     values.push(id);
