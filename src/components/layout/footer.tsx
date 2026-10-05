@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, Headset, LockKeyhole, ShieldCheck } from "lucide-react";
 import { FlatFolksLogo } from "@/components/ui/flatfolks-logo";
-import { noidaSubLocalities, priorityLocations } from "@/data/priority-locations";
+import { intents, placePath } from "@/lib/seo/listings";
+import { cities, getCity } from "@/lib/seo/locations";
 
 const trust = [
   [ShieldCheck, "Verified listings", "bg-blue-50 text-blue-600"],
@@ -9,37 +10,23 @@ const trust = [
   [Headset, "24/7 support", "bg-amber-50 text-amber-500"],
 ] as const;
 
-// Kept short on purpose — this is what every visitor sees without clicking
-// anything. Home-market cities only; everything else lives in "more searches"
-// below so the footer doesn't turn into a wall of links for real visitors.
-const primarySearches = priorityLocations.slice(0, 4).flatMap(({ label, query }) => [
-  [`Sharing flat in ${label}`, `/search?location=${encodeURIComponent(query)}`],
-  [`Flatmate in ${label}`, `/flatmates?location=${encodeURIComponent(query)}`],
-]);
+// Every city hub and its intent pages, plus the Greater Noida West society
+// pages that matter most. Plain crawlable links with descriptive anchors; the
+// long tail lives one click away behind a native <details> disclosure.
+const cityLinks = cities.map((city) => ({
+  city: city.name,
+  links: [
+    [`Flats & flatmates in ${city.name}`, placePath(city)],
+    ...intents.map((intent) => [`${intent.label} in ${city.name}`, placePath(city, [], intent.slug)]),
+  ],
+}));
 
-// Still real links in the actual page HTML (crawlable, same as the primary
-// list) — just tucked behind a native <details> disclosure instead of shown
-// by default. That's the legitimate way to keep a long link list out of a
-// visitor's way: the content is genuinely one click away, not hidden from
-// users while still served to crawlers (which is what gets sites penalized).
-const moreSearches = [
-  ...priorityLocations.slice(4).flatMap(({ label, query }) => [
-    [`Sharing flat in ${label}`, `/search?location=${encodeURIComponent(query)}`],
-    [`Flatmate in ${label}`, `/flatmates?location=${encodeURIComponent(query)}`],
-  ]),
-  ...noidaSubLocalities.map(({ label, query }) => [`Sharing flat in ${label}`, `/search?location=${encodeURIComponent(query)}`]),
-  ["Flat and Flatmates", "/search"],
-  ["Flats and Flatmates in Noida", "/search?location=Noida"],
-  ["Flat and Flatmates in Greater Noida", "/search?location=Greater%20Noida"],
-  ["Single Room for Rent in Noida Under ₹5,000", "/search?location=Noida"],
-  ["Pre-Occupied Flats in Noida for Female", "/flatmates?location=Noida"],
-  ["Room for Rent in Noida", "/search?location=Noida"],
-  ["PG in Noida", "/search?location=Noida"],
-  ["Low Budget Sharing Flat in Noida", "/search?location=Noida"],
-  ["Bachelor Roommate in Noida", "/flatmates?location=Noida"],
-  ["2 BHK Flat for Rent in Noida Extension", "/search?location=Noida%20Extension"],
-  ["Flats and Flatmates in Noida Sector 137", "/search?location=Sector%20137%2C%20Noida"],
-  ["Flatmates in Noida, Uttar Pradesh", "/flatmates?location=Noida"],
+const greaterNoida = getCity("greater-noida")!;
+const noidaExtension = greaterNoida.places.find((place) => place.slug === "noida-extension")!;
+const greaterNoidaWestLinks = [
+  ["Sharing flat in Greater Noida West", placePath(greaterNoida, [noidaExtension], "sharing-flat")],
+  ["Flatmates in Noida Extension", placePath(greaterNoida, [noidaExtension], "flatmates")],
+  ...(noidaExtension.children || []).filter((society) => society.slug.startsWith("gaur-city")).map((society) => [`Flats & flatmates in ${society.name}`, placePath(greaterNoida, [noidaExtension, society])]),
 ];
 
 export function Footer() {
@@ -85,7 +72,7 @@ export function Footer() {
                 </div>
               ))}
             </div>
-            <Link href="/guides" className="mt-4 inline-block text-sm font-medium text-blue-600 hover:underline">
+            <Link href="/blog" className="mt-4 inline-block text-sm font-medium text-blue-600 hover:underline">
               Renting guides &amp; tips
             </Link>
           </div>
@@ -93,25 +80,25 @@ export function Footer() {
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
               Popular searches
             </p>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4 md:grid-cols-2 xl:grid-cols-4">
+              {cityLinks.map(({ city, links }) => (
+                <div key={city} className="flex flex-col gap-2">
+                  {links.map(([label, href]) => (
+                    <Link key={href} href={href} className="text-sm text-slate-600 hover:text-blue-600 hover:underline">
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              ))}
+            </div>
+            <p className="mb-2 mt-6 text-sm font-semibold text-slate-700">Greater Noida West</p>
             <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
-              {primarySearches.map(([label, href]) => (
-                <Link key={label} href={href} className="text-sm text-slate-600 hover:text-blue-600 hover:underline">
+              {greaterNoidaWestLinks.map(([label, href]) => (
+                <Link key={href} href={href} className="text-sm text-slate-600 hover:text-blue-600 hover:underline">
                   {label}
                 </Link>
               ))}
             </div>
-            <details className="mt-3 group">
-              <summary className="cursor-pointer list-none text-sm font-medium text-blue-600 hover:underline [&::-webkit-details-marker]:hidden">
-                More searches <span className="inline-block transition group-open:rotate-180">▾</span>
-              </summary>
-              <div className="mt-3 grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
-                {moreSearches.map(([label, href]) => (
-                  <Link key={label} href={href} className="text-sm text-slate-600 hover:text-blue-600 hover:underline">
-                    {label}
-                  </Link>
-                ))}
-              </div>
-            </details>
           </div>
         </div>
 

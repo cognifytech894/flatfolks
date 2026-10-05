@@ -8,7 +8,7 @@ import { GenderFilter } from "@/components/search/gender-filter";
 import { getListings } from "@/lib/database";
 import { safeJsonLd } from "@/lib/json-ld";
 import { searchPageIntro, searchPageTitle } from "@/lib/city-titles";
-import { isUnindexedCity } from "@/data/priority-locations";
+import { listingPath } from "@/lib/seo/listings";
 
 export const dynamic = "force-dynamic";
 
@@ -18,18 +18,12 @@ type SearchParams = { location?: string; budget?: string; minBudget?: string; ma
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParams> }): Promise<Metadata> {
   const filters = await searchParams;
-  if (filters.location && isUnindexedCity(filters.location)) {
-    return { title: "Find Rooms & Flatmates", robots: { index: false, follow: true } };
-  }
-  // Only the location narrows down to genuinely distinct, worth-indexing content;
-  // budget/type/amenity/etc. just filter the same page, so they're dropped from the
-  // canonical to avoid a combinatorial explosion of near-duplicate indexed URLs.
-  const canonical = filters.location ? `${baseUrl}/search?location=${encodeURIComponent(filters.location)}` : `${baseUrl}/search`;
+  // /search is the free-form search tool: every combination of location,
+  // budget, type and amenity would otherwise be a crawlable near-duplicate.
+  // The indexable versions are the clean city/place pages (/noida,
+  // /noida/sharing-flat, ...) and the /flats-for-rent and /sharing-flat hubs.
   const title = filters.location ? searchPageTitle(filters.location) : "Find Flat and Flatmates | Rooms & PGs to Rent Near You";
-  const description = filters.location
-    ? `Flats and flatmates in ${filters.location}: looking for a room for rent, sharing flat, or PG? Browse verified, fully furnished single rooms, flats, and budget PGs — filter by budget, property type, and gender preference on FlatFolks.`
-    : "Search verified rooms, flats, and PGs across India. Filter by location, budget, property type, and amenities on FlatFolks.";
-  return { title, description, alternates: { canonical } };
+  return { title, robots: { index: false, follow: true } };
 }
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -58,7 +52,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   // the full listing (contactPhone, ownerId, ...) here previously leaked the
   // phone number the login gate on /property/[id] is supposed to hide.
   const publicListings = filteredListings.map((listing) => ({
-    id: listing.id, title: listing.title, location: listing.location, rent: listing.rent,
+    id: listing.id, href: listingPath(listing), title: listing.title, location: listing.location, rent: listing.rent,
     image: listing.image, description: listing.description, propertyType: listing.propertyType,
   }));
   const jsonLd = {
@@ -67,7 +61,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     itemListElement: filteredListings.slice(0, 20).map((listing, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      url: `${baseUrl}/property/${listing.id}`,
+      url: `${baseUrl}${listingPath(listing)}`,
       name: listing.title,
     })),
   };

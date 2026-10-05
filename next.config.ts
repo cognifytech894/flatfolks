@@ -15,6 +15,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      // /gurgaon is the canonical city section; Gurugram URLs are permanent aliases.
+      { source: "/gurugram", destination: "/gurgaon", permanent: true },
+      { source: "/gurugram/:path*", destination: "/gurgaon/:path*", permanent: true },
+      // The renting guides moved under /blog alongside the city articles.
+      { source: "/guides", destination: "/blog", permanent: true },
+      { source: "/guides/:slug", destination: "/blog/:slug", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

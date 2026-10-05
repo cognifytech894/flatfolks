@@ -6,7 +6,7 @@ import Link from "next/link";
 import { getSavedCity, rememberCity, sortByCity } from "@/lib/saved-city";
 
 type ResultListing = {
-  id: string; title: string; location: string; rent: number; image: string; description?: string;
+  id: string; href: string; title: string; location: string; rent: number; image: string; description?: string;
   propertyType: string;
 };
 
@@ -43,7 +43,7 @@ export function SearchResults({ listings, mapView, searchedLocation }: { listing
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{listing.propertyType}</span>
                 <div className="flex items-center gap-2">
                   <Link href={`/interest?listingId=${listing.id}`} className="rounded-full bg-emerald-500 px-3 py-2 text-sm font-semibold text-white">Interested</Link>
-                  <Link href={`/property/${listing.id}`} className="text-sm font-semibold text-slate-700">View details</Link>
+                  <Link href={listing.href} className="text-sm font-semibold text-slate-700">View details</Link>
                 </div>
               </div>
             </div>

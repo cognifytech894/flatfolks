@@ -32,6 +32,8 @@ export type Listing = {
   genderPreference?: "Male" | "Female" | "Family" | "Any";
   /** A flat offer is shown to people looking for a flat; a requirement is shown to flat owners. */
   listingKind?: "flat-offer" | "flat-requirement";
+  /** ISO timestamp of when the listing was posted. */
+  createdAt?: string;
 };
 
 export type ListingReview = { id: string; listingId: string; author: string; rating: number; comment: string; createdAt: string };
@@ -74,6 +76,7 @@ type ListingRow = {
   match_score: number; min_budget: number; max_budget: number; images: unknown; status: Listing["status"];
   views: number; saves: number; owner_id: string | null; owner_name: string | null; owner_phone: string | null; owner_photo: string | null; owner_gender: Listing["ownerGender"] | null; available_from: string | null;
   gender_preference: Listing["genderPreference"]; listing_kind: Listing["listingKind"]; contact_phone: string | null; preferences: unknown;
+  created_at?: Date | string | null;
 };
 
 // Stock photo createListing used to save for member listings posted without photos.
@@ -93,6 +96,7 @@ function rowToListing(row: ListingRow): Listing {
     preferences: parseJsonField<string[]>(row.preferences, []),
     availableFrom: row.available_from || undefined,
     genderPreference: row.gender_preference || undefined, listingKind: row.listing_kind || undefined,
+    createdAt: row.created_at ? new Date(row.created_at).toISOString() : undefined,
   };
 }
 
@@ -131,7 +135,7 @@ export async function createListing(input: NewListing): Promise<Listing> {
     description: input.description?.trim() || undefined,
     // No stock fallback — a listing posted without photos stays photo-less.
     image: input.image || input.images?.[0] || "",
-    verified: false, tags: input.tags?.length ? input.tags : [], matchScore: 0,
+    verified: false, tags: input.tags?.length ? input.tags : [], matchScore: 0, createdAt: new Date().toISOString(),
     minBudget: Math.max(0, input.rent - 2000), maxBudget: input.rent + 2000,
     images: input.images?.slice(0, 3), status: input.status || "published", views: 0, saves: 0, ownerId: input.ownerId,
     contactPhone: input.contactPhone?.trim() || undefined,
@@ -200,6 +204,13 @@ export async function deleteListing(id: string): Promise<void> {
 /** Read-only lookup — use this for anything that shouldn't count as a page view (e.g. generateMetadata, which Next.js may invoke separately from the page render). */
 export async function getListingById(id: string): Promise<Listing | undefined> {
   const { rows } = await pool.query<ListingRow>(`${listingSelect} WHERE listings.id = $1`, [id]);
+  return rows[0] ? rowToListing(rows[0]) : undefined;
+}
+
+/** Finds a listing by the last 8 characters of its id — the suffix SEO listing URLs end in. */
+export async function getListingByIdSuffix(suffix: string): Promise<Listing | undefined> {
+  if (!/^[0-9a-f]{8}$/.test(suffix)) return undefined;
+  const { rows } = await pool.query<ListingRow>(`${listingSelect} WHERE RIGHT(listings.id::text, 8) = $1 LIMIT 1`, [suffix]);
   return rows[0] ? rowToListing(rows[0]) : undefined;
 }
 

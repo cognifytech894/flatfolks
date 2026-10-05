@@ -20,12 +20,14 @@ import { cookies } from "next/headers";
 import { getFeaturedListings, getFeedback } from "@/lib/database";
 import { featuredCityCookie, normalizeCity } from "@/lib/saved-city";
 import { safeJsonLd } from "@/lib/json-ld";
+import { listingPath } from "@/lib/seo/listings";
 
+// Target cities link to their city hub; Delhi has no hub, so it uses search.
 const cities = [
-  ["Noida", "photo-1486406146926-c627a92ad1ab"],
-  ["Greater Noida", "photo-1449824913935-59a10b8d2000"],
-  ["Delhi", "photo-1587474260584-136574528ed5"],
-  ["Gurugram", "photo-1511818966892-d7d671e672a2"],
+  ["Noida", "photo-1486406146926-c627a92ad1ab", "/noida"],
+  ["Greater Noida", "photo-1449824913935-59a10b8d2000", "/greater-noida"],
+  ["Delhi", "photo-1587474260584-136574528ed5", "/search?location=Delhi"],
+  ["Gurgaon", "photo-1511818966892-d7d671e672a2", "/gurgaon"],
 ];
 
 function Unsplash({ id, alt, className, priority }: { id: string; alt: string; className?: string; priority?: boolean }) {
@@ -86,13 +88,13 @@ export default async function Home() {
           <section className="mt-5">
             <div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-bold">Popular Cities</h2><Link href="/search" className="text-xs font-semibold text-blue-600">View all cities <ArrowRight className="inline h-3.5 w-3.5" /></Link></div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {cities.map(([name, image], index) => <Link key={name} href={`/search?location=${encodeURIComponent(name)}`} className="group relative h-[86px] overflow-hidden rounded-lg bg-slate-200 shadow-sm"><Unsplash id={image} alt={`Rooms and flatmates in ${name}`} priority={index < 4} className="object-cover transition duration-500 group-hover:scale-110" /><div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-transparent" /><b className="absolute bottom-2 left-2 right-2 text-center text-[11px] text-white">{name}</b></Link>)}
+              {cities.map(([name, image, href], index) => <Link key={name} href={href} className="group relative h-[86px] overflow-hidden rounded-lg bg-slate-200 shadow-sm"><Unsplash id={image} alt={`Rooms and flatmates in ${name}`} priority={index < 4} className="object-cover transition duration-500 group-hover:scale-110" /><div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-transparent" /><b className="absolute bottom-2 left-2 right-2 text-center text-[11px] text-white">{name}</b></Link>)}
             </div>
           </section>
           <section className="mt-5">
             <div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-bold">{featuredCity ? `Featured Rooms in ${featuredCity}` : "Featured Rooms For You"}</h2><Link href={featuredCity ? `/search?location=${encodeURIComponent(featuredCity)}` : "/search"} className="text-xs font-semibold text-blue-600">View all rooms <ArrowRight className="inline h-3.5 w-3.5" /></Link></div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {rooms.map((room, index) => <article key={room.id} className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"><div className="relative h-28">{room.image ? <Image src={room.image} alt={room.title} fill priority={index < 2} className="object-cover" sizes="(max-width: 768px) 100vw, 320px" /> : <div className="grid h-full w-full place-items-center bg-slate-100 text-[10px] font-medium text-slate-400">No photos</div>}<span className="absolute bottom-2 left-2 rounded bg-blue-600 px-2 py-1 text-[10px] font-bold text-white">{room.verified ? "Verified" : "New"}</span><button aria-label="Save listing" className="absolute right-2 top-2 z-10 rounded-full bg-white p-1.5 text-slate-600"><Heart className="h-3.5 w-3.5" /></button></div><div className="p-3"><h3 className="truncate text-xs font-bold"><Link href={`/property/${room.id}`} className="after:absolute after:inset-0">{room.title}</Link></h3><p className="mt-1 text-[10px] text-slate-500">{room.location}</p><p className="mt-2 text-sm font-extrabold text-[#161b32]">₹{room.rent.toLocaleString("en-IN")} <span className="text-[10px] font-medium text-slate-500">/month</span></p><div className="mt-2 flex gap-2 text-[10px] text-slate-500">{room.tags.slice(0, 3).map((tag) => <span key={tag} className="flex gap-1"><Wifi className="h-3 w-3" />{tag}</span>)}</div></div></article>)}
+              {rooms.map((room, index) => <article key={room.id} className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"><div className="relative h-28">{room.image ? <Image src={room.image} alt={room.title} fill priority={index < 2} className="object-cover" sizes="(max-width: 768px) 100vw, 320px" /> : <div className="grid h-full w-full place-items-center bg-slate-100 text-[10px] font-medium text-slate-400">No photos</div>}<span className="absolute bottom-2 left-2 rounded bg-blue-600 px-2 py-1 text-[10px] font-bold text-white">{room.verified ? "Verified" : "New"}</span><button aria-label="Save listing" className="absolute right-2 top-2 z-10 rounded-full bg-white p-1.5 text-slate-600"><Heart className="h-3.5 w-3.5" /></button></div><div className="p-3"><h3 className="truncate text-xs font-bold"><Link href={listingPath(room)} className="after:absolute after:inset-0">{room.title}</Link></h3><p className="mt-1 text-[10px] text-slate-500">{room.location}</p><p className="mt-2 text-sm font-extrabold text-[#161b32]">₹{room.rent.toLocaleString("en-IN")} <span className="text-[10px] font-medium text-slate-500">/month</span></p><div className="mt-2 flex gap-2 text-[10px] text-slate-500">{room.tags.slice(0, 3).map((tag) => <span key={tag} className="flex gap-1"><Wifi className="h-3 w-3" />{tag}</span>)}</div></div></article>)}
             </div>
           </section>
           <section className="mt-5"><h2 className="text-lg font-bold">How FlatFolks Works</h2><div className="mt-4 grid grid-cols-3 gap-3">{[[Search,"Search","Find rooms and flatmates that match your budget and location."],[MessageCircle,"Connect","Chat with verified owners and flatmates instantly."],[HomeIcon,"Move In","Finalize your choice and move in without any hassle."]].map(([Icon,title,description], index) => { const C = Icon as typeof Search; return <div key={title as string} className="relative pl-1"><span className={`mb-2 grid h-11 w-11 place-items-center rounded-full text-white shadow-lg ${index === 0 ? "bg-blue-600" : index === 1 ? "bg-emerald-500" : "bg-amber-500"}`}><C className="h-5 w-5" /></span><b className="block text-xs">{title as string}</b><p className="mt-1 text-[10px] leading-4 text-slate-600">{description as string}</p></div>})}</div></section>

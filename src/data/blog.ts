@@ -1,7 +1,10 @@
-export type GuideSection = { heading: string; paragraphs: string[] };
-export type Guide = { slug: string; title: string; description: string; sections: GuideSection[] };
+import { cityPosts } from "@/data/blog-city-posts";
 
-export const guides: Guide[] = [
+export type BlogSection = { heading: string; paragraphs: string[] };
+/** `city` is a slug from src/lib/seo/locations.ts; general renting guides have none. */
+export type BlogPost = { slug: string; title: string; description: string; city?: string; sections: BlogSection[] };
+
+const generalPosts: BlogPost[] = [
   {
     slug: "pg-vs-flat",
     title: "PG vs. Flat: Which Should You Choose?",
@@ -102,6 +105,12 @@ export const guides: Guide[] = [
   },
 ];
 
-export function getGuide(slug: string) {
-  return guides.find((guide) => guide.slug === slug);
+export const blogPosts: BlogPost[] = [...cityPosts, ...generalPosts];
+
+export function getPost(slug: string) {
+  return blogPosts.find((post) => post.slug === slug);
+}
+
+export function postsForCity(citySlug: string) {
+  return blogPosts.filter((post) => post.city === citySlug);
 }

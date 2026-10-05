@@ -1,46 +1,38 @@
 import type { Metadata } from "next";
+import { permanentRedirect } from "next/navigation";
 import { FlatmatesView } from "@/components/flatmates/flatmates-view";
+import { LandingPage, landingMetadata, pickFilters } from "@/components/seo/landing-page";
 import { getListings } from "@/lib/database";
-import { safeJsonLd } from "@/lib/json-ld";
-import { flatmatesPageTitle } from "@/lib/city-titles";
-import { isUnindexedCity } from "@/data/priority-locations";
+import { getIntent, placePath } from "@/lib/seo/listings";
+import { resolvePlace } from "@/lib/seo/locations";
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+export const dynamic = "force-dynamic";
 
-type SearchParams = { location?: string };
+type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
-export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParams> }): Promise<Metadata> {
-  const { location } = await searchParams;
-  if (location && isUnindexedCity(location)) {
-    return { title: "Find Flatmates & Roommates", robots: { index: false, follow: true } };
-  }
-  const canonical = location ? `${baseUrl}/flatmates?location=${encodeURIComponent(location)}` : `${baseUrl}/flatmates`;
-  const year = new Date().getFullYear();
-  const title = location ? `${flatmatesPageTitle(location)} (${year})` : "Find Flatmates & Roommates Near You";
-  const description = location
-    ? `Roommates in ${location} for male & female — browse female and male flatmates, bachelor roommates, and pre-occupied flats looking for one more flatmate on FlatFolks.`
-    : "Browse people looking for a flat across India and offer them a match — filter by preferred gender on FlatFolks.";
-  return { title, description, alternates: { canonical } };
+const intent = getIntent("flatmates")!;
+
+function locationOf(searchParams: Record<string, string | string[] | undefined>) {
+  const raw = searchParams.location;
+  return ((Array.isArray(raw) ? raw[0] : raw) || "").trim();
 }
 
-export default async function FlatmatesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const { location } = await searchParams;
-  const listings = await getListings().catch(() => []);
-  const requirements = listings.filter((listing) => listing.listingKind === "flat-requirement" && listing.status !== "draft");
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    itemListElement: requirements.slice(0, 20).map((listing, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      url: `${baseUrl}/property/${listing.id}`,
-      name: listing.title,
-    })),
-  };
-  return (
-    <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
-      <FlatmatesView initialLocation={location || ""} />
-    </>
-  );
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const params = await searchParams;
+  const location = locationOf(params);
+  // Location-filtered views outside the target cities are a tool, not a landing page.
+  if (location) return { title: `Flatmates in ${location}`, robots: { index: false, follow: true } };
+  return landingMetadata({ intent }, await getListings().catch(() => []), pickFilters(params));
+}
+
+export default async function FlatmatesPage({ searchParams }: Props) {
+  const params = await searchParams;
+  const location = locationOf(params);
+  if (location) {
+    // Old /flatmates?location=Noida links move to the clean city/place URL.
+    const place = resolvePlace(location);
+    if (place) permanentRedirect(placePath(place.city, place.trail, "flatmates"));
+    return <FlatmatesView initialLocation={location} />;
+  }
+  return <LandingPage scope={{ intent }} listings={await getListings().catch(() => [])} filters={pickFilters(params)} />;
 }
