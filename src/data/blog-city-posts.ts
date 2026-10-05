@@ -11,12 +11,12 @@ export const cityPosts: BlogPost[] = [
     description: "How sharing a flat in Noida works: which sectors to look in, what a room usually costs, what to check before you pay a deposit, and how to find flatmates you can live with.",
     sections: [
       { heading: "Why so many people share a flat in Noida", paragraphs: [
-        "Noida's offices are concentrated in a few places: Sector 62 and the sectors around it, Sector 16 to 18 in the centre, and the office campuses along the Noida–Greater Noida Expressway. Renting a whole 2 or 3 BHK near any of them is more than most single professionals want to spend, so sharing a flat with one or two other people is the norm rather than the exception.",
+        "Renting a whole 2 or 3 BHK close to work is more than most single professionals want to spend, so sharing a flat with one or two other people is the norm rather than the exception.",
         "A sharing flat here usually means you get your own bedroom (sometimes with an attached bathroom) and share the kitchen, living room and bills. Some listings are for a shared room with two beds, which is cheaper but much less private.",
       ] },
       { heading: "Where to look", paragraphs: [
-        "Start from where you work and the metro line you'll use. If your office is around Sector 62, look at [sharing flats in Sector 62](/noida/sector-62/sharing-flat) and the sectors next to it on the Blue Line. If you work on the Expressway, the high-rise societies in [Sector 137](/noida/sector-137) and Sector 143 on the Aqua Line keep the commute short.",
-        "If budget matters more than commute, look across the border in [Greater Noida West](/greater-noida/noida-extension), where newer 2 and 3 BHK flats in societies like Gaur City are noticeably cheaper. Our guide to the [best areas to live in Noida](/blog/best-areas-to-live-in-noida) compares the main options.",
+        "Start from where you work and the metro line you'll use. If your office is around Sector 62, look at [sharing flats in Sector 62](/noida/sector-62/sharing-flat) and the sectors next to it on the Blue Line. If you'll commute on the Aqua Line, [Sector 137](/noida/sector-137) and Sector 143 both have stations.",
+        "If budget matters more than commute, look at [Greater Noida West](/greater-noida/noida-extension), where there are newer 2 and 3 BHK flats in societies like Gaur City. Our guide to the [best areas to live in Noida](/blog/best-areas-to-live-in-noida) compares the main options.",
       ] },
       { heading: "What it costs", paragraphs: [
         "What a room in a shared 2 or 3 BHK costs depends on the sector, how new the society is, whether the room is furnished, whether it has an attached bathroom and how many people share the flat. The rent on each listing is set by the person posting it, so compare a few in the sectors you're considering.",
@@ -36,22 +36,22 @@ export const cityPosts: BlogPost[] = [
     slug: "best-areas-to-live-in-noida",
     city: "noida",
     title: "Best Areas to Live in Noida for Working Professionals",
-    description: "A comparison of Noida's most popular sectors for renting and sharing a flat: Sector 62, Sector 18, the Expressway sectors and the Aqua Line belt, with who each one suits.",
+    description: "A comparison of Noida's most popular sectors for renting and sharing a flat: Sector 62, Sector 18, the newer high-rise sectors and Sectors 75 to 78, with who each one suits.",
     sections: [
       { heading: "How to choose a sector", paragraphs: [
         "Noida is laid out in numbered sectors, and the right one depends mainly on two things: where you work and which metro line you'll use. A sector two stops from your office on the metro is usually a better choice than one that looks close on the map but means an auto ride through traffic.",
       ] },
-      { heading: "Sector 62 and around: for the IT belt", paragraphs: [
-        "[Sector 62](/noida/sector-62) is one of Noida's largest office and institutional areas, with a Blue Line station. Living here or in the sectors next to it means a short commute for a lot of IT jobs. It is busy and built-up, and it has plenty of food and everyday shopping.",
+      { heading: "Sector 62", paragraphs: [
+        "[Sector 62](/noida/sector-62) has a Blue Line station, with Sector 59 and Noida Electronic City stations on either side of it. If you work around here, the sectors along this stretch of the Blue Line are the obvious place to start.",
       ] },
-      { heading: "Sector 18: for the centre of everything", paragraphs: [
-        "[Sector 18](/noida/sector-18) is Noida's main shopping and commercial district, with the easiest metro connection to Delhi on the Blue Line. Rents nearby are higher, and the trade-off is that markets, restaurants and transport are all on your doorstep.",
+      { heading: "Sector 18", paragraphs: [
+        "[Sector 18](/noida/sector-18) has a station on the Blue Line, which runs directly into Delhi, so it suits people who commute to Delhi by metro.",
       ] },
-      { heading: "The Expressway sectors: for newer high-rises", paragraphs: [
-        "Sectors along the Noida–Greater Noida Expressway such as [Sector 137](/noida/sector-137), [Sector 143](/noida/sector-143), [Sector 135](/noida/sector-135) and [Sector 150](/noida/sector-150) have newer gated societies with power backup, security and amenities, and they are served by the Aqua Line. They suit people working on the Expressway. Sector 150 in particular is greener and quieter but further out.",
+      { heading: "Sectors 137, 143, 135 and 150: for newer high-rises", paragraphs: [
+        "[Sector 137](/noida/sector-137), [Sector 143](/noida/sector-143), [Sector 135](/noida/sector-135) and [Sector 150](/noida/sector-150) have newer gated societies with power backup, security and amenities. Sector 137 and Sector 143 have their own Aqua Line stations.",
       ] },
-      { heading: "Sectors 75, 76 and 78: for value close to the metro", paragraphs: [
-        "[Sector 75](/noida/sector-75), [Sector 76](/noida/sector-76) and [Sector 78](/noida/sector-78) are a dense belt of large residential societies near the Aqua Line stations at Sector 50 and 76. They usually offer better value than the centre while still being well connected, which is why they are popular for [sharing flats](/noida/sharing-flat).",
+      { heading: "Sectors 75, 76 and 78: for value", paragraphs: [
+        "[Sector 75](/noida/sector-75), [Sector 76](/noida/sector-76) and [Sector 78](/noida/sector-78) are a dense belt of large residential societies, and Sector 76 has its own Aqua Line station. They usually offer good value, which is why they are popular for [sharing flats](/noida/sharing-flat).",
       ] },
       { heading: "Next steps", paragraphs: [
         "Once you have shortlisted two or three sectors, compare [flats for rent in Noida](/noida/flats-for-rent) and [sharing flats in Noida](/noida/sharing-flat), and visit before committing. If you're still deciding between Noida and its neighbours, see the [best areas to live in Greater Noida](/blog/best-areas-to-live-in-greater-noida) and [Ghaziabad](/blog/best-areas-to-live-in-ghaziabad).",
@@ -113,10 +113,10 @@ export const cityPosts: BlogPost[] = [
     description: "How room sharing works in Greater Noida: Knowledge Park for students, Greater Noida West for professionals, typical costs and what to check before moving in.",
     sections: [
       { heading: "Two very different markets", paragraphs: [
-        "Greater Noida has two distinct sharing markets. Around [Knowledge Park](/greater-noida/knowledge-park) and [Pari Chowk](/greater-noida/pari-chowk), most people looking for a room are students, sharing flats and independent houses close to campus. In [Greater Noida West (Noida Extension)](/greater-noida/noida-extension), it is mostly young professionals sharing newer 2 and 3 BHKs in high-rise societies like Gaur City.",
+        "Greater Noida has two distinct sharing markets. Around [Knowledge Park](/greater-noida/knowledge-park) and [Pari Chowk](/greater-noida/pari-chowk), most people looking for a room are students, sharing flats and independent houses. In [Greater Noida West (Noida Extension)](/greater-noida/noida-extension), it is mostly young professionals sharing newer 2 and 3 BHKs in high-rise societies like Gaur City.",
       ] },
       { heading: "For students", paragraphs: [
-        "Many students start in a hostel or PG and move to a sharing flat in the second year for more freedom and often a lower cost per person. Look within easy reach of your college or an Aqua Line station: Knowledge Park II, Pari Chowk and Alpha 1 are all on the line.",
+        "Many students start in a hostel or PG and move to a sharing flat in the second year for more freedom and often a lower cost per person. If you'll use the metro, Knowledge Park II, Pari Chowk and Alpha 1 all have Aqua Line stations.",
         "Agree with your flatmates on how long everyone plans to stay. Student groups often break up at the end of an academic year, and whoever holds the rent agreement is left looking for replacements.",
       ] },
       { heading: "For working professionals", paragraphs: [
@@ -137,16 +137,16 @@ export const cityPosts: BlogPost[] = [
     description: "Greater Noida's main residential areas compared: Noida Extension, Knowledge Park, Pari Chowk and the Alpha and Beta sectors, with who each suits best.",
     sections: [
       { heading: "Noida Extension (Greater Noida West)", paragraphs: [
-        "[Noida Extension](/greater-noida/noida-extension) is a large cluster of newer high-rise societies such as Gaur City, with shops and services built around them. It offers some of the best value for a modern flat in NCR and is especially popular with young professionals working in Noida.",
+        "[Noida Extension](/greater-noida/noida-extension) is a large cluster of newer high-rise societies such as Gaur City, with shops and services built around them. It is especially popular with young professionals working in Noida.",
       ] },
       { heading: "Knowledge Park", paragraphs: [
-        "[Knowledge Park](/greater-noida/knowledge-park) is where many of Greater Noida's colleges and universities are, with an Aqua Line station. It is the obvious choice for students who want to walk or take a short ride to campus.",
+        "[Knowledge Park](/greater-noida/knowledge-park) has an Aqua Line station (Knowledge Park II) and is a common choice for students looking for a room.",
       ] },
       { heading: "Pari Chowk and the Alpha and Beta sectors", paragraphs: [
-        "[Pari Chowk](/greater-noida/pari-chowk) is the city's central hub, and the established sectors around it, [Alpha 1](/greater-noida/alpha-1), [Alpha 2](/greater-noida/alpha-2), [Beta 1](/greater-noida/beta-1) and [Beta 2](/greater-noida/beta-2), have independent houses, builder floors, markets and parks. They are quieter and greener than Noida, with the Aqua Line close by.",
+        "[Pari Chowk](/greater-noida/pari-chowk) has an Aqua Line station, and the established sectors [Alpha 1](/greater-noida/alpha-1), [Alpha 2](/greater-noida/alpha-2), [Beta 1](/greater-noida/beta-1) and [Beta 2](/greater-noida/beta-2) have independent houses and builder floors. Alpha 1 has its own Aqua Line station too.",
       ] },
       { heading: "Techzone", paragraphs: [
-        "[Techzone](/greater-noida/techzone) is an institutional and IT area, and people working or studying there tend to share flats in the nearby sectors and societies.",
+        "People working or studying in [Techzone](/greater-noida/techzone) tend to share flats in the nearby sectors and societies.",
       ] },
       { heading: "Next steps", paragraphs: [
         "Compare [sharing flats in Greater Noida](/greater-noida/sharing-flat) across these areas, and read [sharing flat in Greater Noida](/blog/sharing-flat-in-greater-noida) for what to check before moving in.",
@@ -157,13 +157,13 @@ export const cityPosts: BlogPost[] = [
     slug: "sharing-flat-in-gurgaon",
     city: "gurgaon",
     title: "Sharing Flat in Gurgaon: Where to Look and What to Expect",
-    description: "A guide to sharing a flat in Gurgaon: the areas near Cyber City and Golf Course Road, how much a room usually costs, and how to choose based on your commute.",
+    description: "A guide to sharing a flat in Gurgaon: the main areas people look in, what drives the rent, and how to choose based on your commute.",
     sections: [
       { heading: "Why sharing is so common in Gurgaon", paragraphs: [
-        "Gurgaon has some of the highest rents in NCR, driven by the corporate offices in Cyber City, Golf Course Road and Udyog Vihar. For a single professional, sharing a flat is often the only way to live close to work without spending a big part of your salary on rent.",
+        "Gurgaon has some of the highest rents in NCR, driven by its corporate offices, such as those in Cyber City. For a single professional, sharing a flat is often the only way to live close to work without spending a big part of your salary on rent.",
       ] },
       { heading: "Choose by commute first", paragraphs: [
-        "Traffic makes commute the most important factor in Gurgaon. If you work in Cyber City, [DLF Phase 2](/gurgaon/dlf-phase-2) and [DLF Phase 3](/gurgaon/dlf-phase-3) are within walking distance or a short Rapid Metro ride. For offices along Golf Course Road, look at [Golf Course Road](/gurgaon/golf-course-road) itself or [Sector 57](/gurgaon/sector-57) nearby.",
+        "Traffic makes commute the most important factor in Gurgaon. If you work in Cyber City, [DLF Phase 2](/gurgaon/dlf-phase-2) and [DLF Phase 3](/gurgaon/dlf-phase-3) are a short Rapid Metro ride away. For offices along Golf Course Road, look at [Golf Course Road](/gurgaon/golf-course-road) itself.",
         "[Sohna Road](/gurgaon/sohna-road) and [Golf Course Extension Road](/gurgaon/golf-course-extension-road) have newer societies with better value, but you'll mostly be commuting by road.",
       ] },
       { heading: "What it costs", paragraphs: [
@@ -184,19 +184,19 @@ export const cityPosts: BlogPost[] = [
     description: "The main areas to rent or share a flat in Gurgaon compared: the DLF phases, Cyber City, Golf Course Road, Golf Course Extension Road, Sohna Road and the older sectors.",
     sections: [
       { heading: "The DLF phases", paragraphs: [
-        "[DLF Phase 1](/gurgaon/dlf-phase-1), [Phase 2](/gurgaon/dlf-phase-2) and [Phase 3](/gurgaon/dlf-phase-3) are established areas of independent houses and builder floors close to Cyber City and MG Road, with Rapid Metro stations. They are the first place most people look if they work in Cyber City.",
+        "[DLF Phase 1](/gurgaon/dlf-phase-1), [Phase 2](/gurgaon/dlf-phase-2) and [Phase 3](/gurgaon/dlf-phase-3) are established areas of independent houses and builder floors with Rapid Metro stations. They are the first place most people look if they work in Cyber City.",
       ] },
       { heading: "Cyber City", paragraphs: [
-        "[Cyber City](/gurgaon/cyber-city) itself is a business district rather than a residential area. People who work there share flats in the DLF phases and the sectors around it.",
+        "[Cyber City](/gurgaon/cyber-city) itself is a business district rather than a residential area. People who work there often share flats in the DLF phases, including DLF Phase 2 right next to it.",
       ] },
       { heading: "Golf Course Road and Golf Course Extension Road", paragraphs: [
-        "[Golf Course Road](/gurgaon/golf-course-road) is Gurgaon's premium high-rise corridor, served by the Rapid Metro. [Golf Course Extension Road](/gurgaon/golf-course-extension-road) further south has newer societies at lower rents. Both are popular for sharing among professionals.",
+        "[Golf Course Road](/gurgaon/golf-course-road) is Gurgaon's premium high-rise corridor, served by the Rapid Metro. [Golf Course Extension Road](/gurgaon/golf-course-extension-road) has newer societies at lower rents. Both are popular for sharing among professionals.",
       ] },
       { heading: "Sohna Road", paragraphs: [
-        "[Sohna Road](/gurgaon/sohna-road) has a lot of newer residential projects and generally better value than Golf Course Road, at the cost of a longer road commute to the main business districts.",
+        "[Sohna Road](/gurgaon/sohna-road) has a lot of newer residential projects and generally better value than Golf Course Road.",
       ] },
       { heading: "Older sectors", paragraphs: [
-        "Sectors such as [Sector 14](/gurgaon/sector-14) and [Sector 21](/gurgaon/sector-21) are established parts of the city with markets and independent houses, often cheaper than the newer corridors. [Sector 57](/gurgaon/sector-57) is close to Golf Course Road and Sushant Lok.",
+        "Sectors such as [Sector 14](/gurgaon/sector-14) and [Sector 21](/gurgaon/sector-21) are established parts of the city with independent houses, often cheaper than the newer corridors.",
       ] },
       { heading: "Next steps", paragraphs: [
         "Compare [sharing flats](/gurgaon/sharing-flat) and [flats for rent in Gurgaon](/gurgaon/flats-for-rent), and read [sharing flat in Gurgaon](/blog/sharing-flat-in-gurgaon) for what to check before moving in.",
@@ -228,13 +228,13 @@ export const cityPosts: BlogPost[] = [
     slug: "sharing-flat-in-ghaziabad",
     city: "ghaziabad",
     title: "Sharing Flat in Ghaziabad: Indirapuram, Vaishali and Beyond",
-    description: "A guide to sharing a flat in Ghaziabad: the popular trans-Hindon areas near the metro, newer affordable townships, typical costs and what to check.",
+    description: "A guide to sharing a flat in Ghaziabad: the popular areas, the metro, newer affordable townships, what drives the rent and what to check.",
     sections: [
       { heading: "Why share in Ghaziabad", paragraphs: [
-        "Ghaziabad borders east Delhi and Noida and usually gives you more space for the money than either. For people working in east Delhi or Noida, sharing a flat here can mean a bigger room and a lower rent with a reasonable commute.",
+        "Ghaziabad borders Delhi and Noida and usually gives you more space for the money than either. For people working in east Delhi or Noida, sharing a flat here can mean a bigger room and a lower rent with a reasonable commute.",
       ] },
       { heading: "The popular areas", paragraphs: [
-        "[Indirapuram](/ghaziabad/indirapuram) is the most popular area with professionals, with dense high-rise societies, malls and markets. [Vaishali](/ghaziabad/vaishali) and [Kaushambi](/ghaziabad/kaushambi) are on the Blue Line, which makes commuting into Delhi straightforward. [Vasundhara](/ghaziabad/vasundhara) sits between them with apartments and builder floors.",
+        "[Indirapuram](/ghaziabad/indirapuram) is a popular area with professionals, with dense high-rise societies. [Vaishali](/ghaziabad/vaishali) and [Kaushambi](/ghaziabad/kaushambi) are on the Blue Line, which makes commuting into Delhi straightforward. [Vasundhara](/ghaziabad/vasundhara) has apartments and builder floors.",
         "[Raj Nagar Extension](/ghaziabad/raj-nagar-extension) and [Crossings Republik](/ghaziabad/crossings-republik) have newer, more affordable societies, but you'll rely more on road transport.",
       ] },
       { heading: "What it costs", paragraphs: [
@@ -255,13 +255,13 @@ export const cityPosts: BlogPost[] = [
     description: "Ghaziabad's main residential areas for renting and sharing a flat compared: Indirapuram, Vaishali, Kaushambi, Vasundhara, Raj Nagar Extension and Crossings Republik.",
     sections: [
       { heading: "Indirapuram", paragraphs: [
-        "[Indirapuram](/ghaziabad/indirapuram) is a dense cluster of high-rise societies with malls, markets and good road links to Delhi and Noida. It is the default choice for many professionals in Ghaziabad.",
+        "[Indirapuram](/ghaziabad/indirapuram) is a dense cluster of high-rise societies. It is the default choice for many professionals in Ghaziabad.",
       ] },
       { heading: "Vaishali and Kaushambi", paragraphs: [
-        "[Vaishali](/ghaziabad/vaishali) sits at the end of the Blue Line and [Kaushambi](/ghaziabad/kaushambi) right on the Delhi border next to Anand Vihar. Both are established areas with a direct metro connection into Delhi, ideal if you commute there daily.",
+        "[Vaishali](/ghaziabad/vaishali) sits at the end of a Blue Line branch and [Kaushambi](/ghaziabad/kaushambi) is the stop before it. Both are established areas with a direct metro connection into Delhi, ideal if you commute there daily.",
       ] },
       { heading: "Vasundhara", paragraphs: [
-        "[Vasundhara](/ghaziabad/vasundhara) is next to Vaishali and Indirapuram, with sectors of apartments and builder floors, and it is often slightly cheaper than its neighbours.",
+        "[Vasundhara](/ghaziabad/vasundhara) has sectors of apartments and builder floors.",
       ] },
       { heading: "Raj Nagar Extension and Crossings Republik", paragraphs: [
         "[Raj Nagar Extension](/ghaziabad/raj-nagar-extension) and [Crossings Republik](/ghaziabad/crossings-republik) are newer high-rise areas with affordable modern flats. They suit people who want more space for less and are comfortable commuting by road.",

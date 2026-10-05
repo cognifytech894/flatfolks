@@ -92,9 +92,10 @@ function intro(scope: Scope, matches: Listing[]): string[] {
   const node = deepest(scope);
   if (!node) return intent ? [city.intentCopy[intent.slug]] : city.intro;
   const name = node.kind === "avenue" ? label(scope)! : node.name;
+  // Localities without verified detail get no description rather than an invented one.
+  if (!isSmallPlace(scope)) return [...(node.about ? [node.about] : []), ...(intent ? [city.intentCopy[intent.slug]] : [])];
   const about = node.about || `${name} is a residential ${node.kind === "avenue" ? "avenue" : "society"} in ${titleLabel({ city, trail: (scope.trail || []).slice(0, -1) }) || city.name}.`;
   if (!intent) return [about];
-  if (!isSmallPlace(scope)) return [about, city.intentCopy[intent.slug]];
   const bhk = bhkSummary(matches);
   switch (intent.slug) {
     case "flats-for-rent": return [about, `Flats for rent in ${name} posted directly by owners and current tenants${bhk ? `, currently ${bhk}` : ""}. Compare rent and deposit, then contact the poster yourself, with no brokerage.`];
