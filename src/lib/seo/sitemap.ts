@@ -30,10 +30,26 @@ export function urlset(entries: Entry[]) {
   return `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`;
 }
 
-export function sitemapIndex() {
+// Search Console flags an empty <urlset> as an error, so child sitemaps with no
+// URLs yet (e.g. societies before any society page is indexable) are left out.
+export async function sitemapIndex() {
   const now = new Date().toISOString();
-  const items = sitemapNames.map((name) => `  <sitemap>\n    <loc>${baseUrl}/sitemap-${name}.xml</loc>\n    <lastmod>${now}</lastmod>\n  </sitemap>`);
+  const listings = await getListings();
+  const names = [];
+  for (const name of sitemapNames) if ((await sitemapEntries(name, listings)).length) names.push(name);
+  const items = names.map((name) => `  <sitemap>\n    <loc>${baseUrl}/sitemap-${name}.xml</loc>\n    <lastmod>${now}</lastmod>\n  </sitemap>`);
   return `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${items.join("\n")}\n</sitemapindex>`;
+}
+
+/** Serves a sitemap, answering 503 if the database is down: Google retries a 503,
+ * whereas an empty sitemap would tell it every listing URL had disappeared. */
+export async function sitemapResponse(build: () => Promise<string>) {
+  try {
+    return xmlResponse(await build());
+  } catch (error) {
+    console.error("Sitemap generation failed", error);
+    return new Response("Sitemap temporarily unavailable", { status: 503, headers: { "Retry-After": "3600" } });
+  }
 }
 
 /** Newest listing date in a scope, so lastmod moves when the page's content does. */
@@ -59,7 +75,7 @@ function withIntents(scope: Scope): Scope[] {
   return [scope, ...intents.map((intent) => ({ ...scope, intent }))];
 }
 
-export async function sitemapEntries(name: SitemapName): Promise<Entry[]> {
+export async function sitemapEntries(name: SitemapName, preloaded?: Listing[]): Promise<Entry[]> {
   if (name === "pages") {
     return [
       { path: "/", changeFrequency: "daily", priority: 1 },
@@ -70,7 +86,7 @@ export async function sitemapEntries(name: SitemapName): Promise<Entry[]> {
   }
   if (name === "blog") return blogPosts.map((post) => ({ path: `/blog/${post.slug}`, changeFrequency: "monthly", priority: 0.5 }));
 
-  const listings = await getListings().catch(() => []);
+  const listings = preloaded ?? (await getListings());
   if (name === "listings") {
     return listings.filter(isListingIndexable).map((listing) => ({ path: listingPath(listing), lastModified: listing.createdAt, changeFrequency: "weekly", priority: 0.6 }));
   }

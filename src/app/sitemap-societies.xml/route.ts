@@ -1,7 +1,7 @@
-import { sitemapEntries, urlset, xmlResponse } from "@/lib/seo/sitemap";
+import { sitemapEntries, sitemapResponse, urlset } from "@/lib/seo/sitemap";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  return xmlResponse(urlset(await sitemapEntries("societies")));
+export function GET() {
+  return sitemapResponse(async () => urlset(await sitemapEntries("societies")));
 }

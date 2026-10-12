@@ -1,5 +1,7 @@
-import { sitemapIndex, xmlResponse } from "@/lib/seo/sitemap";
+import { sitemapIndex, sitemapResponse } from "@/lib/seo/sitemap";
+
+export const dynamic = "force-dynamic";
 
 export function GET() {
-  return xmlResponse(sitemapIndex());
+  return sitemapResponse(sitemapIndex);
 }
