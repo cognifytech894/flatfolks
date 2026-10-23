@@ -45,21 +45,14 @@ export function listingContext(listing: Listing, all: Listing[]) {
   const intent = primaryIntent(listing);
   const path = listingPath(listing);
   const crumbs: Crumb[] = [{ name: "Home", href: "/" }];
-  const backLinks: { label: string; href: string }[] = [];
 
   if (place) {
     const { city, trail } = place;
     crumbs.push({ name: city.name, href: placePath(city) });
     trail.forEach((item, index) => crumbs.push({ name: index === 0 && item.areaName ? item.areaName : item.name, href: placePath(city, trail.slice(0, index + 1)) }));
     crumbs.push({ name: intent.label, href: placePath(city, trail, intent.slug) });
-    // Deepest first: "Sharing Flat in Gaur City 2", "All of Gaur City 2", then each level above.
-    backLinks.push({ label: `${intent.label} in ${placeLabel(city, trail)}`, href: placePath(city, trail, intent.slug) });
-    for (let depth = trail.length; depth >= 0; depth--) {
-      backLinks.push({ label: `Flats & flatmates in ${placeLabel(city, trail.slice(0, depth))}`, href: placePath(city, trail.slice(0, depth)) });
-    }
   } else {
     crumbs.push({ name: intent.label, href: `/${intent.slug}` });
-    backLinks.push({ label: `Browse ${intent.label.toLowerCase()}`, href: `/${intent.slug}` });
   }
   crumbs.push({ name: listing.title, href: path });
 
@@ -71,5 +64,5 @@ export function listingContext(listing: Listing, all: Listing[]) {
     for (const other of others) if (related.length < 6 && !related.includes(other) && inScope(other, scope)) related.push(other);
   }
 
-  return { path, url: `${baseUrl}${path}`, crumbs, backLinks, related, expired: isExpired(listing) };
+  return { path, url: `${baseUrl}${path}`, crumbs, related, expired: isExpired(listing) };
 }

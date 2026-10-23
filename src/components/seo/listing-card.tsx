@@ -35,7 +35,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
     <article className="relative flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
       <div className="relative h-40 w-full shrink-0 bg-slate-100">
         {listing.image
-          ? <Image src={listing.image} alt={listing.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 400px" />
+          ? <Image src={listing.image} alt={listing.title} fill className="object-cover" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px" />
           : <div className="grid h-full w-full place-items-center text-sm font-medium text-slate-600">No photos</div>}
       </div>
       <div className="flex flex-1 flex-col p-4">

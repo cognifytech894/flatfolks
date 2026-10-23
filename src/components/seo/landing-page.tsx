@@ -4,12 +4,11 @@ import { ArrowRight, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { Breadcrumbs, breadcrumbJsonLd, type Crumb } from "@/components/seo/breadcrumbs";
 import { ListingCard } from "@/components/seo/listing-card";
 import { RichText } from "@/components/seo/rich-text";
-import { postsForCity } from "@/data/blog";
 import { furnishingLabel, furnishingOptions, isFurnishing } from "@/data/furnishing";
 import type { Listing } from "@/lib/database";
 import { safeJsonLd } from "@/lib/json-ld";
-import { baseUrl, childPlacesByListings, inScope, intents, isScopeIndexable, listingPath, placePath, type Scope } from "@/lib/seo/listings";
-import { cities, placeLabel, type City, type IntentSlug, type Place } from "@/lib/seo/locations";
+import { baseUrl, inScope, intents, isScopeIndexable, listingPath, placePath, type Scope } from "@/lib/seo/listings";
+import { placeLabel, type City, type IntentSlug, type Place } from "@/lib/seo/locations";
 
 export type LandingFilters = { gender?: string; budget?: string; furnishing?: string };
 
@@ -189,33 +188,6 @@ function FilterBar({ path, filters }: { path: string; filters: LandingFilters })
   );
 }
 
-type PillLink = { label: string; href: string; count?: number };
-
-function LinkPills({ title: sectionTitle, links, more }: { title: string; links: PillLink[]; more?: PillLink[] }) {
-  if (!links.length && !more?.length) return null;
-  const pill = (link: PillLink) => (
-    <Link key={link.href} href={link.href} aria-label={link.count ? `${link.label}, ${link.count} listing${link.count === 1 ? "" : "s"}` : undefined} className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:border-blue-300 hover:text-blue-600">
-      {link.label}
-      {/* The count is its own badge, separated in the text too, so it never reads as part of the name ("Sector 1371"). */}
-      {link.count ? <><span className="sr-only"> · </span><span aria-hidden="true" className="ml-2 grid h-5 min-w-5 place-items-center rounded-full bg-slate-100 px-1.5 text-xs font-semibold text-slate-600">{link.count}</span></> : null}
-    </Link>
-  );
-  return (
-    <section className="mt-10">
-      <h2 className="text-lg font-semibold text-slate-900">{sectionTitle}</h2>
-      {links.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{links.map(pill)}</div>}
-      {more && more.length > 0 && (
-        <details className="group mt-3">
-          <summary className="inline-block cursor-pointer list-none py-1 text-sm font-medium text-blue-600 hover:underline [&::-webkit-details-marker]:hidden">
-            {links.length ? "More" : "Show all"} ({more.length}) <span className="inline-block transition group-open:rotate-180">▾</span>
-          </summary>
-          <div className="mt-3 flex flex-wrap gap-2">{more.map(pill)}</div>
-        </details>
-      )}
-    </section>
-  );
-}
-
 /** Furnishing mix of the listings that state one, e.g. "2 furnished, 1 semi-furnished". */
 function furnishingSummary(listings: Listing[]): string {
   return furnishingOptions
@@ -283,22 +255,6 @@ export function LandingPage({ scope, listings, filters }: { scope: Scope; listin
   const postHref = intent?.slug === "flatmates" ? "/property?intent=flat" : "/property?intent=flatmate";
   const faqs = faqsFor(scope, inPage);
 
-  const scopeLink = (nextTrail: Place[], nextIntent?: IntentSlug) => city ? placePath(city, nextTrail, nextIntent) : `/${nextIntent}`;
-  const intentLinks: PillLink[] = intents.filter((other) => other.slug !== intent?.slug).map((other) => ({ label: city ? `${other.label} in ${place}` : other.label, href: scopeLink(trail, other.slug) }));
-  if (intent && city) intentLinks.unshift({ label: `All listings in ${place}`, href: scopeLink(trail) });
-  if (trail.length && city) {
-    const parentTrail = trail.slice(0, -1);
-    intentLinks.push({ label: `${intent ? `${intent.label} in ` : "All of "}${placeLabel(city, parentTrail)}`, href: scopeLink(parentTrail, intent?.slug) });
-  }
-
-  const childLinks = (items: { place: Place; count: number }[], parent: Place[]) => items.map(({ place: child, count }) => ({ label: intent ? `${intent.label} in ${child.name}` : child.name, href: scopeLink([...parent, child], intent?.slug), count }));
-  const children = city ? childPlacesByListings(listings, city, trail) : [];
-  const siblings = city && trail.length ? childPlacesByListings(listings, city, trail.slice(0, -1)).filter(({ place: other }) => other.slug !== trail[trail.length - 1].slug) : [];
-  const childKind = children[0]?.place.kind;
-  const childTitle = !trail.length ? `Popular areas in ${city?.name}` : childKind === "avenue" ? `Avenues in ${place}` : childKind === "society" ? `Societies in ${trail[trail.length - 1].areaName || place}` : `Areas in ${place}`;
-  const siblingTitle = deepest(scope)?.kind === "avenue" ? `Other avenues in ${trail[trail.length - 2].name}` : isSmallPlace(scope) ? "Nearby societies" : `Other areas in ${city?.name}`;
-  const cityLinks = cities.filter((other) => other.slug !== city?.slug).map((other) => ({ label: intent ? `${intent.label} in ${other.name}` : other.name, href: placePath(other, [], intent?.slug) }));
-  const guides = city ? postsForCity(city.slug) : [];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -383,12 +339,6 @@ export function LandingPage({ scope, listings, filters }: { scope: Scope; listin
             </section>
           )}
 
-          {city && children.length > 0 && <LinkPills title={childTitle} links={childLinks(children.filter(({ count }) => count > 0), trail)} more={childLinks(children.filter(({ count }) => count === 0), trail)} />}
-          {siblings.length > 0 && <LinkPills title={siblingTitle} links={childLinks(siblings.filter(({ count }) => count > 0).slice(0, 12), trail.slice(0, -1))} more={childLinks(siblings.filter(({ count }) => count === 0), trail.slice(0, -1))} />}
-          <LinkPills title="Also browse" links={intentLinks} />
-          {!city && <LinkPills title="Browse by city" links={cityLinks} />}
-          {city && !trail.length && <LinkPills title="Other cities" links={cityLinks} />}
-          {guides.length > 0 && <LinkPills title={`Guides for ${city!.name}`} links={guides.map((post) => ({ label: post.title, href: `/blog/${post.slug}` }))} />}
         </div>
       </div>
     </main>

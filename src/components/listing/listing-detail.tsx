@@ -34,12 +34,11 @@ export type ListingDetailProps = {
   url: string;
   crumbs: Crumb[];
   /** Descriptive links back up the hierarchy: society, intent page, area. */
-  backLinks: { label: string; href: string }[];
   related: Listing[];
   expired: boolean;
 };
 
-export function ListingDetail({ listing, isLoggedIn, url, crumbs, backLinks, related, expired }: ListingDetailProps) {
+export function ListingDetail({ listing, isLoggedIn, url, crumbs, related, expired }: ListingDetailProps) {
   const ownerName = listing.ownerName || "FlatFolks member";
   const isRequirement = listing.listingKind === "flat-requirement";
   // A flat-requirement listing has no real property photos (it's a person's
@@ -216,11 +215,6 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, backLinks, rel
             </div>
           </div>
 
-          {backLinks.length > 0 && (
-            <nav aria-label="Browse more" className="mt-8 flex flex-wrap gap-2">
-              {backLinks.map((link) => <Link key={link.href} href={link.href} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:border-blue-300 hover:text-blue-600">{link.label}</Link>)}
-            </nav>
-          )}
 
           {related.length > 0 && (
             <section className="mt-10">

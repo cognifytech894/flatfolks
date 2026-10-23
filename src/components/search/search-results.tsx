@@ -32,7 +32,7 @@ export function SearchResults({ listings, mapView, searchedLocation, keepOrder }
           <article key={listing.id} className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
             <div className="relative h-40 w-full shrink-0">
               {listing.image
-                ? <Image src={listing.image} alt={listing.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 400px" />
+                ? <Image src={listing.image} alt={listing.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 480px" />
                 : <div className="grid h-full w-full place-items-center bg-slate-100 text-sm font-medium text-slate-600">No photos</div>}
             </div>
             <div className="flex flex-1 flex-col p-4">

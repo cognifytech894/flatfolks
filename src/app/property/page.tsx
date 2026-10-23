@@ -10,6 +10,13 @@ import { PreferencesField } from "@/components/listing/preferences-field";
 import { furnishingOptions, nearbyMetroMaxLength, type Furnishing } from "@/data/furnishing";
 import { flatConfigurationOptions, listingAmenities, roomTypeOptions, tenantPreferenceOptions, type FlatConfiguration, type RoomType, type TenantPreference } from "@/data/listing-attributes";
 
+type RequiredField = "location" | "budget" | "availableFrom" | "contactPhone";
+
+// Same rule as the listings API, so the form never accepts a number the server rejects.
+function isValidPhone(phone: string) {
+  return /^[ds+-]{7,20}$/.test(phone) && phone.replace(/D/g, "").length >= 10;
+}
+
 type Form = { title: string; description: string; location: string; address: string; budget: string; deposit: string; availableFrom: string; genderPreference: "Male" | "Female" | "Family" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string; furnishing: "" | Furnishing; nearbyMetro: string; flatConfiguration: "" | FlatConfiguration; roomType: "" | RoomType; tenantPreference: "" | TenantPreference };
 
 function PostListing() {
@@ -22,9 +29,27 @@ function PostListing() {
   const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [errors, setErrors] = useState<Partial<Record<RequiredField, string>>>({});
   const locationSuggestions = searchLocations(form.location);
 
-  const update = (field: keyof Form, value: string) => setForm((current) => ({ ...current, [field]: value }));
+  const update = (field: keyof Form, value: string) => {
+    setForm((current) => ({ ...current, [field]: value }));
+    setErrors((current) => (field in current ? { ...current, [field]: undefined } : current));
+  };
+
+  // Inline, per-field messages instead of the browser's one-at-a-time bubbles (the forms use noValidate).
+  function validate(): Partial<Record<RequiredField, string>> {
+    const found: Partial<Record<RequiredField, string>> = {};
+    if (!form.location.trim()) found.location = isFlatRequirement ? "Enter the area or society you want to live in." : "Enter the area or society of the flat.";
+    if (!(Number(form.budget) >= 1)) found.budget = isFlatRequirement ? "Enter your maximum monthly budget." : "Enter the monthly rent.";
+    if (!form.availableFrom) found.availableFrom = isFlatRequirement ? "Pick the date you need the flat from." : "Pick the date the flat is available from.";
+    if (!form.contactPhone.trim()) found.contactPhone = "Enter a contact number.";
+    else if (!isValidPhone(form.contactPhone.trim())) found.contactPhone = "Enter a valid 10-digit phone number.";
+    return found;
+  }
+  const fieldError = (field: RequiredField) => errors[field] ? <p id={`post-${field}-error`} className="mt-1.5 text-sm font-medium text-red-700">{errors[field]}</p> : null;
+  const invalidProps = (field: RequiredField) => ({ id: `post-${field}`, "aria-invalid": Boolean(errors[field]) || undefined, "aria-describedby": errors[field] ? `post-${field}-error` : undefined });
+  const errorBorder = (field: RequiredField) => (errors[field] ? " border-red-500" : "");
   const toggleAmenity = (amenity: string) => setSelectedAmenities((current) => current.includes(amenity) ? current.filter((item) => item !== amenity) : [...current, amenity]);
   const togglePreference = (id: string) => setSelectedPreferences((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
 
@@ -37,6 +62,9 @@ function PostListing() {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const found = validate();
+    const firstInvalid = (["location", "budget", "availableFrom", "contactPhone"] as const).find((field) => found[field]);
+    if (firstInvalid) { setErrors(found); setStatus("idle"); setMessage(""); document.getElementById(`post-${firstInvalid}`)?.focus(); return; }
     if (images.some((image) => image.uploading)) { setStatus("error"); setMessage("Please wait for your photos to finish uploading."); return; }
     setStatus("saving"); setMessage("");
     try {
@@ -121,7 +149,8 @@ function PostListing() {
   const dateField = (
     <label className={labelClass}>
       {isFlatRequirement ? "Need flat from" : "Flat available from"}
-      <input required type="date" value={form.availableFrom} onChange={(event) => update("availableFrom", event.target.value)} className={fieldClass} />
+      <input required type="date" {...invalidProps("availableFrom")} value={form.availableFrom} onChange={(event) => update("availableFrom", event.target.value)} className={fieldClass + errorBorder("availableFrom")} />
+      {fieldError("availableFrom")}
     </label>
   );
 
@@ -157,10 +186,11 @@ function PostListing() {
   const contactField = (
     <label className={labelClass}>
       Contact number
-      <div className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-blue-500">
+      <div className={`mt-2 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-blue-500${errorBorder("contactPhone")}`}>
         <Phone className="h-4 w-4 text-slate-500" />
-        <input required type="tel" value={form.contactPhone} onChange={(event) => update("contactPhone", event.target.value)} className="w-full bg-transparent outline-none" placeholder="98765 43210" />
+        <input required type="tel" {...invalidProps("contactPhone")} value={form.contactPhone} onChange={(event) => update("contactPhone", event.target.value)} className="w-full bg-transparent outline-none" placeholder="98765 43210" />
       </div>
+      {fieldError("contactPhone")}
     </label>
   );
 
@@ -168,10 +198,11 @@ function PostListing() {
     <label className={labelClass}>
       Location
       <div className="relative mt-2">
-        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-blue-500">
+        <div className={`flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-blue-500${errorBorder("location")}`}>
           <MapPin className="h-4 w-4 text-slate-500" />
           <input
             required
+            {...invalidProps("location")}
             value={form.location}
             onFocus={() => setShowLocationSuggestions(true)}
             onBlur={() => window.setTimeout(() => setShowLocationSuggestions(false), 150)}
@@ -198,6 +229,7 @@ function PostListing() {
           </div>
         )}
       </div>
+      {fieldError("location")}
     </label>
   );
 
@@ -216,7 +248,8 @@ function PostListing() {
   const budgetField = (
     <label className={labelClass}>
       {isFlatRequirement ? "Maximum budget per month" : "Monthly rent"}
-      <input required min="1" type="number" value={form.budget} onChange={(event) => update("budget", event.target.value)} className={fieldClass} placeholder="₹ 15,000" />
+      <input required min="1" type="number" {...invalidProps("budget")} value={form.budget} onChange={(event) => update("budget", event.target.value)} className={fieldClass + errorBorder("budget")} placeholder="₹ 15,000" />
+      {fieldError("budget")}
     </label>
   );
 
@@ -338,7 +371,7 @@ function PostListing() {
           <p className="mt-2 text-sm text-slate-600">{isFlatRequirement ? "Your requirement will be visible to people looking for a flatmate." : "Your flat will be visible to people looking for a flat."}</p>
 
           {isFlatRequirement ? (
-            <form onSubmit={submit} className="mt-7 space-y-6">
+            <form onSubmit={submit} noValidate className="mt-7 space-y-6">
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-4">
                   {titleField}
@@ -360,7 +393,7 @@ function PostListing() {
               {submitButton}
             </form>
           ) : (
-            <form onSubmit={submit} className="mt-7 space-y-6">
+            <form onSubmit={submit} noValidate className="mt-7 space-y-6">
               <label className="flex min-h-40 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center hover:border-blue-400 hover:bg-blue-50">
                 <input type="file" accept="image/png,image/jpeg,image/webp" multiple onChange={selectImage} className="hidden" />
                 {images.length ? (

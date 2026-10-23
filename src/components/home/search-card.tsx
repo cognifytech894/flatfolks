@@ -1,18 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { House, IndianRupee, MapPin, Search, SlidersHorizontal, UsersRound } from "lucide-react";
 import { indianCities, searchLocations } from "@/data/indian-cities";
-
-// One-tap searches for the areas with the most demand.
-const quickAreas = [
-  ["Gaur City 2", "Gaur City 2"],
-  ["Noida Ext.", "Noida Extension"],
-  ["Sector 62", "Sector 62, Noida"],
-  ["Sector 137", "Sector 137, Noida"],
-] as const;
 
 export function SearchCard() {
   const router = useRouter();
@@ -53,8 +44,5 @@ export function SearchCard() {
       <button type="button" onClick={() => setShowFilters((open) => !open)} aria-expanded={showFilters} aria-controls="home-filters" className="flex items-center justify-center gap-2 rounded-md border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 lg:hidden"><SlidersHorizontal className="h-4 w-4" />Filters{activeFilters > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-blue-600 px-1 text-xs text-white">{activeFilters}</span>}</button>
       <button type="submit" className="flex items-center justify-center gap-2 rounded-md bg-[#1760dc] px-4 py-3 text-sm font-bold text-white shadow-md transition hover:bg-blue-700 lg:text-xs"><Search className="h-4 w-4" />Search</button>
     </div></form>
-    <div className="mt-3 flex flex-wrap gap-2">
-      {quickAreas.map(([label, query]) => <Link key={label} href={`/search?location=${encodeURIComponent(query)}`} className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700">{label}</Link>)}
-    </div>
   </div>;
 }

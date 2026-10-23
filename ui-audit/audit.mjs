@@ -504,11 +504,14 @@ async function interactions(browser, listingPath, blocked) {
       const bodyBefore = await page.locator("body").innerText();
       await submit.click();
       await page.waitForTimeout(800);
-      const invalid = await page.evaluate(() => [...document.querySelectorAll("form :invalid")].map((el) => ({ name: el.getAttribute("name") || el.id || el.getAttribute("placeholder") || el.tagName, msg: el.validationMessage })));
+      // Inline errors: fields marked aria-invalid, each pointing at a visible message.
+      const inline = await page.evaluate(() => [...document.querySelectorAll('form [aria-invalid="true"]')].map((el) => document.getElementById(el.getAttribute("aria-describedby") || "")?.textContent || ""));
+      const usesNative = await page.evaluate(() => [...document.querySelectorAll("form")].some((f) => !f.noValidate) && document.querySelectorAll("form :invalid").length > 0);
       const bodyAfter = await page.locator("body").innerText();
       const appMessage = bodyAfter !== bodyBefore && /required|please|enter|add|select|login|log in|sign in/i.test(bodyAfter);
-      if (!invalid.length && !appMessage) throw fail("Submitting the empty form shows no validation message.", "src/app/property/page.tsx", "Mark required fields `required` or show inline errors.");
-      if (invalid.length) addIssue({ severity: "Low", page: `interaction: post form (${intent})`, viewport: vp.name, what: `Empty submit is blocked by browser validation on ${invalid.length} field(s) (first: ${invalid[0].name} — "${invalid[0].msg}"). Native bubbles show one field at a time.`, shot: "-", file: "src/app/property/page.tsx", fix: "Optional: show inline per-field errors instead of native bubbles." });
+      if (!inline.length && !usesNative && !appMessage) throw fail("Submitting the empty form shows no validation message.", "src/app/property/page.tsx", "Show inline errors on required fields.");
+      if (!inline.length && usesNative) addIssue({ severity: "Low", page: `interaction: post form (${intent})`, viewport: vp.name, what: "Empty submit is blocked only by native browser bubbles, which show one field at a time.", shot: "-", file: "src/app/property/page.tsx", fix: "Show inline per-field errors (noValidate + aria-invalid + message)." });
+      if (inline.some((msg) => !msg.trim())) addIssue({ severity: "Medium", page: `interaction: post form (${intent})`, viewport: vp.name, what: "A field is marked invalid but its aria-describedby message is missing or empty.", shot: "-", file: "src/app/property/page.tsx", fix: "Point aria-describedby at the rendered error text." });
     });
   }
 
