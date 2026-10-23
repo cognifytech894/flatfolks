@@ -44,7 +44,7 @@ export type City = {
   /** Shown under the H1 of the city hub page. */
   intro: string[];
   /** One short, city-specific paragraph per intent page. */
-  intentCopy: Record<IntentSlug, string>;
+  intentCopy: Partial<Record<IntentSlug, string>>;
   places: Place[];
 };
 
@@ -147,7 +147,6 @@ export const cities: City[] = [
     ],
     intentCopy: {
       "flats-for-rent": "Flats for rent in Noida range from compact 1 BHKs to 3 BHKs in newer high-rise societies, which usually come with power backup, security and a gym.",
-      flatmates: "These are people who need a place in Noida and are looking for someone to share with. If you have a room free in your flat, contact the ones whose budget and preferences match yours.",
       "sharing-flat": "A sharing flat in Noida usually means a private or shared room in a 2 or 3 BHK, with the kitchen and living room shared with one or two flatmates. It is a common way for working professionals to keep rent down.",
     },
     places: [

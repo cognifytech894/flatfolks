@@ -14,7 +14,7 @@ import { cities, placeLabel, type City, type IntentSlug, type Place } from "@/li
 export type LandingFilters = { gender?: string; budget?: string; furnishing?: string };
 
 // Copy for the national intent hubs (/sharing-flat, /flats-for-rent, /flatmates).
-const nationalCopy: Record<IntentSlug, { h1: string; title: string; intro: string }> = {
+const nationalCopy: Record<IntentSlug, { h1: string; title: string; intro?: string }> = {
   "sharing-flat": {
     h1: "Sharing Flats in Noida, Greater Noida, Gurgaon & Ghaziabad",
     title: "Sharing Flat: Rooms in Shared Flats in Noida, Gurgaon & Ghaziabad",
@@ -28,7 +28,6 @@ const nationalCopy: Record<IntentSlug, { h1: string; title: string; intro: strin
   flatmates: {
     h1: "Find Flatmates & Roommates",
     title: "Find Flatmates & Roommates in Noida, Gurgaon & Ghaziabad",
-    intro: "These are people who need a place and are looking for someone to share with. If you have a room free in your flat, browse their budget, move-in plans and lifestyle preferences and contact the ones that match.",
   },
 };
 
@@ -88,12 +87,16 @@ function title(scope: Scope, matches: Listing[]): string {
 
 function intro(scope: Scope, matches: Listing[]): string[] {
   const { city, intent } = scope;
-  if (!city) return intent ? [nationalCopy[intent.slug].intro] : [];
+  if (!city) {
+    const text = intent && nationalCopy[intent.slug].intro;
+    return text ? [text] : [];
+  }
   const node = deepest(scope);
-  if (!node) return intent ? [city.intentCopy[intent.slug]] : city.intro;
+  const intentText = intent ? city.intentCopy[intent.slug] : undefined;
+  if (!node) return intent ? (intentText ? [intentText] : []) : city.intro;
   const name = node.kind === "avenue" ? label(scope)! : node.name;
   // Localities without verified detail get no description rather than an invented one.
-  if (!isSmallPlace(scope)) return [...(node.about ? [node.about] : []), ...(intent ? [city.intentCopy[intent.slug]] : [])];
+  if (!isSmallPlace(scope)) return [...(node.about ? [node.about] : []), ...(intentText ? [intentText] : [])];
   const about = node.about || `${name} is a residential ${node.kind === "avenue" ? "avenue" : "society"} in ${titleLabel({ city, trail: (scope.trail || []).slice(0, -1) }) || city.name}.`;
   if (!intent) return [about];
   const bhk = bhkSummary(matches);
