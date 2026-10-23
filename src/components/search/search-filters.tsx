@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Filter, RotateCcw, Search, X } from "lucide-react";
 import { searchLocations } from "@/data/indian-cities";
 import { flatConfigurationOptions, roomTypeOptions, searchableAmenities, tenantPreferenceOptions } from "@/data/listing-attributes";
 import type { SearchParams } from "@/lib/search-filters";
 
-type Filters = Omit<SearchParams, "map" | "moveIn">;
+/** Fired by the empty-results "Change budget" button: open the filters and focus the budget, without changing it. */
+export const editBudgetEvent = "flatfolks-edit-budget";
+
+type Filters = Omit<SearchParams, "map" | "moveIn" | "maxBudget">;
 type Option = { readonly value: string; readonly label: string };
 
 const genderOptions = [{ value: "", label: "Any" }, { value: "Male", label: "Male" }, { value: "Female", label: "Female" }];
@@ -35,6 +38,16 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
   const [cityQuery, setCityQuery] = useState("");
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [openOnMobile, setOpenOnMobile] = useState(false);
+  const budgetInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const editBudget = () => {
+      setOpenOnMobile(true);
+      // Wait a frame so the panel is visible on phones before focusing.
+      window.requestAnimationFrame(() => { budgetInput.current?.scrollIntoView({ block: "center", behavior: "smooth" }); budgetInput.current?.focus({ preventScroll: true }); });
+    };
+    window.addEventListener(editBudgetEvent, editBudget);
+    return () => window.removeEventListener(editBudgetEvent, editBudget);
+  }, []);
   const selectedLocations = (filters.location || "").split(",").filter(Boolean);
   const citySuggestions = searchLocations(cityQuery);
 
@@ -88,9 +101,9 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
             {showCitySuggestions && citySuggestions.length > 0 && <div className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg">{citySuggestions.map(({ label, hint }) => <button type="button" key={`${label}-${hint}`} onMouseDown={(event) => event.preventDefault()} onClick={() => addLocation(label)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm hover:bg-blue-50"><span className="font-medium text-slate-800">{label}</span><span className="text-xs text-slate-500">{hint}</span></button>)}</div>}
           </div>
           <div>
-            <p className={sectionTitle}>Budget per month</p>
-            {/* One "up to" budget; links that still carry minBudget keep working through the active-filter chips. */}
-            <input value={filters.maxBudget || ""} onChange={(event) => update("maxBudget", event.target.value)} type="number" min="0" placeholder="Up to ₹" aria-label="Budget per month" className={`mt-2 ${inputClass}`} />
+            <label htmlFor="search-budget" className={`block ${sectionTitle}`}>Max budget (₹/month)</label>
+            {/* Only what the visitor types: empty by default, never prefilled or widened. */}
+            <input id="search-budget" ref={budgetInput} value={filters.budget || ""} onChange={(event) => update("budget", event.target.value)} type="number" min="1" inputMode="numeric" placeholder="₹" className={`mt-2 ${inputClass}`} />
           </div>
           <div>
             <p className={sectionTitle}>Property</p>

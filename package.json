@@ -10,7 +10,8 @@
     "ui-audit": "node ui-audit/audit.mjs",
     "test:api": "node --test tests/api-auth.test.mjs",
     "test:inactive": "node --test tests/inactive-posts.test.mjs",
-    "test:inactive:e2e": "node --test tests/inactive-posts-e2e.test.mjs"
+    "test:inactive:e2e": "node --test tests/inactive-posts-e2e.test.mjs",
+    "test:budget": "node --import ./tests/helpers/alias.mjs --test tests/budget.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

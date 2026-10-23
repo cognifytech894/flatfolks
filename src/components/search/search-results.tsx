@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getSavedCity, rememberCity, sortByCity } from "@/lib/saved-city";
+import { perMonth, rupees } from "@/lib/budget";
+import { editBudgetEvent } from "@/components/search/search-filters";
 
 type ResultListing = {
   id: string; href: string; title: string; location: string; rent: number; image: string; description?: string;
@@ -11,7 +13,15 @@ type ResultListing = {
 };
 
 /** keepOrder: the visitor picked a sort, so don't move their saved city's listings to the top. */
-export function SearchResults({ listings, mapView, searchedLocation, keepOrder }: { listings: ResultListing[]; mapView: boolean; searchedLocation?: string; keepOrder?: boolean }) {
+/** Post-requirement link carrying only what the visitor typed in this search. */
+function requirementHref(location?: string, budget?: number) {
+  const query = new URLSearchParams({ intent: "flat" });
+  if (location?.trim()) query.set("location", location.trim());
+  if (budget) query.set("budget", String(budget));
+  return `/property?${query}`;
+}
+
+export function SearchResults({ listings, mapView, searchedLocation, budget, keepOrder }: { listings: ResultListing[]; mapView: boolean; searchedLocation?: string; budget?: number; keepOrder?: boolean }) {
   const [sorted, setSorted] = useState(listings);
   useEffect(() => { if (searchedLocation) rememberCity(searchedLocation); }, [searchedLocation]);
   useEffect(() => { setSorted(keepOrder ? listings : sortByCity(listings, getSavedCity())); }, [listings, keepOrder]);
@@ -44,7 +54,7 @@ export function SearchResults({ listings, mapView, searchedLocation, keepOrder }
                 </div>
               )}
               {listing.description && <p className="mt-2 line-clamp-2 text-sm text-slate-500">{listing.description}</p>}
-              <p className="mt-2 text-sm font-medium text-emerald-700">Rent: ₹{listing.rent.toLocaleString("en-IN")}</p>
+              <p className="mt-2 text-sm font-medium text-emerald-700">{perMonth(listing.rent)}</p>
               <div className="mt-auto flex items-center justify-between pt-4">
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{listing.propertyType}</span>
                 <Link href={listing.href} className="inline-block py-1 text-sm font-semibold text-slate-700">View details</Link>
@@ -52,12 +62,20 @@ export function SearchResults({ listings, mapView, searchedLocation, keepOrder }
             </div>
           </article>
         ))}
-        {sorted.length === 0 && (
+        {sorted.length === 0 && (budget ? (
+          // No suggested amounts and nothing outside the budget: only the visitor's own number.
           <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-sm text-slate-600 md:col-span-2">
-            No rooms match these filters yet. Try removing a filter, another location or a wider budget.
+            <p className="text-base font-semibold text-slate-900">No rooms up to {rupees(budget)} right now.</p>
+            <button type="button" onClick={() => window.dispatchEvent(new Event(editBudgetEvent))} className="mt-4 inline-flex min-h-11 items-center rounded-full border border-slate-300 bg-white px-5 py-2 font-semibold text-slate-800 hover:border-blue-300 hover:text-blue-700">Change budget</button>
+            <p className="mt-6">Or post your requirement and owners can contact you.</p>
+            <Link href={requirementHref(searchedLocation, budget)} className="mt-3 inline-flex min-h-11 items-center rounded-full bg-emerald-700 px-5 py-2 font-semibold text-white hover:bg-emerald-800">Post requirement</Link>
+          </div>
+        ) : (
+          <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-sm text-slate-600 md:col-span-2">
+            No rooms match these filters yet. Try removing a filter or another location.
             <Link href="/search" className="mt-3 block font-semibold text-blue-600">Clear all filters</Link>
           </div>
-        )}
+        ))}
       </div>
     </>
   );

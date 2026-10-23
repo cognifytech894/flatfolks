@@ -1,9 +1,10 @@
 import type { Listing } from "@/lib/database";
 import { isFlatConfiguration, isRoomType, isTenantPreference } from "@/data/listing-attributes";
+import { parseBudget, withinBudget } from "@/lib/budget";
 
-/** Raw /search query string. List-valued params are comma-separated. */
+/** Raw /search query string. List-valued params are comma-separated. `maxBudget` is only read from old links; `budget` is written. */
 export type SearchParams = {
-  q?: string; location?: string; budget?: string; minBudget?: string; maxBudget?: string; propertyType?: string;
+  q?: string; location?: string; budget?: string; maxBudget?: string; propertyType?: string;
   size?: string; room?: string; gender?: string; tenant?: string; amenity?: string; furnishing?: string;
   metro?: string; sort?: string; moveIn?: string; map?: string;
 };
@@ -17,12 +18,10 @@ export const sortOptions = [
 const list = (value?: string) => (value || "").split(",").map((item) => item.trim()).filter(Boolean);
 
 export function parseSearchFilters(params: SearchParams) {
-  const [presetMinimum, presetMaximum] = (params.budget || "").split("-").map(Number);
   return {
     keywords: (params.q || "").trim().toLowerCase().split(/\s+/).filter(Boolean),
     locations: list(params.location),
-    minimum: Number(params.minBudget) || presetMinimum || 0,
-    maximum: Number(params.maxBudget) || presetMaximum || 0,
+    budget: parseBudget(params),
     propertyType: params.propertyType,
     sizes: list(params.size).filter(isFlatConfiguration),
     rooms: list(params.room).filter(isRoomType),
@@ -39,7 +38,7 @@ export type ParsedSearchFilters = ReturnType<typeof parseSearchFilters>;
 
 /** How many filters are on, for the "Filters (n)" badge — location, keywords and sort don't count. */
 export function activeFilterCount(filters: ParsedSearchFilters) {
-  return [filters.minimum || filters.maximum, filters.propertyType, filters.metro, filters.gender, filters.tenant, filters.furnishing].filter(Boolean).length
+  return [filters.budget, filters.propertyType, filters.metro, filters.gender, filters.tenant, filters.furnishing].filter(Boolean).length
     + filters.sizes.length + filters.rooms.length + filters.amenities.length;
 }
 
@@ -56,8 +55,7 @@ export function matchesSearch(listing: Listing, filters: ParsedSearchFilters) {
   const furnished = filters.furnishing;
   return filters.keywords.every((word) => haystack.includes(word))
     && (filters.locations.length === 0 || filters.locations.some((location) => listing.location.toLowerCase().includes(location.toLowerCase())))
-    && (!filters.minimum || listing.rent >= filters.minimum)
-    && (!filters.maximum || listing.rent <= filters.maximum)
+    && withinBudget(listing, filters.budget)
     && (!filters.propertyType || listing.propertyType === filters.propertyType)
     && (filters.sizes.length === 0 || (!!listing.flatConfiguration && filters.sizes.includes(listing.flatConfiguration)))
     && (filters.rooms.length === 0 || (!!listing.roomType && filters.rooms.includes(listing.roomType)))

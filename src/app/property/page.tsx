@@ -9,6 +9,7 @@ import { compressImageFile } from "@/lib/compress-image";
 import { PreferencesField } from "@/components/listing/preferences-field";
 import { furnishingOptions, nearbyMetroMaxLength, type Furnishing } from "@/data/furnishing";
 import { flatConfigurationOptions, listingAmenities, roomTypeOptions, tenantPreferenceOptions, type FlatConfiguration, type RoomType, type TenantPreference } from "@/data/listing-attributes";
+import { parseBudget } from "@/lib/budget";
 
 type RequiredField = "location" | "budget" | "availableFrom" | "contactPhone";
 
@@ -22,7 +23,10 @@ type Form = { title: string; description: string; location: string; address: str
 function PostListing() {
   const params = useSearchParams();
   const isFlatRequirement = params.get("intent") === "flat";
-  const [form, setForm] = useState<Form>({ title: "", description: "", location: "", address: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "", bedrooms: "1", bathrooms: "1", furnishing: "", nearbyMetro: "", flatConfiguration: "", roomType: "", tenantPreference: "" });
+  // Nothing is prefilled except what the visitor typed into a room search and
+  // carried here with its "Post requirement" link (?location=&budget=).
+  const carried = isFlatRequirement ? { location: (params.get("location") || "").trim(), budget: String(parseBudget({ budget: params.get("budget") || undefined }) || "") } : { location: "", budget: "" };
+  const [form, setForm] = useState<Form>({ title: "", description: "", location: carried.location, address: "", budget: carried.budget, deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "", bedrooms: "1", bathrooms: "1", furnishing: "", nearbyMetro: "", flatConfiguration: "", roomType: "", tenantPreference: "" });
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
   const [images, setImages] = useState<{ id: string; preview: string; url?: string; uploading: boolean }[]>([]);
@@ -247,16 +251,17 @@ function PostListing() {
 
   const budgetField = (
     <label className={labelClass}>
-      {isFlatRequirement ? "Maximum budget per month" : "Monthly rent"}
-      <input required min="1" type="number" {...invalidProps("budget")} value={form.budget} onChange={(event) => update("budget", event.target.value)} className={fieldClass + errorBorder("budget")} placeholder="₹ 15,000" />
+      {isFlatRequirement ? "Max budget (₹/month)" : "Monthly rent (₹/month)"}
+      {!isFlatRequirement && <span className="mt-1 block text-xs font-normal text-slate-500">Rent for the room or bed you&apos;re offering, not the whole flat.</span>}
+      <input required min="1" type="number" inputMode="numeric" {...invalidProps("budget")} value={form.budget} onChange={(event) => update("budget", event.target.value)} className={fieldClass + errorBorder("budget")} placeholder="₹" />
       {fieldError("budget")}
     </label>
   );
 
   const depositField = (
     <label className={labelClass}>
-      Security deposit
-      <input min="0" type="number" value={form.deposit} onChange={(event) => update("deposit", event.target.value)} className={fieldClass} placeholder="₹ 20,000" />
+      Security deposit (₹)
+      <input min="0" type="number" inputMode="numeric" value={form.deposit} onChange={(event) => update("deposit", event.target.value)} className={fieldClass} placeholder="₹" />
     </label>
   );
 

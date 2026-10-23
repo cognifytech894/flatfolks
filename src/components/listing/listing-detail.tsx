@@ -8,6 +8,7 @@ import type { Listing } from "@/lib/database";
 import { safeJsonLd } from "@/lib/json-ld";
 import { lifestylePreferences } from "@/data/preferences";
 import { furnishingLabel } from "@/data/furnishing";
+import { perMonth } from "@/lib/budget";
 
 // Assumes an Indian mobile number when no country code was entered.
 function toWhatsAppNumber(phone: string) {
@@ -112,14 +113,14 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, related }: Lis
   const facts = isRequirement
     ? [
       ...(listing.ownerGender ? [{ icon: UserRound, label: "Gender", value: listing.ownerGender }] : []),
-      { icon: Wallet, label: "Approx rent", value: `₹${listing.rent.toLocaleString("en-IN")}` },
+      { icon: Wallet, label: "Max budget", value: perMonth(listing.rent) },
       { icon: HomeIcon, label: "Looking for", value: listing.propertyType },
       { icon: UsersRound, label: "Flatmate gender", value: listing.genderPreference || "Any" },
       ...(available ? [{ icon: CalendarDays, label: "Move-in", value: available }] : []),
       ...(furnishing ? [{ icon: Armchair, label: "Preferred furnishing", value: furnishing }] : []),
     ]
     : [
-      { icon: Wallet, label: "Monthly rent", value: `₹${listing.rent.toLocaleString("en-IN")}` },
+      { icon: Wallet, label: "Monthly rent", value: perMonth(listing.rent) },
       { icon: Lock, label: "Security deposit", value: `₹${listing.deposit.toLocaleString("en-IN")}` },
       { icon: HomeIcon, label: "Room type", value: listing.propertyType },
       { icon: Bed, label: "BHK", value: `${listing.bedrooms} BHK` },
