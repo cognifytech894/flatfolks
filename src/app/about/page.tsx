@@ -7,17 +7,17 @@ import { siteUrl as baseUrl } from "@/lib/site-url";
 
 export const metadata: Metadata = {
   title: "About Us",
-  description: "FlatFolks helps you find verified rooms, flats, and compatible flatmates across India with no brokerage — smart search, secure messaging, and direct contact with owners.",
+  description: "FlatFolks helps you find rooms, flats, and compatible flatmates in Delhi NCR — free to list, simple search, and direct contact with owners.",
   alternates: { canonical: `${baseUrl}/about` },
-  openGraph: { title: "About FlatFolks", description: "FlatFolks helps you find verified rooms, flats, and compatible flatmates across India with no brokerage.", type: "website", siteName: "FlatFolks", url: `${baseUrl}/about` },
+  openGraph: { title: "About FlatFolks", description: "FlatFolks helps you find rooms, flats, and compatible flatmates, with direct contact with owners.", type: "website", siteName: "FlatFolks", url: `${baseUrl}/about` },
 };
 
 const offers = [
-  [ShieldCheck, "Verified room and flat listings", "bg-blue-50 text-blue-600"],
+  [ShieldCheck, "Room and flat listings posted by owners and tenants", "bg-blue-50 text-blue-600"],
   [UsersRound, "Compatible flatmates based on lifestyle and budget", "bg-emerald-50 text-emerald-500"],
   [MapPin, "Smart location and budget search", "bg-amber-50 text-amber-500"],
   [MessageCircle, "Direct communication with owners and roommates", "bg-violet-50 text-violet-500"],
-  [LockKeyhole, "Secure and transparent verified profiles", "bg-rose-50 text-rose-500"],
+  [LockKeyhole, "Sign in with a one-time email code, no passwords", "bg-rose-50 text-rose-500"],
   [Handshake, "No-brokerage, transparent pricing", "bg-cyan-50 text-cyan-600"],
 ] as const;
 
@@ -35,8 +35,8 @@ export default function AboutPage() {
           <p className="mt-6 text-lg leading-8 text-slate-600">
             At <b>FlatFolks</b> (Flat Folks), we believe that finding a room or the right flatmate should be simple, safe, and
             stress-free. Whether you&apos;re a student moving to a new city, a working professional relocating for a
-            job, or someone looking to share a home, FlatFolks helps you connect with verified listings and compatible
-            roommates&mdash;all in one place.
+            job, or someone looking to share a home, FlatFolks helps you find rooms and compatible
+            flatmates&mdash;all in one place.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -67,7 +67,7 @@ export default function AboutPage() {
               </span>
               <h2 className="mt-3 text-2xl font-bold">Our Mission</h2>
               <p className="mt-3 leading-7 text-slate-600">
-                Our mission is to make shared living easier by connecting people with trusted rooms and reliable
+                Our mission is to make shared living easier by connecting people with rooms and
                 flatmates through a modern, transparent, and user-friendly platform.
               </p>
             </section>
@@ -105,7 +105,7 @@ export default function AboutPage() {
           <div className="mt-12 rounded-2xl bg-[#0b1220] p-8 text-center sm:p-10">
             <h2 className="text-2xl font-bold text-white">Ready to move smarter?</h2>
             <p className="mt-2 text-sm text-slate-300">
-              Join thousands of verified users already finding rooms and flatmates on FlatFolks.
+              Post your room or requirement for free, or start browsing.
             </p>
             <div className="mt-5 flex flex-wrap justify-center gap-3">
               <Link

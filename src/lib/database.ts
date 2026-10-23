@@ -230,7 +230,8 @@ export async function getListingByIdSuffix(suffix: string): Promise<Listing | un
 }
 
 export async function recordListingView(id: string): Promise<Listing | undefined> {
-  await pool.query("UPDATE listings SET views = views + 1 WHERE id = $1", [id]);
+  // Set by `npm run ui-audit` so automated page loads don't inflate real view counts.
+  if (process.env.DISABLE_VIEW_TRACKING !== "1") await pool.query("UPDATE listings SET views = views + 1 WHERE id = $1", [id]);
   const { rows } = await pool.query<ListingRow>(`${listingSelect} WHERE listings.id = $1`, [id]);
   return rows[0] ? rowToListing(rows[0]) : undefined;
 }

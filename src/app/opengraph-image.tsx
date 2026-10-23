@@ -46,7 +46,7 @@ export default function Image() {
           Find Rooms &amp; Flatmates Across India
         </div>
         <div style={{ display: "flex", marginTop: 26, fontSize: 27, color: "#c7d2fe" }}>
-          Verified listings · No brokerage · Direct contact with owners
+          Free to list · No fees · Direct contact with owners
         </div>
       </div>
     ),

@@ -46,12 +46,13 @@ function withoutContactPhone<T extends { contactPhone?: string }>(listing: T): O
 
 export async function GET(request: Request) {
   const ownerId = new URL(request.url).searchParams.get("ownerId");
-  const listings = await getListings();
+  const sessionUserId = await getSessionUserId();
+  // Drafts are private: only their owner sees them.
+  const listings = (await getListings()).filter((listing) => listing.status !== "draft" || (sessionUserId && listing.ownerId === sessionUserId));
   const filtered = ownerId ? listings.filter((listing) => listing.ownerId === ownerId) : listings;
   // Mirrors the login gate on the property detail page — without this, the
   // phone number would still be visible to anyone calling this endpoint
   // directly (e.g. via devtools) even though the page itself hides it.
-  const sessionUserId = await getSessionUserId();
   const withGatedContact = sessionUserId ? filtered : filtered.map(withoutContactPhone);
   return NextResponse.json(withGatedContact);
 }
@@ -111,9 +112,10 @@ export async function PATCH(request: Request) {
   const isAdmin = isValidAdminSessionToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
   if (!isAdmin) {
     const sessionUserId = verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
+    if (!sessionUserId) return NextResponse.json({ error: "Please log in to edit a listing." }, { status: 401 });
     const actualOwnerId = await getListingOwnerId(body.id);
     if (actualOwnerId === undefined) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
-    if (!sessionUserId || actualOwnerId !== sessionUserId) return NextResponse.json({ error: "You can only edit your own listings." }, { status: 403 });
+    if (actualOwnerId !== sessionUserId) return NextResponse.json({ error: "You can only edit your own listings." }, { status: 403 });
   }
 
   if (body.description && body.description.length > 2000) return NextResponse.json({ error: "Description must be 2000 characters or fewer." }, { status: 400 });
@@ -141,9 +143,10 @@ export async function DELETE(request: Request) {
     // param — a caller could otherwise read another user's real ownerId off any
     // public listing and replay it here to delete listings they don't own.
     const sessionUserId = verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
+    if (!sessionUserId) return NextResponse.json({ error: "Please log in to delete a listing." }, { status: 401 });
     const actualOwnerId = await getListingOwnerId(id);
     if (actualOwnerId === undefined) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
-    if (!sessionUserId || actualOwnerId !== sessionUserId) return NextResponse.json({ error: "You can only delete your own listings." }, { status: 403 });
+    if (actualOwnerId !== sessionUserId) return NextResponse.json({ error: "You can only delete your own listings." }, { status: 403 });
   }
 
   try { await deleteListing(id); return new NextResponse(null, { status: 204 }); }

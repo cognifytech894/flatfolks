@@ -27,8 +27,10 @@ export default function AuthPage() {
   function finish(user: PublicUser) {
     localStorage.setItem("flatfolks_user", JSON.stringify(user));
     // A full navigation ensures the home navigation reads the just-saved login
-    // session immediately after authentication.
-    window.location.assign("/");
+    // session immediately after authentication. `?next=` (e.g. from the
+    // dashboard's login redirect) is honoured only for same-site paths.
+    const next = new URLSearchParams(window.location.search).get("next") || "";
+    window.location.assign(next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\") ? next : "/");
   }
 
   async function requestOtp(event: React.FormEvent) {

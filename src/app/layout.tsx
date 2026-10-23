@@ -18,10 +18,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: { default: "FlatFolks | Find Rooms & Flatmates", template: "%s | FlatFolks" },
-  description: "FlatFolks (Flat Folks) helps you find verified rooms, trusted flatmates, and shared accommodations across India.",
+  description: "FlatFolks (Flat Folks) helps you find rooms, flatmates, and shared accommodations, with direct contact with owners.",
   openGraph: {
     title: "FlatFolks | Find Rooms & Flatmates",
-    description: "Find verified rooms and compatible flatmates across India.",
+    description: "Find rooms and compatible flatmates, and contact owners directly.",
     type: "website",
     siteName: "FlatFolks",
     locale: "en_IN",

@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "FlatFolks | Find Rooms & Flatmates",
     short_name: "FlatFolks",
-    description: "Find verified rooms, trusted flatmates, and shared accommodations across India.",
+    description: "Find rooms, flatmates, and shared accommodations, and contact owners directly.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

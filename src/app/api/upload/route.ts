@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { uploadImage } from "@/lib/image-storage";
+import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -13,6 +15,10 @@ function rateLimited(request: Request) {
 
 export async function POST(request: Request) {
   if (rateLimited(request)) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
+  // Only signed-in users upload (profile photos, listing photos); otherwise anyone
+  // could fill the storage bucket.
+  const cookieStore = await cookies();
+  if (!verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value)) return NextResponse.json({ error: "Please log in to upload photos." }, { status: 401 });
   const body = await request.json() as { image?: string };
   if (!body.image) return NextResponse.json({ error: "An image is required." }, { status: 400 });
   try {

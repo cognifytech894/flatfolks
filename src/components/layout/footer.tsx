@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { ArrowRight, Headset, LockKeyhole, ShieldCheck } from "lucide-react";
+import { ArrowRight, LockKeyhole, Phone, ShieldCheck } from "lucide-react";
 import { FlatFolksLogo } from "@/components/ui/flatfolks-logo";
 import { intents, placePath } from "@/lib/seo/listings";
 import { cities, getCity } from "@/lib/seo/locations";
 
 const trust = [
-  [ShieldCheck, "Verified listings", "bg-blue-50 text-blue-600"],
-  [LockKeyhole, "Secure messaging", "bg-emerald-50 text-emerald-500"],
-  [Headset, "24/7 support", "bg-amber-50 text-amber-500"],
+  [ShieldCheck, "Free to list", "bg-blue-50 text-blue-600"],
+  [Phone, "Contact owners directly", "bg-emerald-50 text-emerald-500"],
+  [LockKeyhole, "No fees from FlatFolks", "bg-amber-50 text-amber-500"],
 ] as const;
 
 // Every city hub and its intent pages, plus the Greater Noida West society
@@ -44,7 +44,7 @@ export function Footer() {
           <div className="max-w-xl">
             <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
               <ShieldCheck className="h-4 w-4" />
-              Trusted by 25k+ renters and landlords
+              Free to list your room or flat
             </p>
             <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
               Your next room, roommate, or perfect place to live starts here.
@@ -62,7 +62,7 @@ export function Footer() {
           <div>
             <FlatFolksLogo compact />
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              AI-powered housing discovery for students and professionals across India.
+              Rooms, flats and flatmates for students and professionals in Delhi NCR.
             </p>
           </div>
           <div>
