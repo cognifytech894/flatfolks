@@ -119,6 +119,8 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, related }: Lis
       ...(furnishing ? [{ icon: Armchair, label: "Preferred furnishing", value: furnishing }] : []),
     ]
     : [
+      { icon: Wallet, label: "Monthly rent", value: `₹${listing.rent.toLocaleString("en-IN")}` },
+      { icon: Lock, label: "Security deposit", value: `₹${listing.deposit.toLocaleString("en-IN")}` },
       { icon: HomeIcon, label: "Room type", value: listing.propertyType },
       { icon: Bed, label: "BHK", value: `${listing.bedrooms} BHK` },
       { icon: Bath, label: "Bathrooms", value: String(listing.bathrooms) },
@@ -181,12 +183,6 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, related }: Lis
                   {!isRequirement && listing.nearbyMetro && <p className="mt-2 flex items-start gap-2 text-sm text-slate-600"><TrainFront className="mt-0.5 h-4 w-4 shrink-0" /> Nearest metro: {listing.nearbyMetro} <span className="text-slate-500">(as given by the poster)</span></p>}
                   {posted && <p className="mt-2 flex items-center gap-2 text-sm text-slate-500"><Clock className="h-4 w-4" /> Posted {posted}</p>}
                 </div>
-                {!isRequirement && (
-                  <div className="flex flex-wrap gap-6 rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                    <div><p className="text-sm text-slate-500">Monthly rent</p><p className="text-2xl font-semibold text-slate-900">₹{listing.rent.toLocaleString("en-IN")}</p></div>
-                    <div><p className="text-sm text-slate-500">Security deposit</p><p className="text-2xl font-semibold text-slate-900">₹{listing.deposit.toLocaleString("en-IN")}</p></div>
-                  </div>
-                )}
                 {factGrid}
                 {extras}
               </div>
