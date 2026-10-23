@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Handshake, LockKeyhole, MapPin, MessageCircle, Rocket, ShieldCheck, Target, UsersRound } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
-import { StatsRow } from "@/components/home/stats-row";
+import { SHOW_STATS, StatsRow } from "@/components/home/stats-row";
 import { siteUrl as baseUrl } from "@/lib/site-url";
 
 export const metadata: Metadata = {
@@ -54,9 +54,11 @@ export default function AboutPage() {
             </Link>
           </div>
 
-          <div className="mt-10">
-            <StatsRow />
-          </div>
+          {SHOW_STATS && (
+            <div className="mt-10">
+              <StatsRow />
+            </div>
+          )}
 
           <div className="mt-12 grid gap-8 sm:grid-cols-2">
             <section>
