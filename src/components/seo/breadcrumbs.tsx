@@ -14,7 +14,7 @@ export function breadcrumbJsonLd(crumbs: Crumb[]) {
 
 export function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
   return (
-    <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-1.5 text-sm text-slate-500">
+    <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-x-1.5 gap-y-2 text-sm text-slate-500">
       {crumbs.map((crumb, index) => (
         <span key={crumb.href} className="flex min-w-0 items-center gap-1.5">
           {index > 0 && <ChevronRight className="h-3.5 w-3.5 shrink-0" />}

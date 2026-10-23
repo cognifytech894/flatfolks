@@ -159,6 +159,9 @@ function pageChecks({ mobile }) {
       for (let j = i + 1; j < rects.length; j++) {
         const a = rects[i].r, b = rects[j].r;
         if (rects[i].el.contains(rects[j].el) || rects[j].el.contains(rects[i].el)) continue;
+        // The fixed bottom nav floats over whatever is scrolled under it; that's not crowding.
+        const fixedNav = (el) => Boolean(el.closest('nav[aria-label="Main"]'));
+        if (fixedNav(rects[i].el) !== fixedNav(rects[j].el)) continue;
         const gapX = Math.max(b.left - a.right, a.left - b.right);
         const gapY = Math.max(b.top - a.bottom, a.top - b.bottom);
         const gap = Math.max(gapX, gapY);
