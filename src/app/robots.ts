@@ -10,7 +10,7 @@ export default function robots(): MetadataRoute.Robots {
     // "/property$" is the post-a-listing form (client-only, no SEO value, requires
     // login). The trailing $ anchors it exactly so /property/{id} listing pages
     // aren't caught by the same rule.
-    rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/auth", "/profile", "/dashboard", "/chat", "/interest", "/admin", "/property$"] },
+    rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/auth", "/profile", "/dashboard","/admin", "/property$"] },
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MessageCircle, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BackLink } from "@/components/ui/back-link";
 import { MyPosts } from "@/components/dashboard/my-posts";
@@ -9,16 +9,14 @@ import { syncSavedListings } from "@/lib/saved-listings-sync";
 
 export function DashboardView() {
   const [savedCount, setSavedCount] = useState(0);
-  const [messageCount, setMessageCount] = useState(0);
   useEffect(() => {
-    const sync = () => setMessageCount((JSON.parse(localStorage.getItem("flatfolks_chat_requests") || "[]") as string[]).length);
     // Counts only saved posts that are still live, and drops ones that were deleted.
     const syncSaved = () => { syncSavedListings().then((visible) => setSavedCount(visible.length)).catch(() => {}); };
-    const frame = requestAnimationFrame(() => { sync(); syncSaved(); });
-    window.addEventListener("flatfolks-saved-listings", syncSaved); window.addEventListener("flatfolks-chat-access", sync);
-    return () => { cancelAnimationFrame(frame); window.removeEventListener("flatfolks-saved-listings", syncSaved); window.removeEventListener("flatfolks-chat-access", sync); };
+    const frame = requestAnimationFrame(syncSaved);
+    window.addEventListener("flatfolks-saved-listings", syncSaved);
+    return () => { cancelAnimationFrame(frame); window.removeEventListener("flatfolks-saved-listings", syncSaved); };
   }, []);
-  const cards = [{ title: "Listing Views", value: "0" }, { title: "Saved Listings", value: String(savedCount) }, { title: "Messages", value: String(messageCount) }, { title: "Interests", value: String(messageCount) }];
+  const cards = [{ title: "Listing Views", value: "0" }, { title: "Saved Listings", value: String(savedCount) }];
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -30,12 +28,11 @@ export function DashboardView() {
               <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Your housing hub</h1>
             </div>
             <div className="flex gap-3">
-              <Link href="/chat" aria-label="Messages" className="rounded-full border border-slate-200 p-3 text-slate-700 hover:bg-slate-50"><MessageCircle className="h-5 w-5" /></Link>
               <Link href="/profile" aria-label="Profile settings" className="rounded-full border border-slate-200 p-3 text-slate-700 hover:bg-slate-50"><Settings className="h-5 w-5" /></Link>
             </div>
           </div>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
             {cards.map((card) => (
               <div key={card.title} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                 <p className="text-sm font-medium text-slate-500">{card.title}</p>

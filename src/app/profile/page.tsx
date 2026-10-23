@@ -56,7 +56,6 @@ export default function ProfilePage() {
   function logout() {
     localStorage.removeItem("flatfolks_user");
     localStorage.removeItem("flatfolks_profile_photo");
-    localStorage.removeItem("flatfolks_chat_requests");
     window.location.assign("/auth");
   }
   async function save() { if (!draft) return; setSaving(true); setMessage(""); try { const response = await fetch(`/api/users/${draft.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: draft.name, email: draft.email, phone: draft.phone, location: draft.location, gender: draft.gender }) }); const result = await response.json() as { user?: Profile; error?: string }; if (!response.ok || !result.user) throw new Error(result.error || "Could not update profile."); setProfile(result.user); setDraft(result.user); localStorage.setItem("flatfolks_user", JSON.stringify(result.user)); setEditing(false); setMessage("Profile updated successfully. Old details have been replaced."); } catch (error) { setMessage(error instanceof Error ? error.message : "Could not update profile."); } finally { setSaving(false); } }

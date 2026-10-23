@@ -65,8 +65,8 @@ export default function PrivacyPolicyPage() {
       <section>
         <h2>Cookies and local storage</h2>
         <p>
-          We use a secure cookie to keep you signed in, and your browser&apos;s local storage to remember things like your profile details and
-          chat requests on your device. These are needed for the site to work. You can clear them at any time from your browser settings, which
+          We use a secure cookie to keep you signed in, and your browser&apos;s local storage to remember things like your profile details on
+          your device. These are needed for the site to work. You can clear them at any time from your browser settings, which
           will sign you out.
         </p>
         <p className="mt-3">

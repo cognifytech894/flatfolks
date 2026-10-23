@@ -3,23 +3,21 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronDown, Home, MessageCircle, Plus, Search, UserRound, UsersRound } from "lucide-react";
+import { ChevronDown, Home, Plus, Search, UserRound, UsersRound } from "lucide-react";
 import { FlatFolksLogo } from "@/components/ui/flatfolks-logo";
 
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<{ name: string } | null>(null);
-  const [hasChatAccess, setHasChatAccess] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState("");
   const [postMenuOpen, setPostMenuOpen] = useState(false);
-  const navClass = (active: boolean) => `py-4 transition hover:text-blue-600 ${active ? "border-b-2 border-blue-600 text-blue-600" : "border-b-2 border-transparent"}`;
+  const navClass = (active: boolean) => `flex flex-col items-center gap-1 py-2.5 transition hover:text-blue-600 ${active ? "border-b-2 border-blue-600 text-blue-600" : "border-b-2 border-transparent"}`;
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       const savedUser = localStorage.getItem("flatfolks_user");
       if (savedUser) setUser(JSON.parse(savedUser) as { name: string });
-      setHasChatAccess((JSON.parse(localStorage.getItem("flatfolks_chat_requests") || "[]") as string[]).length > 0);
       setProfilePhoto(localStorage.getItem("flatfolks_profile_photo") || "");
     });
     return () => window.cancelAnimationFrame(frame);
@@ -29,12 +27,6 @@ export function Navbar() {
     const syncPhoto = () => setProfilePhoto(localStorage.getItem("flatfolks_profile_photo") || "");
     window.addEventListener("flatfolks-profile-photo", syncPhoto);
     return () => window.removeEventListener("flatfolks-profile-photo", syncPhoto);
-  }, []);
-
-  useEffect(() => {
-    const syncChatAccess = () => setHasChatAccess((JSON.parse(localStorage.getItem("flatfolks_chat_requests") || "[]") as string[]).length > 0);
-    window.addEventListener("flatfolks-chat-access", syncChatAccess);
-    return () => window.removeEventListener("flatfolks-chat-access", syncChatAccess);
   }, []);
 
   useEffect(() => {
@@ -75,14 +67,12 @@ export function Navbar() {
         </Link>
 
         <nav className="hidden items-center gap-9 text-sm font-medium text-slate-900 lg:flex">
-          <Link href="/" className={navClass(pathname === "/")}>Home</Link>
-          <Link href="/search" className={navClass(pathname === "/search")}>Find Room</Link>
-          <Link href="/flatmates" className={navClass(pathname === "/flatmates")}>Find Flatmates</Link>
-          <div className="group relative"><button className={`flex items-center gap-1 ${navClass(pathname.startsWith("/property"))}`}>Post Property <ChevronDown className="h-3.5 w-3.5" /></button><div className="invisible absolute left-0 top-full z-50 w-72 translate-y-2 rounded-xl border border-slate-200 bg-white p-2 opacity-0 shadow-xl transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100"><Link href="/property?intent=flat" className="block rounded-lg px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-600"><b className="block">Looking for a flat</b><small className="text-xs text-slate-500">Add your location, budget and amenities</small></Link><Link href="/property?intent=flatmate" className="block rounded-lg px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-600"><b className="block">Looking for a flatmate</b><small className="text-xs text-slate-500">Add your flat, amenities and up to 3 photos</small></Link></div></div>
-          {hasChatAccess && <Link href="/chat" className={navClass(pathname === "/chat")}>One-to-One Chat</Link>}        </nav>
+          <Link href="/" className={navClass(pathname === "/")}><Home className="h-5 w-5" />Home</Link>
+          <Link href="/search" className={navClass(pathname === "/search")}><Search className="h-5 w-5" />Find Room</Link>
+          <Link href="/flatmates" className={navClass(pathname === "/flatmates")}><UsersRound className="h-5 w-5" />Find Flatmates</Link>
+          <div className="group relative"><button className={navClass(pathname.startsWith("/property"))}><Plus className="h-5 w-5" /><span className="flex items-center gap-1">Post Property <ChevronDown className="h-3.5 w-3.5" /></span></button><div className="invisible absolute left-0 top-full z-50 w-72 translate-y-2 rounded-xl border border-slate-200 bg-white p-2 opacity-0 shadow-xl transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100"><Link href="/property?intent=flat" className="block rounded-lg px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-600"><b className="block">Looking for a flat</b><small className="text-xs text-slate-500">Add your location, budget and amenities</small></Link><Link href="/property?intent=flatmate" className="block rounded-lg px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-600"><b className="block">Looking for a flatmate</b><small className="text-xs text-slate-500">Add your flat, amenities and up to 3 photos</small></Link></div></div>        </nav>
 
         <div className="flex items-center gap-3">
-          {hasChatAccess && <Link href="/chat" aria-label="One-to-one chat" className="grid h-11 w-11 place-items-center rounded-full bg-slate-100 text-slate-700 lg:hidden"><MessageCircle className="h-5 w-5" /></Link>}
           {user ? <Link href="/profile" className="hidden min-w-14 flex-col items-center text-xs font-semibold text-slate-800 sm:flex">{profilePhoto ? <img src={profilePhoto} alt="Profile" className="h-10 w-10 rounded-full object-cover ring-2 ring-blue-100" /> : <span className="grid h-10 w-10 place-items-center rounded-full bg-blue-600 text-sm font-bold text-white shadow-sm">{user.name.trim().charAt(0).toUpperCase() || "U"}</span>}<span className="mt-1 max-w-20 truncate">{user.name.split(" ")[0]}</span></Link> : <button onClick={() => router.push("/auth")} className="rounded-full bg-slate-100 px-7 py-3 text-sm font-medium text-slate-900 transition hover:bg-blue-50 hover:text-blue-700">Login / Register</button>}
         </div>
       </div>

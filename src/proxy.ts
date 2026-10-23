@@ -23,5 +23,5 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Listing URLs only: /property/{id} and /{city}/.../{slug-xxxxxxxx}. Skips assets and APIs.
-  matcher: ["/property/:id", "/((?!_next|api|blog|admin|auth|search|dashboard|profile|chat|interest|restore)[^/.]+)/:path+"],
+  matcher: ["/property/:id", "/((?!_next|api|blog|admin|auth|search|dashboard|profile|restore)[^/.]+)/:path+"],
 };
