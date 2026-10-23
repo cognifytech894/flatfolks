@@ -1,8 +1,8 @@
 "use client";
 
-import { ChangeEvent, ReactNode, useEffect, useState } from "react";
+import { ChangeEvent, ReactNode, useEffect, useId, useState } from "react";
 import Link from "next/link";
-import { Camera, Check, ChevronRight, LayoutDashboard, Loader2, LogOut, Mail, MapPin, Pencil, Phone, UserRound, UsersRound } from "lucide-react";
+import { Camera, Check, ChevronRight, LayoutDashboard, Loader2, LogOut, Mail, MapPin, Pencil, Phone, Trash2, UserRound, UsersRound, X } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
 import { loadImageFile, releaseImage } from "@/lib/load-image";
 import { PhotoAdjuster } from "@/components/profile/photo-adjuster";
@@ -17,6 +17,14 @@ const inputClass = "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null); const [draft, setDraft] = useState<Profile | null>(null); const [photo, setPhoto] = useState(""); const [editing, setEditing] = useState(false); const [notice, setNotice] = useState<Notice | null>(null); const [saving, setSaving] = useState(false); const [uploadingPhoto, setUploadingPhoto] = useState(false); const [adjusting, setAdjusting] = useState<HTMLImageElement | null>(null);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [viewingPhoto, setViewingPhoto] = useState(false);
+  const photoInputId = useId();
+  useEffect(() => {
+    if (!viewingPhoto) return;
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setViewingPhoto(false); };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [viewingPhoto]);
   useEffect(() => { const frame = window.requestAnimationFrame(() => { const raw = localStorage.getItem("flatfolks_user"); const savedPhoto = localStorage.getItem("flatfolks_profile_photo"); if (raw) { const user = JSON.parse(raw) as Profile; setProfile(user); setDraft(user); if (user.photo) setPhoto(user.photo); else if (savedPhoto) setPhoto(savedPhoto); } else if (savedPhoto) setPhoto(savedPhoto); }); return () => window.cancelAnimationFrame(frame); }, []);
   const fail = (error: unknown, fallback: string) => setNotice({ text: error instanceof Error ? error.message : fallback, ok: false });
   // Photos are stored on the account (Supabase Storage URL, or a preset avatar's /avatars path)
@@ -96,20 +104,32 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
       {adjusting && <PhotoAdjuster image={adjusting} onCancel={closeAdjuster} onSave={uploadPhoto} />}
+      {viewingPhoto && photo && (
+        <div role="dialog" aria-modal="true" aria-label="Profile photo" onClick={() => setViewingPhoto(false)} className="fixed inset-0 z-[60] grid place-items-center bg-slate-950/80 p-4">
+          <div onClick={(event) => event.stopPropagation()} className="relative w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl">
+            <button type="button" onClick={() => setViewingPhoto(false)} aria-label="Close" className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200"><X className="h-4 w-4" /></button>
+            <p className="text-sm font-semibold text-slate-900">Profile photo</p>
+            <img src={photo} alt="Profile" className="mt-4 aspect-square w-full rounded-2xl bg-slate-100 object-cover" />
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <label htmlFor={photoInputId} onClick={() => setViewingPhoto(false)} className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"><Camera className="h-4 w-4" />Change</label>
+              <button type="button" onClick={() => { setViewingPhoto(false); savePhoto(""); }} className="flex items-center justify-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"><Trash2 className="h-4 w-4" />Remove</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mx-auto max-w-5xl">
         <BackLink />
         <div className="mt-5 grid gap-6 lg:grid-cols-[320px_1fr]">
           <aside className="flex flex-col gap-6">
-            <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-              <div className="h-24 bg-gradient-to-r from-blue-600 to-indigo-700" />
-              <div className="flex flex-col items-center px-6 pb-6 text-center">
-                <div className="relative -mt-14">
-                  <div className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-white bg-blue-100 shadow-md">
-                    {photo ? <img src={photo} alt="Profile" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-blue-600"><UserRound className="h-12 w-12" /></div>}
-                    {uploadingPhoto && <div className="absolute inset-0 grid place-items-center bg-slate-900/40"><Loader2 className="h-6 w-6 animate-spin text-white" /></div>}
-                  </div>
-                  <label aria-label="Upload profile photo" title="Upload profile photo" className="absolute bottom-1 right-1 grid h-9 w-9 cursor-pointer place-items-center rounded-full border-2 border-white bg-blue-600 text-white shadow transition hover:bg-blue-700">
-                    <input type="file" accept="image/*,.heic,.heif" onChange={pickPhoto} className="hidden" />
+            <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex flex-col items-center px-6 py-8 text-center">
+                <input id={photoInputId} type="file" accept="image/*,.heic,.heif" onChange={pickPhoto} className="hidden" />
+                <div className="relative">
+                  {/* With a photo, tapping it opens the viewer (view / change / remove); without one it opens the file picker. */}
+                  {photo
+                    ? <button type="button" onClick={() => setViewingPhoto(true)} aria-label="View profile photo" className="relative block h-36 w-36 overflow-hidden rounded-full bg-blue-100 ring-4 ring-slate-100 transition hover:ring-blue-100"><img src={photo} alt="Profile" className="h-full w-full object-cover" />{uploadingPhoto && <span className="absolute inset-0 grid place-items-center bg-slate-900/40"><Loader2 className="h-6 w-6 animate-spin text-white" /></span>}</button>
+                    : <label htmlFor={photoInputId} aria-label="Upload profile photo" className="relative grid h-36 w-36 cursor-pointer place-items-center rounded-full bg-blue-100 text-blue-600 ring-4 ring-slate-100 transition hover:ring-blue-100">{uploadingPhoto ? <Loader2 className="h-6 w-6 animate-spin" /> : <UserRound className="h-14 w-14" />}</label>}
+                  <label htmlFor={photoInputId} aria-label="Upload profile photo" title="Upload profile photo" className="absolute bottom-1.5 right-1.5 grid h-10 w-10 cursor-pointer place-items-center rounded-full border-2 border-white bg-blue-600 text-white shadow transition hover:bg-blue-700">
                     <Camera className="h-4 w-4" />
                   </label>
                 </div>
