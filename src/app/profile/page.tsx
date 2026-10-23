@@ -15,7 +15,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null); const [draft, setDraft] = useState<Profile | null>(null); const [photo, setPhoto] = useState(""); const [editing, setEditing] = useState(false); const [message, setMessage] = useState(""); const [saving, setSaving] = useState(false); const [uploadingPhoto, setUploadingPhoto] = useState(false); const [adjusting, setAdjusting] = useState<HTMLImageElement | null>(null);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   useEffect(() => { const frame = window.requestAnimationFrame(() => { const raw = localStorage.getItem("flatfolks_user"); const savedPhoto = localStorage.getItem("flatfolks_profile_photo"); if (raw) { const user = JSON.parse(raw) as Profile; setProfile(user); setDraft(user); if (user.photo) setPhoto(user.photo); else if (savedPhoto) setPhoto(savedPhoto); } else if (savedPhoto) setPhoto(savedPhoto); }); return () => window.cancelAnimationFrame(frame); }, []);
-  // Photos are stored on the account (Supabase Storage URL, or a preset avatar's inline SVG data URI)
+  // Photos are stored on the account (Supabase Storage URL, or a preset avatar's /avatars path)
   // so other users see them too — e.g. on Find Flatmates cards — not just this browser.
   async function savePhoto(url: string) {
     if (!profile) return;
