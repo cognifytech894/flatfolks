@@ -11,8 +11,7 @@ const trust = [
 ] as const;
 
 // Every city hub and its intent pages, plus the Greater Noida West society
-// pages that matter most. Plain crawlable links with descriptive anchors; the
-// long tail lives one click away behind a native <details> disclosure.
+// pages that matter most. Plain crawlable links with descriptive anchors.
 const cityLinks = cities.map((city) => ({
   city: city.name,
   links: [
@@ -58,7 +57,7 @@ export function Footer() {
           </Link>
         </div>
 
-        <div className="grid gap-10 border-t border-slate-200 pt-10 md:grid-cols-[0.9fr_0.7fr_1.4fr]">
+        <div className="grid gap-10 border-t border-slate-200 pt-10 md:grid-cols-[1.4fr_1fr]">
           <div>
             <FlatFolksLogo compact />
             <p className="mt-4 text-sm leading-7 text-slate-600">
@@ -91,31 +90,22 @@ export function Footer() {
               Renting guides &amp; tips
             </Link>
           </div>
-          <div>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
-              Popular searches
-            </p>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4 md:grid-cols-2 xl:grid-cols-4">
-              {cityLinks.map(({ city, links }) => (
-                <div key={city} className="flex flex-col gap-2">
-                  {links.map(([label, href]) => (
-                    <Link key={href} href={href} className="inline-block py-1 text-sm text-slate-600 hover:text-blue-600 hover:underline">
-                      {label}
-                    </Link>
-                  ))}
-                </div>
-              ))}
-            </div>
-            <p className="mb-2 mt-6 text-sm font-semibold text-slate-700">Greater Noida West</p>
-            <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
-              {greaterNoidaWestLinks.map(([label, href]) => (
-                <Link key={href} href={href} className="inline-block py-1 text-sm text-slate-600 hover:text-blue-600 hover:underline">
-                  {label}
-                </Link>
-              ))}
-            </div>
-          </div>
         </div>
+
+        <section aria-label="Popular searches" className="flex flex-col gap-8 border-t border-slate-200 pt-10">
+          {[...cityLinks, { city: "Greater Noida West", links: greaterNoidaWestLinks }].map(({ city, links }) => (
+            <div key={city}>
+              <h3 className="mb-4 text-base font-semibold text-slate-700">Popular searches in {city}</h3>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                {links.map(([label, href]) => (
+                  <Link key={href} href={href} title={label} className="truncate rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500 transition hover:border-blue-300 hover:text-blue-600">
+                    #{label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
+        </section>
 
         <div className="flex flex-col gap-3 border-t border-slate-200 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} FlatFolks (Flat Folks). All rights reserved.</p>
