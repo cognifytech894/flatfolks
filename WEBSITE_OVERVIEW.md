@@ -1,80 +1,99 @@
 # FlatFolks Website Overview
 
-FlatFolks is a housing-discovery platform for finding rooms, flats, PGs, and compatible flatmates in India.
+FlatFolks is a housing-discovery platform for finding rooms, flats, PGs, and compatible flatmates in India. SEO focus: Noida, Greater Noida (incl. Greater Noida West / Noida Extension), Gurgaon and Ghaziabad.
 
-## Website sections and features
+_Last updated: 23 October 2026. Items marked **(new, date)** changed recently; everything still to do is under [Pending](#pending)._
+
+## Features (live)
 
 ### Home page
 
-- Landing page with hero search bar, popular cities, featured rooms, trust stats, and a footer.
+- Hero search bar, popular cities, featured rooms (property offers only, from the visitor's city) and "How FlatFolks works".
+- Trust stats row (10,000+ users, 5,000+ properties, etc.) is hidden on the home and About pages, not deleted — set `SHOW_STATS = true` in `src/components/home/stats-row.tsx` to show it again. **(new, 23 Oct)**
 
 ### Search and listings
 
-- Browse verified listings by location, budget, property type, and amenities; switch between list and map-style views.
-- Each listing's detail page shows a one-at-a-time photo carousel (prev/next + dots), real bedroom/bathroom counts, description, amenities, lifestyle-preference tags, the actual owner's name, and a working contact number (Call and WhatsApp links).
-- Save a listing to a personal wishlist, or submit interest to unlock a private chat with that listing's real owner.
+- Browse listings by location, budget, property type, gender preference and amenities.
+- Listing detail page: photo carousel, bedroom/bathroom counts, description, amenities, furnishing, nearest metro, lifestyle tags, owner's name, and Call / WhatsApp buttons.
+- Contact details are shown only to signed-in users; saving a listing requires login.
+- Clean listing URLs, e.g. `/greater-noida/noida-extension/gaur-city-2/<listing>`.
 
 ### Property posting
 
-Posting a property covers two distinct flows, both requiring a contact number:
+Two flows, both requiring a contact number:
 
-- **Looking for a flatmate** (a flat/room offer): title, flat type, bedrooms/bathrooms, rent, deposit, availability, preferred tenant gender, amenities, lifestyle-preference tags, description, and up to 3 photos (auto-compressed and center-cropped to 16:9, 9:16, or 1:1 in the browser before upload).
-- **Looking for a flat** (a requirement): title, needed-from date, preferred gender, location, max budget, amenities, and lifestyle-preference tags — no photos.
-
-The listings API validates input server-side and rate-limits requests.
+- **Looking for a flatmate** (flat/room offer): title, flat type, bedrooms/bathrooms, rent, deposit, availability, preferred gender, optional furnishing and nearest metro, amenities, lifestyle tags, description, and up to 3 photos (compressed and cropped in the browser, stored in Supabase Storage).
+- **Looking for a flat** (requirement): title, needed-from date, preferred gender, location, max budget, amenities and lifestyle tags — no photos.
+- Server-side validation, rate limiting, and a check that uploaded image bytes match their claimed type.
 
 ### Flatmates
 
-- Browse posted flat *requirements* (people looking for a flat, not standalone "profiles") on the Flatmates page.
-- Each card shows the poster's real name, gender preference, location, budget, amenities, lifestyle tags, and contact number.
-- "I have a suitable flat" links to that specific requirement's interest flow.
+- Lists posted flat requirements (people looking for a flat) with name, gender preference, location, budget, amenities, lifestyle tags and contact number.
+- "I have a suitable flat" opens that requirement's interest flow.
 
-### Chat and interest
+### Chat, interest and wishlist
 
-- Submitting interest on a listing adds that listing's real owner to your contacts list (no more placeholder names).
-- Chat is a same-browser, cross-tab prototype built on `BroadcastChannel` and `localStorage` — it only syncs between tabs open in the same browser on the same device, with a browser notification on new messages. It is **not** a real server-backed messaging system between two different people's devices yet.
-- Contacts can be removed from the list at any time.
+- Submitting interest on a listing adds its owner to your contacts; contacts can be removed.
+- Same-browser chat across tabs, with a browser notification on new messages.
+- Save and remove listings in a wishlist; totals show on the dashboard.
 
-### Wishlist
+### Login and profile
 
-- Save and remove property listings from a personal wishlist; totals are reflected on the dashboard.
-
-### Profile and settings
-
-- Edit name, email, and phone number.
-- Set a profile photo either by uploading one (compressed client-side) or picking one of 6 preset avatar icons.
-- A separate "Preferences & settings" mini-form for preferred city, budget, and lifestyle text, plus a notifications toggle.
-- A "Dashboard" quick-link card (this is currently the only way to reach `/dashboard` from the UI).
+- Email OTP login/signup, sent via Resend from `otp@flatfolks.in`; codes expire in 10 minutes and requests are rate-limited. No passwords.
+- Sessions use a secure, httpOnly cookie (30 days).
+- Edit name, phone, location and gender; upload a profile photo (any format, with crop/adjust) or pick a preset avatar; Dashboard link card.
 
 ### Dashboard
 
-- Stat cards for listing views, saved listings, messages, and interests.
-- "My Posts": edit any of your own posts in place (title, description, location, budget, bedrooms/bathrooms, photos, contact number, availability, gender preference, lifestyle tags) or delete them outright.
-- Placeholder "recent activity" and "profile status" panels.
+- Stat cards for views, saved listings, messages and interests.
+- "My Posts": edit or delete your own posts.
 
 ### Admin workspace
 
-- `/admin` is gated behind a username/password login (`/admin/login`); credentials are set via the `ADMIN_USERNAME`/`ADMIN_PASSWORD` environment variables, not stored in the database or the repo.
-- Shows total/pending-moderation listing counts, a per-listing view/save table, and a full listings table where the admin can open (view) or permanently delete any listing.
-- Still a starting point, not a full moderation system (no real user management or report queues yet).
+- `/admin` behind a username/password login set via `ADMIN_USERNAME` / `ADMIN_PASSWORD` env vars.
+- Listing counts, real account count and recent signups, a views/saves table, and view/delete for any listing.
 
-### SEO, accessibility, and performance
+### Content and legal pages
 
-- Search-engine metadata, Open Graph data, sitemap, and robots configuration are included.
-- Semantic controls and ARIA labels are used where relevant, with keyboard-accessible form controls.
-- Next.js production build supports route-level optimization and code splitting.
+- About (`/about`) and Blog (`/blog`, 3 renting guides).
+- Privacy Policy (`/privacy-policy`), Terms of Use (`/terms`) and Contact (`/contact`, email only), linked in the footer under "Renting guides & tips". Contact email is set in `src/data/contact.ts`. **(new, 23 Oct)**
 
-## Known gaps (honest state, not yet built)
+### SEO
 
-- **Login is email/password or OTP-based, but OTP delivery is not real SMS/email yet** — the code (`requestPhoneLoginOtp`, `requestEmailLoginOtp`) generates a code and hands it straight back to the same browser to display, rather than actually texting or emailing it. A phone-only login option (via a real provider like Firebase Phone Auth) has been discussed but not implemented.
-- **Chat has no real backend** — see above; it only works within one browser across its own tabs.
-- Photo uploads are capped at 3 per listing, ~2MB each after compression.
+- City, locality and society landing pages, each with intent pages (`/flats-for-rent`, `/flatmates`, `/sharing-flat`).
+- A page is indexed only when it has enough real listings. Thin pages, filtered views (`?budget=`, `?gender=`), `/search` and non-target cities (Mumbai, Bangalore, Pune, etc.) are `noindex, follow` on purpose — this is why Search Console shows ~200 pages as "Excluded by noindex", which is expected.
+- Split sitemaps under `/sitemap.xml` (pages, cities, localities, societies, listings, blog). Empty child sitemaps are left out of the index and return 404; the sitemap returns 503 if the database is down. **(new, 12–23 Oct)**
+- Metadata, Open Graph, structured data (Organization/WebSite), and a robots.txt that blocks only private paths.
+- Place copy contains no unverified claims (metro distances, landmarks, rent figures).
+
+## Pending
+
+### In progress (local, not pushed)
+
+- **Search filters upgrade**: flat configuration (1RK–3BHK), room type (private/shared), tenant preference (students / working professionals), min and max budget, near-metro search, and a sort dropdown (newest, rent low→high, high→low); replaces the old gender filter. Touches `data/schema.sql` and `src/lib/database.ts` — run the DB migration before deploying.
+
+### Before running Google Ads
+
+- Remove or verify unproven claims: "Trusted by 25k+ renters and landlords", "Verified listings" and "24/7 support" (footer), "10,000+ Flatmates Already Joined" (home), and "verified" wording on the About page. Google Ads can reject ads for these under its Misrepresentation policy.
+- Add the Google tag and conversion tracking (needs the `AW-` ID from the Google Ads account).
+- Only 2 live listings — start ads on posting/signup or on Greater Noida West only.
+
+### Search Console
+
+- "Redirect error" on 1 URL — needs the URL from the report.
+- `sitemap-societies.xml` "1 error" clears once Google re-reads it.
+
+### Product gaps
+
+- Chat has no server backend: it only syncs between tabs in the same browser, not between two people's devices.
+- Dashboard "recent activity" and "profile status" panels are placeholders.
+- Admin has no user management, report queue or moderation workflow.
+- Profile details are also cached in `localStorage` for the UI.
+- No error monitoring.
 
 ## Deployment
 
-Two documented paths — see `DEPLOYMENT.md` for both:
+See `DEPLOYMENT.md` for both paths:
 
-- **Self-hosted Ubuntu 24.04 LTS**: Node + local Postgres + Nginx reverse proxy, provisioned by `deploy/setup-ubuntu.sh`.
-- **Vercel + Supabase** (free tier): Postgres-hosted, serverless.
-
-Users, listings, reviews, and feedback all persist in Postgres either way. Before a real public launch, still worth adding: secure file/object storage for photos (instead of storing base64 in Postgres), a real SMS/email OTP provider, a real chat backend, server-side sessions (auth currently stores the logged-in user in `localStorage`, not a signed session/cookie), and error monitoring.
+- **Self-hosted Ubuntu 24.04 LTS**: Node + local Postgres + Nginx, provisioned by `deploy/setup-ubuntu.sh`.
+- **Vercel + Supabase** (free tier): hosted Postgres, serverless.

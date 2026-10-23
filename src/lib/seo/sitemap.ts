@@ -92,6 +92,9 @@ export async function sitemapEntries(name: SitemapName, preloaded?: Listing[]): 
       ...intents.map((intent) => ({ path: `/${intent.slug}`, changeFrequency: "daily", priority: 0.9 })),
       { path: "/blog", changeFrequency: "weekly", priority: 0.5 },
       { path: "/about", changeFrequency: "monthly", priority: 0.3 },
+      { path: "/contact", changeFrequency: "yearly", priority: 0.2 },
+      { path: "/privacy-policy", changeFrequency: "yearly", priority: 0.1 },
+      { path: "/terms", changeFrequency: "yearly", priority: 0.1 },
     ];
   }
   if (name === "blog") return blogPosts.map((post) => ({ path: `/blog/${post.slug}`, changeFrequency: "monthly", priority: 0.5 }));

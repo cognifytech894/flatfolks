@@ -29,6 +29,12 @@ const greaterNoidaWestLinks = [
   ...(noidaExtension.children || []).filter((society) => society.slug.startsWith("gaur-city")).map((society) => [`Flats & flatmates in ${society.name}`, placePath(greaterNoida, [noidaExtension, society])]),
 ];
 
+const legalLinks = [
+  ["Privacy Policy", "/privacy-policy"],
+  ["Terms", "/terms"],
+  ["Contact", "/contact"],
+] as const;
+
 export function Footer() {
   return (
     <footer className="border-t border-slate-200 bg-slate-50/80">
@@ -75,6 +81,13 @@ export function Footer() {
             <Link href="/blog" className="mt-4 inline-block text-sm font-medium text-blue-600 hover:underline">
               Renting guides &amp; tips
             </Link>
+            <nav aria-label="Legal" className="mt-4 flex flex-col gap-2">
+              {legalLinks.map(([label, href]) => (
+                <Link key={href} href={href} className="text-sm text-slate-600 hover:text-blue-600 hover:underline">
+                  {label}
+                </Link>
+              ))}
+            </nav>
           </div>
           <div>
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
