@@ -35,7 +35,7 @@ export const cityPosts: BlogPost[] = [
   {
     slug: "best-areas-to-live-in-noida",
     city: "noida",
-    title: "Best Areas to Live in Noida for Working Professionals",
+    title: "Best Places to Live in Noida for Working Professionals",
     description: "A comparison of Noida's most popular sectors for renting and sharing a flat: Sector 62, Sector 18, the newer high-rise sectors and Sectors 75 to 78, with who each one suits.",
     sections: [
       { heading: "How to choose a sector", paragraphs: [
@@ -133,7 +133,7 @@ export const cityPosts: BlogPost[] = [
   {
     slug: "best-areas-to-live-in-greater-noida",
     city: "greater-noida",
-    title: "Best Areas to Live in Greater Noida",
+    title: "Best Places to Live in Greater Noida: Areas Compared",
     description: "Greater Noida's main residential areas compared: Noida Extension, Knowledge Park, Pari Chowk and the Alpha and Beta sectors, with who each suits best.",
     sections: [
       { heading: "Noida Extension (Greater Noida West)", paragraphs: [
@@ -180,7 +180,7 @@ export const cityPosts: BlogPost[] = [
   {
     slug: "best-areas-to-live-in-gurgaon",
     city: "gurgaon",
-    title: "Best Areas to Live in Gurgaon for Working Professionals",
+    title: "Best Places to Live in Gurgaon for Working Professionals",
     description: "The main areas to rent or share a flat in Gurgaon compared: the DLF phases, Cyber City, Golf Course Road, Golf Course Extension Road, Sohna Road and the older sectors.",
     sections: [
       { heading: "The DLF phases", paragraphs: [
@@ -206,7 +206,7 @@ export const cityPosts: BlogPost[] = [
   {
     slug: "cost-of-living-in-gurgaon",
     city: "gurgaon",
-    title: "Cost of Living in Gurgaon: Rent, Bills and Commute",
+    title: "Cost of Living in Gurgaon (Gurugram): Rent, Bills and Commute",
     description: "A rough monthly budget for living in Gurgaon: rent for a sharing flat vs. a whole flat, utilities, food, commute and moving-in costs.",
     sections: [
       { heading: "Rent", paragraphs: [
@@ -251,7 +251,7 @@ export const cityPosts: BlogPost[] = [
   {
     slug: "best-areas-to-live-in-ghaziabad",
     city: "ghaziabad",
-    title: "Best Areas to Live in Ghaziabad",
+    title: "Best Places to Live in Ghaziabad: Areas Compared",
     description: "Ghaziabad's main residential areas for renting and sharing a flat compared: Indirapuram, Vaishali, Kaushambi, Vasundhara, Raj Nagar Extension and Crossings Republik.",
     sections: [
       { heading: "Indirapuram", paragraphs: [
@@ -288,6 +288,41 @@ export const cityPosts: BlogPost[] = [
       ] },
       { heading: "Moving-in costs", paragraphs: [
         "Plan for a security deposit (often one to two months' rent), the first month's rent and any furniture you need. A furnished room in a [sharing flat in Ghaziabad](/ghaziabad/sharing-flat) is the easiest way to keep these down.",
+      ] },
+    ],
+  },
+  {
+    slug: "flatmates-and-sharing-flats-in-delhi",
+    city: "delhi",
+    title: "Flatmates and Sharing Flats in Delhi: Where to Look",
+    description: "How to find a flatmate or a room in a sharing flat in Delhi: the areas students and working professionals look in, how to choose by metro line, and what to check before you pay a deposit.",
+    sections: [
+      { heading: "Choose by commute first", paragraphs: [
+        "Delhi is big, and the metro is what makes it work. A room near a station on the line you'll use every day is usually a better choice than one that looks close on the map but means a long auto ride through traffic. Start from where you study or work, then look at the areas on that line.",
+      ] },
+      { heading: "For Delhi University and coaching", paragraphs: [
+        "[North Campus](/delhi/north-campus), with Vishwavidyalaya and GTB Nagar stations on the Yellow Line, is where many DU students share flats, along with nearby [Kamla Nagar](/delhi/kamla-nagar). [Mukherjee Nagar](/delhi/mukherjee-nagar) is known for civil services coaching and is full of students sharing rooms.",
+        "[Rajinder Nagar](/delhi/rajinder-nagar) and [Karol Bagh](/delhi/karol-bagh), on the Blue Line, are the other big area for civil services aspirants, and [Patel Nagar](/delhi/patel-nagar) is a stop further west on the same line.",
+      ] },
+      { heading: "South Delhi", paragraphs: [
+        "[Hauz Khas](/delhi/hauz-khas) is an interchange between the Yellow and Magenta Lines. [Malviya Nagar](/delhi/malviya-nagar) and [Saket](/delhi/saket) are on the Yellow Line, and [Munirka](/delhi/munirka), on the Magenta Line, is close to JNU and IIT Delhi.",
+        "[Lajpat Nagar](/delhi/lajpat-nagar) is an interchange between the Violet and Pink Lines, and [Kalkaji](/delhi/kalkaji) has Kalkaji Mandir, an interchange between the Violet and Magenta Lines.",
+      ] },
+      { heading: "East, west and north-west Delhi", paragraphs: [
+        "[Laxmi Nagar](/delhi/laxmi-nagar) and [Mayur Vihar](/delhi/mayur-vihar) in East Delhi are on the Blue Line and close to Noida, so they suit people who work on either side of the Yamuna.",
+        "[Dwarka](/delhi/dwarka) is a large area of sectors along the Blue Line in South West Delhi, near the airport and Gurgaon. [Janakpuri](/delhi/janakpuri) is on the Blue Line, and the Magenta Line starts at Janakpuri West. [Rohini](/delhi/rohini) in North West Delhi is on the Red Line.",
+      ] },
+      { heading: "What it costs", paragraphs: [
+        "The rent for a room in a sharing flat in Delhi depends on the area, how close it is to the metro, whether it's a builder floor or a DDA or society flat, the furnishing and how many people share. The rent on each listing is set by the person posting it, so compare a few in the areas you're considering on [sharing flats in Delhi](/delhi/sharing-flat).",
+        "Expect a security deposit, usually one to two months' rent for your share, plus a split of electricity, WiFi and any maid or maintenance charges. Our guide on [how to split rent and bills with flatmates](/blog/split-rent-with-flatmates) covers the common ways to divide them.",
+      ] },
+      { heading: "Before you pay a deposit", paragraphs: [
+        "Visit in person, ideally in the evening. Check the water supply and pressure, power backup, mobile signal inside the room and how long the walk to the metro really is. In builder floors, ask which floor the room is on and whether there's a lift.",
+        "Ask who holds the rent agreement and whether your name will be on it, and get your rent, deposit and notice period in writing. See [documents you need to rent a flat](/blog/documents-to-rent-a-flat-in-india) for the paperwork.",
+      ] },
+      { heading: "Finding a flatmate", paragraphs: [
+        "Habits matter more than anything else in a shared flat: sleep schedule, guests, cooking, smoking and how clean the common areas are kept. Ask about these on the first call.",
+        "On FlatFolks you can browse [people looking for a flatmate in Delhi](/delhi/flatmates) with their budget and preferences, see [flats for rent in Delhi](/delhi/flats-for-rent), or [post your room](/property?intent=flatmate) so people looking in your area can find you. No brokerage, and you contact people directly.",
       ] },
     ],
   },

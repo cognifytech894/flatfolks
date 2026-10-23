@@ -23,11 +23,11 @@ import { safeJsonLd } from "@/lib/json-ld";
 import { listingPath } from "@/lib/seo/listings";
 import { siteUrl as baseUrl } from "@/lib/site-url";
 
-// Target cities link to their city hub; Delhi has no hub, so it uses search.
+// Target cities link to their city hub.
 const cities = [
   ["Noida", "photo-1486406146926-c627a92ad1ab", "/noida"],
   ["Greater Noida", "photo-1449824913935-59a10b8d2000", "/greater-noida"],
-  ["Delhi", "photo-1587474260584-136574528ed5", "/search?location=Delhi"],
+  ["Delhi", "photo-1587474260584-136574528ed5", "/delhi"],
   ["Gurgaon", "photo-1511818966892-d7d671e672a2", "/gurgaon"],
 ];
 
@@ -37,7 +37,7 @@ function Unsplash({ id, alt, className, priority, sizes }: { id: string; alt: st
 
 export const dynamic = "force-dynamic";
 
-const description = "FlatFolks (Flat Folks): rooms, PGs, and flatmates across India — filter by city, budget, and amenities. No brokerage, direct contact with owners.";
+const description = "FlatFolks (Flat Folks): find flatmates, sharing flats and rooms in Delhi, Noida, Greater Noida, Gurgaon and Ghaziabad. No brokerage, direct contact with owners.";
 
 // No `title` here on purpose: it inherits the root layout's `default` title
 // verbatim rather than going through the "%s | FlatFolks" template, which

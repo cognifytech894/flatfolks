@@ -7,8 +7,8 @@ import { safeJsonLd } from "@/lib/json-ld";
 import { baseUrl } from "@/lib/seo/listings";
 import { cities } from "@/lib/seo/locations";
 
-const title = "Sharing Flat & Renting Guides for Noida, Gurgaon and Ghaziabad";
-const description = "Guides to sharing a flat and renting in Noida, Greater Noida, Gurgaon and Ghaziabad: the best areas to live, cost of living, finding flatmates and the paperwork you need.";
+const title = "Sharing Flat & Renting Guides for Delhi, Noida, Gurgaon and Ghaziabad";
+const description = "Guides to sharing a flat and renting in Delhi, Noida, Greater Noida, Gurgaon and Ghaziabad: the best places to live, cost of living, finding flatmates and the paperwork you need.";
 
 export const metadata: Metadata = {
   title,
@@ -37,7 +37,7 @@ export default function BlogPage() {
       <div className="mx-auto max-w-5xl">
         <Breadcrumbs crumbs={crumbs} />
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Sharing flat and renting guides</h1>
-        <p className="mt-3 max-w-2xl text-slate-600">Practical, city-by-city guides for anyone moving to Noida, Greater Noida, Gurgaon or Ghaziabad: where to live, what it costs, how to find good flatmates and what to check before paying a deposit.</p>
+        <p className="mt-3 max-w-2xl text-slate-600">Practical, city-by-city guides for anyone moving to Delhi, Noida, Greater Noida, Gurgaon or Ghaziabad: where to live, what it costs, how to find good flatmates and what to check before paying a deposit.</p>
         {cities.map((city) => {
           const posts = blogPosts.filter((post) => post.city === city.slug);
           if (!posts.length) return null;

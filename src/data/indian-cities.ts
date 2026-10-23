@@ -29,7 +29,7 @@ export const indianLocalities: IndianLocality[] = [
   ["Noida Extension", "Greater Noida West"],
   ["Indirapuram", "Ghaziabad"], ["Vaishali", "Ghaziabad"], ["Raj Nagar Extension", "Ghaziabad"],
   ["DLF Phase 1", "Gurugram"], ["DLF Phase 2", "Gurugram"], ["Sushant Lok", "Gurugram"], ["Sector 56", "Gurugram"], ["Golf Course Road", "Gurugram"],
-  ["Dwarka", "Delhi"], ["Rohini", "Delhi"], ["Lajpat Nagar", "Delhi"], ["Saket", "Delhi"],
+  ["Dwarka", "Delhi"], ["Rohini", "Delhi"], ["Lajpat Nagar", "Delhi"], ["Saket", "Delhi"], ["Laxmi Nagar", "Delhi"], ["Mukherjee Nagar", "Delhi"], ["North Campus", "Delhi"], ["Rajinder Nagar", "Delhi"], ["Hauz Khas", "Delhi"], ["Malviya Nagar", "Delhi"], ["Kalkaji", "Delhi"], ["Mayur Vihar", "Delhi"], ["Janakpuri", "Delhi"],
   ["HSR Layout", "Bangalore"], ["Koramangala", "Bangalore"], ["Whitefield", "Bangalore"], ["Electronic City", "Bangalore"], ["Indiranagar", "Bangalore"], ["BTM Layout", "Bangalore"], ["Marathahalli", "Bangalore"],
   ["Hinjewadi", "Pune"], ["Kharadi", "Pune"], ["Baner", "Pune"], ["Wakad", "Pune"], ["Viman Nagar", "Pune"],
   ["Andheri", "Mumbai"], ["Powai", "Mumbai"], ["Malad", "Mumbai"], ["Bandra", "Mumbai"], ["Thane West", "Thane"],

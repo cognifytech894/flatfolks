@@ -15,16 +15,16 @@ export type LandingFilters = { gender?: string; budget?: string; furnishing?: st
 // Copy for the national intent hubs (/sharing-flat, /flats-for-rent, /flatmates).
 const nationalCopy: Record<IntentSlug, { h1: string; title: string }> = {
   "sharing-flat": {
-    h1: "Sharing Flats in Noida, Greater Noida, Gurgaon & Ghaziabad",
-    title: "Sharing Flat: Rooms in Shared Flats in Noida, Gurgaon & Ghaziabad",
+    h1: "Sharing Flats in Delhi, Noida, Greater Noida, Gurgaon & Ghaziabad",
+    title: "Sharing Flat & Flat Share in Delhi, Noida, Gurgaon & Ghaziabad",
   },
   "flats-for-rent": {
-    h1: "Flats for Rent in Noida, Greater Noida, Gurgaon & Ghaziabad",
-    title: "Flats for Rent in Noida, Gurgaon & Ghaziabad, No Brokerage",
+    h1: "Flats for Rent in Delhi, Noida, Greater Noida, Gurgaon & Ghaziabad",
+    title: "Flats for Rent in Delhi, Noida, Gurgaon & Ghaziabad, No Brokerage",
   },
   flatmates: {
     h1: "Find Flatmates & Roommates",
-    title: "Find Flatmates & Roommates in Noida, Gurgaon & Ghaziabad",
+    title: "Find Flatmates & Roommates in Delhi, Noida, Gurgaon & Ghaziabad",
   },
 };
 
@@ -72,12 +72,12 @@ function title(scope: Scope, matches: Listing[]): string {
   const place = titleLabel(scope);
   if (!place) return scope.intent ? nationalCopy[scope.intent.slug].title : heading(scope);
   switch (scope.intent?.slug) {
-    case "sharing-flat": return `Sharing Flat in ${place}: Rooms in Shared Flats`;
+    case "sharing-flat": return `Sharing Flat in ${place}: Shared Accommodation & Rooms`;
     case "flats-for-rent": {
       const bhk = bhkSummary(matches);
       return bhk ? `${bhk} Flats for Rent in ${place}` : `Flats for Rent in ${place}, No Brokerage`;
     }
-    case "flatmates": return `Flatmates in ${place}: Find a Roommate`;
+    case "flatmates": return `Flatmates & Roommates in ${place}: Find a Flatmate`;
     default: return deepest(scope)?.seo?.title || (isSmallPlace(scope) ? `Flats & Flatmates in ${place}` : heading(scope));
   }
 }
@@ -85,7 +85,7 @@ function title(scope: Scope, matches: Listing[]): string {
 function description(scope: Scope, matches: Listing[]): string {
   const node = deepest(scope);
   if (!scope.intent && node?.seo?.description) return node.seo.description;
-  const place = titleLabel(scope) || "Noida, Greater Noida, Gurgaon and Ghaziabad";
+  const place = titleLabel(scope) || "Delhi, Noida, Greater Noida, Gurgaon and Ghaziabad";
   const offers = matches.filter((listing) => listing.listingKind !== "flat-requirement");
   const cheapest = offers.length ? Math.min(...offers.map((listing) => listing.rent)) : 0;
   const from = cheapest ? ` from ${rupees(cheapest)}/month` : "";
@@ -93,7 +93,7 @@ function description(scope: Scope, matches: Listing[]): string {
   switch (scope.intent?.slug) {
     case "sharing-flat": return count
       ? `${count} sharing flat${count === 1 ? "" : "s"} in ${place}${from}: private and shared rooms in 2 and 3 BHK flats. Contact current tenants and owners directly, with no brokerage.`
-      : `Find a sharing flat in ${place}: private and shared rooms in 2 and 3 BHK flats, posted by current tenants and owners. No brokerage, direct contact.`;
+      : `Find a sharing flat or flat share in ${place}: private and shared rooms in 2 and 3 BHK flats, posted by current tenants and owners. No brokerage, direct contact.`;
     case "flats-for-rent": return count
       ? `${count} flat${count === 1 ? "" : "s"} for rent in ${place}${from}${bhkSummary(matches) ? ` (${bhkSummary(matches)})` : ""}, posted directly by owners and tenants. Compare rent, deposit and amenities, with no brokerage.`
       : `Flats for rent in ${place}, posted directly by owners and tenants. Compare rent, deposit and amenities, with no brokerage.`;
