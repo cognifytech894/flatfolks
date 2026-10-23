@@ -1,19 +1,54 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Map, SlidersHorizontal } from "lucide-react";
+import { Map, X } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
 import { SearchFilters } from "@/components/search/search-filters";
 import { SearchResults } from "@/components/search/search-results";
-import { GenderFilter } from "@/components/search/gender-filter";
+import { SortSelect } from "@/components/search/sort-select";
 import { getListings } from "@/lib/database";
 import { safeJsonLd } from "@/lib/json-ld";
-import { searchPageIntro, searchPageTitle } from "@/lib/city-titles";
+import { searchPageTitle } from "@/lib/city-titles";
 import { listingPath } from "@/lib/seo/listings";
 import { siteUrl as baseUrl } from "@/lib/site-url";
+import { activeFilterCount, matchesSearch, parseSearchFilters, sortListings, type SearchParams } from "@/lib/search-filters";
+import { flatConfigurationLabel, listingAmenities, roomTypeLabel, tenantPreferenceLabel } from "@/data/listing-attributes";
+import { furnishingLabel } from "@/data/furnishing";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = { location?: string; budget?: string; minBudget?: string; maxBudget?: string; propertyType?: string; gender?: string; moveIn?: string; amenity?: string; furnishing?: string; metro?: string; map?: string };
+/** One removable chip per active filter value; its link is the current search without that value. */
+function activeFilterChips(params: SearchParams) {
+  const chips: { label: string; href: string }[] = [];
+  const without = (key: keyof SearchParams, value?: string) => {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([name, current]) => {
+      if (!current || name === "map") return;
+      if (name !== key) return query.set(name, current);
+      if (value === undefined) return;
+      const rest = current.split(",").filter((item) => item !== value);
+      if (rest.length) query.set(name, rest.join(","));
+    });
+    return `/search?${query.toString()}`;
+  };
+  const add = (key: keyof SearchParams, label: string, value?: string) => chips.push({ label, href: without(key, value) });
+  const each = (key: keyof SearchParams, label: (value: string) => string | undefined) =>
+    (params[key] || "").split(",").filter(Boolean).forEach((value) => add(key, label(value) || value, value));
+
+  if (params.q?.trim()) add("q", `"${params.q.trim()}"`);
+  each("location", (value) => value);
+  if (params.minBudget) add("minBudget", `Min ₹${Number(params.minBudget).toLocaleString("en-IN")}`);
+  if (params.maxBudget) add("maxBudget", `Max ₹${Number(params.maxBudget).toLocaleString("en-IN")}`);
+  if (params.budget) add("budget", `₹${params.budget.replace("-", " – ₹")}`);
+  each("size", flatConfigurationLabel);
+  each("room", roomTypeLabel);
+  if (params.gender && params.gender !== "Any") add("gender", params.gender);
+  if (params.tenant) add("tenant", tenantPreferenceLabel(params.tenant) || params.tenant);
+  if (params.furnishing) add("furnishing", furnishingLabel(params.furnishing) || params.furnishing);
+  each("amenity", (value) => listingAmenities.find((amenity) => amenity.value === value)?.label);
+  if (params.propertyType) add("propertyType", params.propertyType);
+  if (params.metro?.trim()) add("metro", `Near ${params.metro.trim()}`);
+  return chips;
+}
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParams> }): Promise<Metadata> {
   const filters = await searchParams;
@@ -28,23 +63,10 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 export default async function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const filters = await searchParams;
   const listings = await getListings();
-  const [presetMinimum, presetMaximum] = (filters.budget || "").split("-").map(Number);
-  const minimum = Number(filters.minBudget) || presetMinimum;
-  const maximum = Number(filters.maxBudget) || presetMaximum;
-  const selectedLocations = (filters.location || "").split(",").filter(Boolean);
-  const selectedAmenities = (filters.amenity || "").split(",").filter(Boolean);
-  const filteredListings = listings.filter((listing) => {
-    const locationMatches = selectedLocations.length === 0 || selectedLocations.some((location) => listing.location.toLowerCase().includes(location.toLowerCase()));
-    const typeMatches = !filters.propertyType || listing.propertyType === filters.propertyType;
-    const minimumMatches = !minimum || listing.rent >= minimum;
-    const maximumMatches = !maximum || listing.rent <= maximum;
-    const amenityMatches = selectedAmenities.length === 0 || selectedAmenities.every((amenity) => listing.tags.includes(amenity));
-    // Listings without these optional fields drop out only while the filter is on.
-    const furnishingMatches = !filters.furnishing || listing.furnishing === filters.furnishing;
-    const metroMatches = !filters.metro?.trim() || (listing.nearbyMetro || "").toLowerCase().includes(filters.metro.trim().toLowerCase());
-    const genderMatches = !filters.gender || filters.gender === "Any" || (listing.genderPreference || "Any") === "Any" || listing.genderPreference === filters.gender;
-    return listing.listingKind !== "flat-requirement" && locationMatches && typeMatches && minimumMatches && maximumMatches && amenityMatches && furnishingMatches && metroMatches && genderMatches;
-  });
+  const parsed = parseSearchFilters(filters);
+  const filteredListings = sortListings(listings.filter((listing) => matchesSearch(listing, parsed)), parsed.sort);
+  const chips = activeFilterChips(filters);
+  const { minimum, maximum } = parsed;
   const query = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => { if (value && key !== "map") query.set(key, value); });
   const mapLink = `/search?${query.toString()}${query.size ? "&" : ""}map=${filters.map === "1" ? "0" : "1"}`;
@@ -56,6 +78,12 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const publicListings = filteredListings.map((listing) => ({
     id: listing.id, href: listingPath(listing), title: listing.title, location: listing.location, rent: listing.rent,
     image: listing.image, description: listing.description, propertyType: listing.propertyType,
+    badges: [
+      flatConfigurationLabel(listing.flatConfiguration),
+      roomTypeLabel(listing.roomType),
+      furnishingLabel(listing.furnishing),
+      listing.tenantPreference ? `For ${tenantPreferenceLabel(listing.tenantPreference)?.toLowerCase()}` : undefined,
+    ].filter((badge): badge is string => Boolean(badge)),
   }));
   const jsonLd = {
     "@context": "https://schema.org",
@@ -68,5 +96,5 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     })),
   };
 
-  return <div className="min-h-screen bg-slate-50"><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} /><div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"><BackLink /><div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm"><div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"><div><h1 className="text-3xl font-semibold tracking-tight text-slate-950">{filters.location ? searchPageTitle(filters.location) : "Find rooms and roommates near you"}</h1>{(filters.location || minimum || maximum || filters.propertyType || filters.amenity || filters.furnishing || filters.metro || filters.gender || filters.moveIn) && <p className="mt-2 text-sm text-slate-500">Showing {filteredListings.length} result{filteredListings.length === 1 ? "" : "s"}{filters.location ? ` in ${filters.location}` : ""}{minimum || maximum ? ` · ₹${minimum || 0} – ₹${maximum || "any"}` : ""}</p>}</div><div className="flex flex-wrap gap-3"><GenderFilter filters={filters} /><a href="#advanced-filters" className="flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700"><SlidersHorizontal className="h-4 w-4" />Filters</a><Link href={mapLink} className="flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white"><Map className="h-4 w-4" />{filters.map === "1" ? "List View" : "Map View"}</Link></div></div><div className="mt-8 grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]"><aside><SearchFilters initialFilters={{ location: filters.location, minBudget: filters.minBudget, maxBudget: filters.maxBudget, propertyType: filters.propertyType, amenity: filters.amenity, furnishing: filters.furnishing, metro: filters.metro }} /></aside><div><SearchResults listings={publicListings} mapView={filters.map === "1"} searchedLocation={filters.location} /></div></div>{filters.location && <section className="mt-10 border-t border-slate-100 pt-6">{filters.location && <p className="max-w-3xl text-sm leading-6 text-slate-600">Browse fully furnished sharing flats, single rooms, and PGs for rent in {filters.location} — including budget-friendly and bachelor-friendly options for male and female tenants.</p>}{filters.location?.trim().toLowerCase() === "noida" && <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">Popular areas: sharing flat in Noida Sector 62, single room for rent in Noida Sector 76, Sector 135, Sector 137, and Noida Extension (2 BHK flats available) — including PG options and single rooms for rent under ₹5,000.</p>}{filters.location && searchPageIntro(filters.location) && <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{searchPageIntro(filters.location)}</p>}</section>}</div></div></div>;
+  return <div className="min-h-screen bg-slate-50"><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} /><div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"><BackLink /><div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm"><div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"><div><h1 className="text-3xl font-semibold tracking-tight text-slate-950">{filters.location ? searchPageTitle(filters.location) : "Find rooms and roommates near you"}</h1><p className="mt-2 text-sm text-slate-500">{filteredListings.length} place{filteredListings.length === 1 ? "" : "s"} found{filters.location ? ` in ${filters.location}` : ""}{minimum || maximum ? ` · ₹${minimum || 0} – ₹${maximum || "any"}` : ""}</p></div><div className="flex flex-wrap gap-3"><SortSelect filters={filters} /><Link href={mapLink} className="flex min-h-11 items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white"><Map className="h-4 w-4" />{filters.map === "1" ? "List View" : "Map View"}</Link></div></div>{chips.length > 0 && <div className="mt-4 flex flex-wrap items-center gap-2">{chips.map((chip) => <Link key={chip.href + chip.label} href={chip.href} aria-label={`Remove filter ${chip.label}`} className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100">{chip.label}<X className="h-3.5 w-3.5" /></Link>)}{chips.length > 1 && <Link href="/search" className="text-xs font-semibold text-slate-500 hover:text-slate-800">Clear all</Link>}</div>}<div className="mt-8 grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]"><aside><SearchFilters key={JSON.stringify(filters)} activeCount={activeFilterCount(parsed)} initialFilters={{ q: filters.q, location: filters.location, minBudget: filters.minBudget, maxBudget: filters.maxBudget, propertyType: filters.propertyType, size: filters.size, room: filters.room, gender: filters.gender, tenant: filters.tenant, amenity: filters.amenity, furnishing: filters.furnishing, metro: filters.metro, sort: filters.sort }} /></aside><div><SearchResults listings={publicListings} mapView={filters.map === "1"} searchedLocation={filters.location} keepOrder={Boolean(parsed.sort)} /></div></div></div></div></div>;
 }

@@ -8,14 +8,14 @@ import { searchLocations } from "@/data/indian-cities";
 import { compressImageFile } from "@/lib/compress-image";
 import { PreferencesField } from "@/components/listing/preferences-field";
 import { furnishingOptions, nearbyMetroMaxLength, type Furnishing } from "@/data/furnishing";
+import { flatConfigurationOptions, listingAmenities, roomTypeOptions, tenantPreferenceOptions, type FlatConfiguration, type RoomType, type TenantPreference } from "@/data/listing-attributes";
 
-const amenities = ["WiFi", "AC", "Parking", "Kitchen", "Lift", "Power Backup"];
-type Form = { title: string; description: string; location: string; address: string; budget: string; deposit: string; availableFrom: string; genderPreference: "Male" | "Female" | "Family" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string; furnishing: "" | Furnishing; nearbyMetro: string };
+type Form = { title: string; description: string; location: string; address: string; budget: string; deposit: string; availableFrom: string; genderPreference: "Male" | "Female" | "Family" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string; furnishing: "" | Furnishing; nearbyMetro: string; flatConfiguration: "" | FlatConfiguration; roomType: "" | RoomType; tenantPreference: "" | TenantPreference };
 
 function PostListing() {
   const params = useSearchParams();
   const isFlatRequirement = params.get("intent") === "flat";
-  const [form, setForm] = useState<Form>({ title: "", description: "", location: "", address: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "", bedrooms: "1", bathrooms: "1", furnishing: "", nearbyMetro: "" });
+  const [form, setForm] = useState<Form>({ title: "", description: "", location: "", address: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "", bedrooms: "1", bathrooms: "1", furnishing: "", nearbyMetro: "", flatConfiguration: "", roomType: "", tenantPreference: "" });
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
   const [images, setImages] = useState<{ id: string; preview: string; url?: string; uploading: boolean }[]>([]);
@@ -66,6 +66,9 @@ function PostListing() {
           contactPhone: form.contactPhone,
           furnishing: form.furnishing || undefined,
           nearbyMetro: isFlatRequirement ? undefined : form.nearbyMetro.trim() || undefined,
+          flatConfiguration: isFlatRequirement ? undefined : form.flatConfiguration || undefined,
+          roomType: isFlatRequirement ? undefined : form.roomType || undefined,
+          tenantPreference: isFlatRequirement ? undefined : form.tenantPreference || undefined,
           status: "published",
         }),
       });
@@ -73,7 +76,7 @@ function PostListing() {
       if (!response.ok) throw new Error(result.error || "Could not publish your post.");
       setStatus("success");
       setMessage(isFlatRequirement ? "Requirement posted! Flat owners can now find it under Find Flatmates." : "Flat posted! People looking for a flat can now find it under Find Flats.");
-      setForm((current) => ({ title: "", description: "", location: "", address: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: current.contactPhone, bedrooms: "1", bathrooms: "1", furnishing: "", nearbyMetro: "" })); setSelectedAmenities([]); setSelectedPreferences([]); setImages([]);
+      setForm((current) => ({ title: "", description: "", location: "", address: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: current.contactPhone, bedrooms: "1", bathrooms: "1", furnishing: "", nearbyMetro: "", flatConfiguration: "", roomType: "", tenantPreference: "" })); setSelectedAmenities([]); setSelectedPreferences([]); setImages([]);
     } catch (error) { setStatus("error"); setMessage(error instanceof Error ? error.message : "Could not publish your post."); }
   }
 
@@ -110,7 +113,7 @@ function PostListing() {
 
   const titleField = (
     <label className={labelClass}>
-      Post title <span className="font-normal text-slate-400">(optional)</span>
+      Post title <span className="font-normal text-slate-500">(optional)</span>
       <input value={form.title} onChange={(event) => update("title", event.target.value)} className={fieldClass} placeholder={isFlatRequirement ? "Need a 1BHK near metro" : "1 room available in a 2BHK"} />
     </label>
   );
@@ -155,7 +158,7 @@ function PostListing() {
     <label className={labelClass}>
       Contact number
       <div className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-blue-500">
-        <Phone className="h-4 w-4 text-slate-400" />
+        <Phone className="h-4 w-4 text-slate-500" />
         <input required type="tel" value={form.contactPhone} onChange={(event) => update("contactPhone", event.target.value)} className="w-full bg-transparent outline-none" placeholder="98765 43210" />
       </div>
     </label>
@@ -166,7 +169,7 @@ function PostListing() {
       Location
       <div className="relative mt-2">
         <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-blue-500">
-          <MapPin className="h-4 w-4 text-slate-400" />
+          <MapPin className="h-4 w-4 text-slate-500" />
           <input
             required
             value={form.location}
@@ -200,7 +203,7 @@ function PostListing() {
 
   const addressField = (
     <label className={labelClass}>
-      Exact address / landmark <span className="font-normal text-slate-400">(optional)</span>
+      Exact address / landmark <span className="font-normal text-slate-500">(optional)</span>
       <input
         value={form.address}
         onChange={(event) => update("address", event.target.value)}
@@ -238,7 +241,7 @@ function PostListing() {
 
   const furnishingField = (
     <label className={labelClass}>
-      {isFlatRequirement ? "Preferred furnishing" : "Furnishing"} <span className="font-normal text-slate-400">(optional)</span>
+      {isFlatRequirement ? "Preferred furnishing" : "Furnishing"} <span className="font-normal text-slate-500">(optional)</span>
       <select value={form.furnishing} onChange={(event) => update("furnishing", event.target.value)} className={fieldClass}>
         <option value="">{isFlatRequirement ? "No preference" : "Not specified"}</option>
         {furnishingOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -246,9 +249,39 @@ function PostListing() {
     </label>
   );
 
+  const flatConfigurationField = (
+    <label className={labelClass}>
+      Flat size <span className="font-normal text-slate-500">(optional)</span>
+      <select value={form.flatConfiguration} onChange={(event) => update("flatConfiguration", event.target.value)} className={fieldClass}>
+        <option value="">Not specified</option>
+        {flatConfigurationOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select>
+    </label>
+  );
+
+  const roomTypeField = (
+    <label className={labelClass}>
+      Room on offer <span className="font-normal text-slate-500">(optional)</span>
+      <select value={form.roomType} onChange={(event) => update("roomType", event.target.value)} className={fieldClass}>
+        <option value="">Not specified</option>
+        {roomTypeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select>
+    </label>
+  );
+
+  const tenantPreferenceField = (
+    <label className={labelClass}>
+      Preferred tenants
+      <select value={form.tenantPreference} onChange={(event) => update("tenantPreference", event.target.value)} className={fieldClass}>
+        <option value="">Anyone</option>
+        {tenantPreferenceOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select>
+    </label>
+  );
+
   const nearbyMetroField = (
     <label className={labelClass}>
-      Nearest metro station <span className="font-normal text-slate-400">(optional)</span>
+      Nearest metro station <span className="font-normal text-slate-500">(optional)</span>
       <input value={form.nearbyMetro} onChange={(event) => update("nearbyMetro", event.target.value)} maxLength={nearbyMetroMaxLength} className={fieldClass} placeholder="Name of the nearest metro station" />
     </label>
   );
@@ -257,10 +290,10 @@ function PostListing() {
     <fieldset>
       <legend className="text-sm font-medium text-slate-700">Amenities</legend>
       <div className="mt-2 grid grid-cols-2 gap-2">
-        {amenities.map((amenity) => (
-          <label key={amenity} className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm">
-            <input type="checkbox" checked={selectedAmenities.includes(amenity)} onChange={() => toggleAmenity(amenity)} />
-            {amenity}
+        {listingAmenities.map((amenity) => (
+          <label key={amenity.value} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm">
+            <input type="checkbox" checked={selectedAmenities.includes(amenity.value)} onChange={() => toggleAmenity(amenity.value)} />
+            {amenity.label}
           </label>
         ))}
       </div>
@@ -269,7 +302,7 @@ function PostListing() {
 
   const descriptionField = (
     <label className={labelClass}>
-      Description <span className="font-normal text-slate-400">(optional)</span>
+      Description <span className="font-normal text-slate-500">(optional)</span>
       <textarea
         value={form.description}
         onChange={(event) => update("description", event.target.value)}
@@ -344,7 +377,7 @@ function PostListing() {
                   </div>
                 ) : (
                   <>
-                    <Camera className="h-10 w-10 text-slate-400" />
+                    <Camera className="h-10 w-10 text-slate-500" />
                     <b className="mt-3 text-slate-700">Upload flat images</b>
                     <span className="mt-1 text-sm text-slate-500">Up to 3 JPG, PNG or WebP photos.</span>
                   </>
@@ -356,7 +389,10 @@ function PostListing() {
                 {addressField}
                 {locationField}
                 {propertyTypeField}
+                {flatConfigurationField}
+                {roomTypeField}
                 {genderField}
+                {tenantPreferenceField}
                 {contactField}
                 {roomCountsField}
                 {budgetField}

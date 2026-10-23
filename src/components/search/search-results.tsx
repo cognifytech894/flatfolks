@@ -7,13 +7,14 @@ import { getSavedCity, rememberCity, sortByCity } from "@/lib/saved-city";
 
 type ResultListing = {
   id: string; href: string; title: string; location: string; rent: number; image: string; description?: string;
-  propertyType: string;
+  propertyType: string; badges: string[];
 };
 
-export function SearchResults({ listings, mapView, searchedLocation }: { listings: ResultListing[]; mapView: boolean; searchedLocation?: string }) {
+/** keepOrder: the visitor picked a sort, so don't move their saved city's listings to the top. */
+export function SearchResults({ listings, mapView, searchedLocation, keepOrder }: { listings: ResultListing[]; mapView: boolean; searchedLocation?: string; keepOrder?: boolean }) {
   const [sorted, setSorted] = useState(listings);
   useEffect(() => { if (searchedLocation) rememberCity(searchedLocation); }, [searchedLocation]);
-  useEffect(() => { setSorted(sortByCity(listings, getSavedCity())); }, [listings]);
+  useEffect(() => { setSorted(keepOrder ? listings : sortByCity(listings, getSavedCity())); }, [listings, keepOrder]);
 
   return (
     <>
@@ -32,18 +33,23 @@ export function SearchResults({ listings, mapView, searchedLocation }: { listing
             <div className="relative h-40 w-full shrink-0">
               {listing.image
                 ? <Image src={listing.image} alt={listing.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 400px" />
-                : <div className="grid h-full w-full place-items-center bg-slate-100 text-sm font-medium text-slate-400">No photos</div>}
+                : <div className="grid h-full w-full place-items-center bg-slate-100 text-sm font-medium text-slate-600">No photos</div>}
             </div>
             <div className="flex flex-1 flex-col p-4">
               <h2 className="mb-2 text-lg font-semibold text-slate-900">{listing.title}</h2>
               <p className="text-sm text-slate-600">{listing.location}</p>
+              {listing.badges.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {listing.badges.map((badge) => <span key={badge} className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">{badge}</span>)}
+                </div>
+              )}
               {listing.description && <p className="mt-2 line-clamp-2 text-sm text-slate-500">{listing.description}</p>}
-              <p className="mt-2 text-sm font-medium text-emerald-600">Rent: ₹{listing.rent.toLocaleString("en-IN")}</p>
+              <p className="mt-2 text-sm font-medium text-emerald-700">Rent: ₹{listing.rent.toLocaleString("en-IN")}</p>
               <div className="mt-auto flex items-center justify-between pt-4">
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{listing.propertyType}</span>
                 <div className="flex items-center gap-2">
-                  <Link href={`/interest?listingId=${listing.id}`} className="rounded-full bg-emerald-500 px-3 py-2 text-sm font-semibold text-white">Interested</Link>
-                  <Link href={listing.href} className="text-sm font-semibold text-slate-700">View details</Link>
+                  <Link href={`/interest?listingId=${listing.id}`} className="inline-flex min-h-11 items-center rounded-full bg-emerald-700 px-4 py-2 text-sm font-semibold text-white">Interested</Link>
+                  <Link href={listing.href} className="inline-block py-1 text-sm font-semibold text-slate-700">View details</Link>
                 </div>
               </div>
             </div>
@@ -51,7 +57,8 @@ export function SearchResults({ listings, mapView, searchedLocation }: { listing
         ))}
         {sorted.length === 0 && (
           <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-sm text-slate-600 md:col-span-2">
-            No rooms match these filters yet. Try another location or custom budget range.
+            No rooms match these filters yet. Try removing a filter, another location or a wider budget.
+            <Link href="/search" className="mt-3 block font-semibold text-blue-600">Clear all filters</Link>
           </div>
         )}
       </div>

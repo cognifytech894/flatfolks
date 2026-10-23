@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import pool from "@/lib/db";
 import type { Furnishing } from "@/data/furnishing";
+import type { FlatConfiguration, RoomType, TenantPreference } from "@/data/listing-attributes";
 
 export type Listing = {
   id: string;
@@ -41,6 +42,12 @@ export type Listing = {
   nearbyMetro?: string;
   /** Reserved for the future verified metro_stations master table; unset for free-text entries. */
   nearbyMetroStationId?: string;
+  /** 1 RK / 1–3 BHK; unset when the poster didn't say. */
+  flatConfiguration?: FlatConfiguration;
+  /** Whether the room on offer is private or shared. */
+  roomType?: RoomType;
+  /** Preferred tenants; unset means open to anyone. */
+  tenantPreference?: TenantPreference;
 };
 
 export type ListingReview = { id: string; listingId: string; author: string; rating: number; comment: string; createdAt: string };
@@ -85,6 +92,7 @@ type ListingRow = {
   gender_preference: Listing["genderPreference"]; listing_kind: Listing["listingKind"]; contact_phone: string | null; preferences: unknown;
   created_at?: Date | string | null;
   furnishing?: Furnishing | null; nearby_metro?: string | null; nearby_metro_station_id?: string | null;
+  flat_configuration?: FlatConfiguration | null; room_type?: RoomType | null; tenant_preference?: TenantPreference | null;
 };
 
 // Stock photo createListing used to save for member listings posted without photos.
@@ -106,6 +114,7 @@ function rowToListing(row: ListingRow): Listing {
     genderPreference: row.gender_preference || undefined, listingKind: row.listing_kind || undefined,
     createdAt: row.created_at ? new Date(row.created_at).toISOString() : undefined,
     furnishing: row.furnishing || undefined, nearbyMetro: row.nearby_metro || undefined, nearbyMetroStationId: row.nearby_metro_station_id || undefined,
+    flatConfiguration: row.flat_configuration || undefined, roomType: row.room_type || undefined, tenantPreference: row.tenant_preference || undefined,
   };
 }
 
@@ -135,7 +144,7 @@ export async function getFeaturedListings(limit = 4, city = ""): Promise<Listing
   return rows.map(rowToListing);
 }
 
-export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { bedrooms?: number; bathrooms?: number; description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; contactPhone?: string; preferences?: string[]; availableFrom?: string; genderPreference?: "Male" | "Female" | "Family" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement"; furnishing?: Furnishing | null; nearbyMetro?: string | null };
+export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { bedrooms?: number; bathrooms?: number; description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; contactPhone?: string; preferences?: string[]; availableFrom?: string; genderPreference?: "Male" | "Female" | "Family" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement"; furnishing?: Furnishing | null; nearbyMetro?: string | null; flatConfiguration?: FlatConfiguration | null; roomType?: RoomType | null; tenantPreference?: TenantPreference | null };
 
 export async function createListing(input: NewListing): Promise<Listing> {
   const listing: Listing = {
@@ -154,15 +163,18 @@ export async function createListing(input: NewListing): Promise<Listing> {
     listingKind: input.listingKind || "flat-offer",
     furnishing: input.furnishing || undefined,
     nearbyMetro: input.nearbyMetro || undefined,
+    flatConfiguration: input.flatConfiguration || undefined,
+    roomType: input.roomType || undefined,
+    tenantPreference: input.tenantPreference || undefined,
   };
   await pool.query(
-    `INSERT INTO listings (id, title, location, rent, deposit, bedrooms, bathrooms, property_type, description, image, verified, tags, match_score, min_budget, max_budget, images, status, views, saves, owner_id, available_from, gender_preference, listing_kind, contact_phone, preferences, furnishing, nearby_metro)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)`,
+    `INSERT INTO listings (id, title, location, rent, deposit, bedrooms, bathrooms, property_type, description, image, verified, tags, match_score, min_budget, max_budget, images, status, views, saves, owner_id, available_from, gender_preference, listing_kind, contact_phone, preferences, furnishing, nearby_metro, flat_configuration, room_type, tenant_preference)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)`,
     [listing.id, listing.title, listing.location, listing.rent, listing.deposit, listing.bedrooms, listing.bathrooms, listing.propertyType,
       listing.description || null, listing.image, listing.verified, JSON.stringify(listing.tags), listing.matchScore, listing.minBudget, listing.maxBudget,
       listing.images ? JSON.stringify(listing.images) : null, listing.status, listing.views, listing.saves, listing.ownerId || null,
       listing.availableFrom || null, listing.genderPreference, listing.listingKind, listing.contactPhone || null, JSON.stringify(listing.preferences),
-      listing.furnishing || null, listing.nearbyMetro || null],
+      listing.furnishing || null, listing.nearbyMetro || null, listing.flatConfiguration || null, listing.roomType || null, listing.tenantPreference || null],
   );
   return listing;
 }
@@ -195,6 +207,9 @@ export async function updateListing(id: string, input: Partial<NewListing>): Pro
   // null clears the field; undefined leaves it as it is.
   if (input.furnishing !== undefined) set("furnishing", input.furnishing || null);
   if (input.nearbyMetro !== undefined) set("nearby_metro", input.nearbyMetro || null);
+  if (input.flatConfiguration !== undefined) set("flat_configuration", input.flatConfiguration || null);
+  if (input.roomType !== undefined) set("room_type", input.roomType || null);
+  if (input.tenantPreference !== undefined) set("tenant_preference", input.tenantPreference || null);
 
   if (sets.length) {
     values.push(id);
