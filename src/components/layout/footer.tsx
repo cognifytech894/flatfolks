@@ -30,9 +30,9 @@ const greaterNoidaWestLinks = [
 ];
 
 const legalLinks = [
-  ["About Us", "/about"],
+  ["Company", "/about"],
+  ["Terms & Conditions", "/terms"],
   ["Privacy Policy", "/privacy-policy"],
-  ["Terms", "/terms"],
   ["Contact", "/contact"],
 ] as const;
 
@@ -64,9 +64,7 @@ export function Footer() {
             <p className="mt-4 text-sm leading-7 text-slate-600">
               Rooms, flats and flatmates for students and professionals in Delhi NCR.
             </p>
-          </div>
-          <div>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
+            <p className="mb-3 mt-6 text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
               Trust
             </p>
             <div className="flex flex-col gap-3">
@@ -79,16 +77,19 @@ export function Footer() {
                 </div>
               ))}
             </div>
-            <Link href="/blog" className="mt-4 inline-block py-1 text-sm font-medium text-blue-600 hover:underline">
-              Renting guides &amp; tips
-            </Link>
-            <nav aria-label="Legal" className="mt-4 flex flex-col gap-2">
+          </div>
+          <div>
+            <p className="mb-3 text-lg font-semibold text-slate-700">About</p>
+            <nav aria-label="Legal" className="flex flex-col gap-2">
               {legalLinks.map(([label, href]) => (
                 <Link key={href} href={href} className="inline-block py-1 text-sm text-slate-600 hover:text-blue-600 hover:underline">
                   {label}
                 </Link>
               ))}
             </nav>
+            <Link href="/blog" className="mt-4 inline-block py-1 text-sm font-medium text-blue-600 hover:underline">
+              Renting guides &amp; tips
+            </Link>
           </div>
           <div>
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">

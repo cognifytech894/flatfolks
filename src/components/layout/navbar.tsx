@@ -79,9 +79,7 @@ export function Navbar() {
           <Link href="/search" className={navClass(pathname === "/search")}>Find Room</Link>
           <Link href="/flatmates" className={navClass(pathname === "/flatmates")}>Find Flatmates</Link>
           <div className="group relative"><button className={`flex items-center gap-1 ${navClass(pathname.startsWith("/property"))}`}>Post Property <ChevronDown className="h-3.5 w-3.5" /></button><div className="invisible absolute left-0 top-full z-50 w-72 translate-y-2 rounded-xl border border-slate-200 bg-white p-2 opacity-0 shadow-xl transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100"><Link href="/property?intent=flat" className="block rounded-lg px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-600"><b className="block">Looking for a flat</b><small className="text-xs text-slate-500">Add your location, budget and amenities</small></Link><Link href="/property?intent=flatmate" className="block rounded-lg px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-600"><b className="block">Looking for a flatmate</b><small className="text-xs text-slate-500">Add your flat, amenities and up to 3 photos</small></Link></div></div>
-          {hasChatAccess && <Link href="/chat" className={navClass(pathname === "/chat")}>One-to-One Chat</Link>}
-          <Link href="/about" className={navClass(pathname === "/about")}>About Us</Link>
-        </nav>
+          {hasChatAccess && <Link href="/chat" className={navClass(pathname === "/chat")}>One-to-One Chat</Link>}        </nav>
 
         <div className="flex items-center gap-3">
           {hasChatAccess && <Link href="/chat" aria-label="One-to-one chat" className="grid h-11 w-11 place-items-center rounded-full bg-slate-100 text-slate-700 lg:hidden"><MessageCircle className="h-5 w-5" /></Link>}
