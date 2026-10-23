@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import type { Crumb } from "@/components/seo/breadcrumbs";
 import type { Listing } from "@/lib/database";
-import { baseUrl, inScope, isExpired, isGenuine, listingPath, placeOf, placePath, primaryIntent } from "@/lib/seo/listings";
+import { baseUrl, inScope, isGenuine, isLive, listingPath, placeOf, placePath, primaryIntent } from "@/lib/seo/listings";
 import { placeLabel } from "@/lib/seo/locations";
 import { isUnindexedCity } from "@/data/priority-locations";
 
-/** Indexed only if it's a genuine, live, unexpired listing outside the cities we deliberately don't target. */
+/** Indexed only if it's a genuine, live listing outside the cities we deliberately don't target. */
 export function isListingIndexable(listing: Listing) {
   return isGenuine(listing) && !isUnindexedCity(listing.location);
 }
@@ -21,6 +21,8 @@ function listingPlaceName(listing: Listing) {
 }
 
 export function listingMetadata(listing: Listing): Metadata {
+  // Removed (or draft) posts keep their URL but say nothing about the post.
+  if (!isLive(listing)) return { title: "This post is no longer available", robots: { index: false, follow: true } };
   const isRequirement = listing.listingKind === "flat-requirement";
   const description = listing.description?.trim().slice(0, 155)
     || (isRequirement
@@ -64,5 +66,5 @@ export function listingContext(listing: Listing, all: Listing[]) {
     for (const other of others) if (related.length < 6 && !related.includes(other) && inScope(other, scope)) related.push(other);
   }
 
-  return { path, url: `${baseUrl}${path}`, crumbs, related, expired: isExpired(listing) };
+  return { path, url: `${baseUrl}${path}`, crumbs, related };
 }

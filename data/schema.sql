@@ -128,6 +128,37 @@ CREATE TABLE IF NOT EXISTS feedback (
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+-- Inactive-owner post removal (src/lib/inactive-posts.ts). Posts of owners not
+-- seen for 30 days become 'removed_inactive' and are deleted 30 days later.
+-- No foreign keys on purpose: deleting a post can never cascade to users.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ;
+UPDATE users SET last_seen_at = NOW() WHERE last_seen_at IS NULL;
+ALTER TABLE users ALTER COLUMN last_seen_at SET DEFAULT NOW();
+ALTER TABLE users ALTER COLUMN last_seen_at SET NOT NULL;
+
+ALTER TABLE listings DROP CONSTRAINT IF EXISTS listings_status_check;
+ALTER TABLE listings ADD CONSTRAINT listings_status_check CHECK (status IN ('draft', 'published', 'moderation', 'removed_inactive'));
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS removed_at TIMESTAMPTZ;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS managed_by_admin BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE listings DROP CONSTRAINT IF EXISTS listings_removed_at_check;
+ALTER TABLE listings ADD CONSTRAINT listings_removed_at_check CHECK ((status = 'removed_inactive') = (removed_at IS NOT NULL));
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS removal_email_sent_at TIMESTAMPTZ;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS removal_email_attempts INT NOT NULL DEFAULT 0;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS removal_email_error TEXT;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS inactivity_warning_sent_at TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS listings_owner_idx ON listings (owner_id);
+CREATE INDEX IF NOT EXISTS listings_removed_idx ON listings (status, removed_at);
+
+-- Tombstones: a deleted post's URL answers 410 Gone, and admin counts them.
+CREATE TABLE IF NOT EXISTS deleted_listings (
+  id UUID PRIMARY KEY,
+  owner_id UUID,
+  title VARCHAR(200),
+  reason VARCHAR(30) NOT NULL CHECK (reason IN ('inactive_owner', 'owner', 'admin')),
+  deleted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS deleted_listings_suffix_idx ON deleted_listings ((RIGHT(id::text, 8)));
+
 -- Seed data matching the original demo listings.
 INSERT INTO listings (id, title, location, rent, deposit, bedrooms, bathrooms, property_type, image, verified, tags, match_score, min_budget, max_budget, listing_kind) VALUES
   ('a0000000-0000-4000-8000-000000000001', 'Private Room in 2BHK', 'Sector 63, Noida', 9500, 19000, 1, 1, 'Room', 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=80', TRUE, '["WiFi", "AC", "Parking"]', 96, 8500, 11000, 'flat-offer'),

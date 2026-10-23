@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createListing, deleteListing, getListingOwnerId, getListings, updateListing, type NewListing } from "@/lib/database";
+import { createListing, deleteListing, getListingOwnerId, getListings, getOwnerListings, touchLastSeen, updateListing, type NewListing } from "@/lib/database";
+import { deleteImages } from "@/lib/image-storage";
 import { lifestylePreferences } from "@/data/preferences";
 import { cleanNearbyMetro, isFurnishing } from "@/data/furnishing";
 import { isFlatConfiguration, isRoomType, isTenantPreference } from "@/data/listing-attributes";
@@ -61,9 +62,8 @@ function withoutContactPhone<T extends { contactPhone?: string }>(listing: T): O
 export async function GET(request: Request) {
   const ownerId = new URL(request.url).searchParams.get("ownerId");
   const sessionUserId = await getSessionUserId();
-  // Drafts are private: only their owner sees them.
-  const listings = (await getListings()).filter((listing) => listing.status !== "draft" || (sessionUserId && listing.ownerId === sessionUserId));
-  const filtered = ownerId ? listings.filter((listing) => listing.ownerId === ownerId) : listings;
+  // Public callers get live posts only; owners also see their drafts and removed posts.
+  const filtered = ownerId && ownerId === sessionUserId ? await getOwnerListings(ownerId) : (await getListings()).filter((listing) => !ownerId || listing.ownerId === ownerId);
   // Mirrors the login gate on the property detail page — without this, the
   // phone number would still be visible to anyone calling this endpoint
   // directly (e.g. via devtools) even though the page itself hides it.
@@ -92,6 +92,7 @@ export async function POST(request: Request) {
   if ("error" in attributes) return NextResponse.json({ error: attributes.error }, { status: 400 });
   const images = body.images?.filter((image) => typeof image === "string" && image.length < 2_000_000).slice(0, 3);
   if (body.listingKind === "flat-requirement" && images?.length) return NextResponse.json({ error: "Flat requirements cannot include images." }, { status: 400 });
+  await touchLastSeen(sessionUserId);
   const listing = await createListing({
     title: body.title,
     location: body.location,
@@ -130,6 +131,11 @@ export async function PATCH(request: Request) {
     const actualOwnerId = await getListingOwnerId(body.id);
     if (actualOwnerId === undefined) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
     if (actualOwnerId !== sessionUserId) return NextResponse.json({ error: "You can only edit your own listings." }, { status: 403 });
+    await touchLastSeen(sessionUserId);
+    // Owners can't set status: a removed post comes back only through restore.
+    delete body.status;
+  } else if (body.status && !["draft", "published", "moderation"].includes(body.status)) {
+    return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   }
 
   if (body.description && body.description.length > 2000) return NextResponse.json({ error: "Description must be 2000 characters or fewer." }, { status: 400 });
@@ -161,8 +167,13 @@ export async function DELETE(request: Request) {
     const actualOwnerId = await getListingOwnerId(id);
     if (actualOwnerId === undefined) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
     if (actualOwnerId !== sessionUserId) return NextResponse.json({ error: "You can only delete your own listings." }, { status: 403 });
+    await touchLastSeen(sessionUserId);
   }
 
-  try { await deleteListing(id); return new NextResponse(null, { status: 204 }); }
+  try {
+    const photos = await deleteListing(id, isAdmin ? "admin" : "owner");
+    await deleteImages(photos).catch((error) => console.error("Could not delete listing photos", id, error));
+    return new NextResponse(null, { status: 204 });
+  }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Could not delete listing." }, { status: 404 }); }
 }

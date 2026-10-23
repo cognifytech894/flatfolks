@@ -20,3 +20,11 @@ export async function sendOtpEmail(to: string, code: string): Promise<boolean> {
   if (error) throw new Error(error.message);
   return true;
 }
+
+/** Sends a prepared email. Throws when Resend isn't configured or rejects it, so callers can retry. */
+export async function sendEmail(email: { to: string; subject: string; html: string; text: string }): Promise<void> {
+  const resend = client();
+  if (!resend) throw new Error("RESEND_API_KEY is not configured.");
+  const { error } = await resend.emails.send({ from: FROM_ADDRESS, ...email });
+  if (error) throw new Error(error.message);
+}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ListingDetail } from "@/components/listing/listing-detail";
+import { ListingUnavailable } from "@/components/listing/listing-unavailable";
 import { LandingPage, landingMetadata, pickFilters } from "@/components/seo/landing-page";
 import { getListingByIdSuffix, getListings, recordListingView, type Listing } from "@/lib/database";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
@@ -50,6 +51,8 @@ export default async function PlacePage({ params, searchParams }: Props) {
   // A changed title or location moves a listing's URL; old URLs 308 to the current one.
   const canonical = listingPath(resolved.listing);
   if (canonical !== resolved.requestedPath) permanentRedirect(canonical);
+  // A removed post keeps its URL (it may be restored) but shows none of its details.
+  if (resolved.listing.status !== "published") return <ListingUnavailable {...listingContext(resolved.listing, listings)} />;
   const listing = (await recordListingView(resolved.listing.id)) || resolved.listing;
   const cookieStore = await cookies();
   const isLoggedIn = Boolean(verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value));

@@ -51,3 +51,18 @@ export async function uploadImage(dataUrl: string): Promise<string> {
   if (error) throw new Error(error.message);
   return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 }
+
+/**
+ * Deletes uploaded photos by their public URLs. URLs that aren't objects in our
+ * bucket (stock photos, other hosts) are skipped, so this can be handed a
+ * listing's whole image list.
+ */
+export async function deleteImages(urls: string[]): Promise<void> {
+  const base = process.env.SUPABASE_URL;
+  if (!base) return;
+  const prefix = `${base.replace(/\/$/, "")}/storage/v1/object/public/${BUCKET}/`;
+  const paths = urls.filter((url) => url.startsWith(prefix)).map((url) => decodeURIComponent(url.slice(prefix.length).split("?")[0]));
+  if (!paths.length) return;
+  const { error } = await storageClient().storage.from(BUCKET).remove(paths);
+  if (error) throw new Error(error.message);
+}

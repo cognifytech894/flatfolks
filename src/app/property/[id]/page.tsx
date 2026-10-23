@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ListingDetail } from "@/components/listing/listing-detail";
+import { ListingUnavailable } from "@/components/listing/listing-unavailable";
 import { getListingById, getListings, recordListingView } from "@/lib/database";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 import { listingPath } from "@/lib/seo/listings";
@@ -24,6 +25,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   if (!existing) notFound();
   const canonical = listingPath(existing);
   if (canonical !== `/property/${id}`) permanentRedirect(canonical);
+  if (existing.status !== "published") return <ListingUnavailable {...listingContext(existing, await getListings().catch(() => []))} />;
 
   const listing = (await recordListingView(id)) || existing;
   const cookieStore = await cookies();

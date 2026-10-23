@@ -20,7 +20,12 @@ export type Listing = {
   minBudget: number;
   maxBudget: number;
   images?: string[];
-  status?: "draft" | "published" | "moderation";
+  /** 'removed_inactive' posts are hidden everywhere public until restored (see src/lib/inactive-posts.ts). */
+  status?: "draft" | "published" | "moderation" | "removed_inactive";
+  /** ISO timestamp of when the post was removed for owner inactivity. */
+  removedAt?: string;
+  /** Admin-managed posts are never removed for inactivity. */
+  managedByAdmin?: boolean;
   views?: number;
   saves?: number;
   ownerId?: string;
@@ -93,6 +98,7 @@ type ListingRow = {
   created_at?: Date | string | null;
   furnishing?: Furnishing | null; nearby_metro?: string | null; nearby_metro_station_id?: string | null;
   flat_configuration?: FlatConfiguration | null; room_type?: RoomType | null; tenant_preference?: TenantPreference | null;
+  removed_at?: Date | string | null; managed_by_admin?: boolean | null;
 };
 
 // Stock photo createListing used to save for member listings posted without photos.
@@ -105,6 +111,7 @@ function rowToListing(row: ListingRow): Listing {
     description: row.description || undefined, image: row.owner_id && row.image === legacyStockImage ? "" : row.image, verified: !!row.verified,
     tags: parseJsonField<string[]>(row.tags, []), matchScore: row.match_score, minBudget: row.min_budget, maxBudget: row.max_budget,
     images: parseJsonField<string[] | undefined>(row.images, undefined), status: row.status || undefined,
+    removedAt: row.removed_at ? new Date(row.removed_at).toISOString() : undefined, managedByAdmin: Boolean(row.managed_by_admin),
     views: row.views, saves: row.saves, ownerId: row.owner_id || undefined, ownerName: row.owner_name || undefined,
     ownerPhoto: row.owner_photo || undefined, ownerGender: row.owner_gender || undefined,
     // Falls back to the owner's account phone for listings posted before contact_phone existed.
@@ -126,14 +133,68 @@ function rowToPublicUser(row: UserRow): PublicUser {
   return { id: row.id, name: row.name, email: row.email, phone: row.phone || undefined, location: row.location || undefined, gender: row.gender || undefined, photo: row.photo || undefined };
 }
 
+/** Live posts only: everything public (search, place pages, sitemaps, counts) reads this. */
 export async function getListings(): Promise<Listing[]> {
+  const { rows } = await pool.query<ListingRow>(`${listingSelect} WHERE listings.status = 'published' ORDER BY listings.created_at DESC`);
+  return rows.map(rowToListing);
+}
+
+/** Every post whatever its status, for the admin workspace. */
+export async function getAllListings(): Promise<Listing[]> {
   const { rows } = await pool.query<ListingRow>(`${listingSelect} ORDER BY listings.created_at DESC`);
   return rows.map(rowToListing);
 }
 
+/** A member's own posts, including removed ones they can still restore. */
+export async function getOwnerListings(ownerId: string): Promise<Listing[]> {
+  const { rows } = await pool.query<ListingRow>(`${listingSelect} WHERE listings.owner_id = $1 ORDER BY listings.created_at DESC`, [ownerId]);
+  return rows.map(rowToListing);
+}
+
+/**
+ * Records that a signed-in member was active, at most once per day. Their posts
+ * are removed after 30 days without this (src/lib/inactive-posts.ts).
+ */
+export async function touchLastSeen(userId: string): Promise<void> {
+  await pool.query("UPDATE users SET last_seen_at = NOW() WHERE id = $1 AND last_seen_at < date_trunc('day', NOW())", [userId]);
+}
+
+export type ListingAvailability = "active" | "removed" | "gone";
+
+/** Whether saved listing ids still point at a live post, a removed (restorable) one, or nothing. */
+export async function getListingAvailability(ids: string[]): Promise<Record<string, ListingAvailability>> {
+  const valid = ids.filter((id) => /^[0-9a-f-]{36}$/.test(id));
+  const result: Record<string, ListingAvailability> = Object.fromEntries(ids.map((id) => [id, "gone" as const]));
+  if (!valid.length) return result;
+  const { rows } = await pool.query<{ id: string; status: string }>("SELECT id, status FROM listings WHERE id = ANY($1::uuid[])", [valid]);
+  for (const row of rows) result[row.id] = row.status === "published" ? "active" : "removed";
+  return result;
+}
+
+export async function setManagedByAdmin(id: string, managed: boolean): Promise<void> {
+  const result = await pool.query("UPDATE listings SET managed_by_admin = $2 WHERE id = $1", [id, managed]);
+  if (result.rowCount === 0) throw new Error("Listing not found.");
+}
+
+export async function getListingCounts(): Promise<{ active: number; removed: number; deleted: number }> {
+  const { rows } = await pool.query<{ active: string; removed: string; deleted: string }>(
+    "SELECT (SELECT COUNT(*) FROM listings WHERE status = 'published') AS active, (SELECT COUNT(*) FROM listings WHERE status = 'removed_inactive') AS removed, (SELECT COUNT(*) FROM deleted_listings) AS deleted",
+  );
+  return { active: Number(rows[0].active), removed: Number(rows[0].removed), deleted: Number(rows[0].deleted) };
+}
+
+/** True when a post with this id (or URL suffix) was permanently deleted and nothing live has taken its URL. */
+export async function isDeletedListing(idOrSuffix: string): Promise<boolean> {
+  const bySuffix = /^[0-9a-f]{8}$/.test(idOrSuffix);
+  if (!bySuffix && !/^[0-9a-f-]{36}$/.test(idOrSuffix)) return false;
+  const match = bySuffix ? "RIGHT(id::text, 8) = $1" : "id = $1::uuid";
+  const { rows } = await pool.query(`SELECT 1 FROM deleted_listings WHERE ${match} AND NOT EXISTS (SELECT 1 FROM listings WHERE ${match}) LIMIT 1`, [idOrSuffix]);
+  return rows.length > 0;
+}
+
 export async function getFeaturedListings(limit = 4, city = ""): Promise<Listing[]> {
   // Only properties people are offering — "need a flat" requirements belong on /flatmates, not the home page.
-  const offers = `${listingSelect} WHERE listings.listing_kind IS DISTINCT FROM 'flat-requirement' AND listings.status IS DISTINCT FROM 'draft'`;
+  const offers = `${listingSelect} WHERE listings.listing_kind IS DISTINCT FROM 'flat-requirement' AND listings.status = 'published'`;
   if (city) {
     // Same "location contains the city" match the search page uses; % and _ are escaped so they match literally.
     const pattern = `%${city.replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
@@ -226,9 +287,28 @@ export async function getListingOwnerId(id: string): Promise<string | null | und
   return rows[0] ? rows[0].owner_id : undefined;
 }
 
-export async function deleteListing(id: string): Promise<void> {
-  const result = await pool.query("DELETE FROM listings WHERE id = $1", [id]);
-  if (result.rowCount === 0) throw new Error("Listing not found.");
+/**
+ * Deletes a post and its reviews, leaving a tombstone so its URL answers 410.
+ * Returns the photo URLs so the caller can remove them from storage. Never
+ * touches users: there are no foreign keys from listings to accounts.
+ */
+export async function deleteListing(id: string, reason: "owner" | "admin"): Promise<string[]> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN READ WRITE");
+    const { rows } = await client.query<{ owner_id: string | null; title: string; image: string | null; images: unknown }>("SELECT owner_id, title, image, images FROM listings WHERE id = $1", [id]);
+    if (!rows[0]) throw new Error("Listing not found.");
+    await client.query("INSERT INTO deleted_listings (id, owner_id, title, reason) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO NOTHING", [id, rows[0].owner_id, rows[0].title, reason]);
+    await client.query("DELETE FROM listing_reviews WHERE listing_id = $1", [id]);
+    await client.query("DELETE FROM listings WHERE id = $1", [id]);
+    await client.query("COMMIT");
+    return [...new Set([rows[0].image, ...parseJsonField<string[]>(rows[0].images, [])].filter((url): url is string => Boolean(url)))];
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 /** Read-only lookup — use this for anything that shouldn't count as a page view (e.g. generateMetadata, which Next.js may invoke separately from the page render). */
@@ -286,7 +366,11 @@ export async function verifyEmailAuthOtp(email: string, otp: string): Promise<{ 
   const normalizedEmail = email.trim().toLowerCase();
   if (!(await consumeOtp(normalizedEmail, "email-auth", otp))) throw new Error("Invalid or expired OTP. Please request a new OTP.");
   const { rows } = await pool.query<UserRow>("SELECT * FROM users WHERE email = $1", [normalizedEmail]);
-  if (rows[0]) return { user: rowToPublicUser(rows[0]), isNewUser: false };
+  if (rows[0]) {
+    // Logging in is activity; it keeps the member's posts from being removed.
+    await pool.query("UPDATE users SET last_seen_at = NOW() WHERE id = $1", [rows[0].id]);
+    return { user: rowToPublicUser(rows[0]), isNewUser: false };
+  }
   const id = randomUUID();
   const name = normalizedEmail.split("@")[0] || "FlatFolks member";
   await pool.query("INSERT INTO users (id, name, email) VALUES ($1, $2, $3)", [id, name, normalizedEmail]);

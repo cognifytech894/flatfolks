@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, Armchair, Bath, Bed, CalendarDays, Clock, Home as HomeIcon, Lock, MapPin, MessageCircle, Phone, ShieldAlert, ShieldCheck, TrainFront, UserRound, UsersRound, Wallet } from "lucide-react";
+import { Armchair, Bath, Bed, CalendarDays, Clock, Home as HomeIcon, Lock, MapPin, MessageCircle, Phone, ShieldAlert, ShieldCheck, TrainFront, UserRound, UsersRound, Wallet } from "lucide-react";
 import { SaveListingButton } from "@/components/listing/save-listing-button";
 import { PhotoCarousel } from "@/components/listing/photo-carousel";
 import { Breadcrumbs, breadcrumbJsonLd, type Crumb } from "@/components/seo/breadcrumbs";
@@ -35,10 +35,9 @@ export type ListingDetailProps = {
   crumbs: Crumb[];
   /** Descriptive links back up the hierarchy: society, intent page, area. */
   related: Listing[];
-  expired: boolean;
 };
 
-export function ListingDetail({ listing, isLoggedIn, url, crumbs, related, expired }: ListingDetailProps) {
+export function ListingDetail({ listing, isLoggedIn, url, crumbs, related }: ListingDetailProps) {
   const ownerName = listing.ownerName || "FlatFolks member";
   const isRequirement = listing.listingKind === "flat-requirement";
   // A flat-requirement listing has no real property photos (it's a person's
@@ -74,16 +73,14 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, related, expir
         numberOfBathroomsTotal: listing.bathrooms,
         amenityFeature: listing.tags.map((tag) => ({ "@type": "LocationFeatureSpecification", name: tag, value: true })),
         address: { "@type": "PostalAddress", streetAddress: listing.location, addressCountry: "IN" },
-        ...(expired ? {} : {
-          offers: {
-            "@type": "Offer",
-            price: listing.rent,
-            priceCurrency: "INR",
-            availability: "https://schema.org/InStock",
-            url,
-            ...(listing.availableFrom ? { availabilityStarts: listing.availableFrom } : {}),
-          },
-        }),
+        offers: {
+          "@type": "Offer",
+          price: listing.rent,
+          priceCurrency: "INR",
+          availability: "https://schema.org/InStock",
+          url,
+          ...(listing.availableFrom ? { availabilityStarts: listing.availableFrom } : {}),
+        },
       },
       breadcrumbJsonLd(crumbs),
     ],
@@ -173,12 +170,6 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, related, expir
       <div className="min-h-screen bg-slate-50">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <Breadcrumbs crumbs={crumbs} />
-          {expired && (
-            <div className="mb-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-              <p>This listing was posted a while ago and may no longer be available. Check with the poster, or browse the similar listings below.</p>
-            </div>
-          )}
           <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
             {!isRequirement && photos.length > 0 && <PhotoCarousel photos={photos} title={listing.title} />}
             <div className="flex flex-col gap-8 p-5 sm:p-6 lg:flex-row lg:p-8">

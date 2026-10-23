@@ -6,7 +6,7 @@
 //
 //   npm run test:api
 
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { createHmac, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -48,7 +48,8 @@ before(async () => {
 
 after(() => {
   if (!server) return;
-  if (process.platform === "win32") spawn("taskkill", ["/pid", String(server.pid), "/T", "/F"], { shell: true });
+  // Synchronous, so the dev server is gone before the next run starts another in this folder.
+    if (process.platform === "win32") { try { execFileSync("taskkill", ["/pid", String(server.pid), "/T", "/F"], { stdio: "ignore" }); } catch {} }
   else server.kill("SIGTERM");
 });
 

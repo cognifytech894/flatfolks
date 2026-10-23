@@ -5,15 +5,18 @@ import { MessageCircle, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BackLink } from "@/components/ui/back-link";
 import { MyPosts } from "@/components/dashboard/my-posts";
+import { syncSavedListings } from "@/lib/saved-listings-sync";
 
 export function DashboardView() {
   const [savedCount, setSavedCount] = useState(0);
   const [messageCount, setMessageCount] = useState(0);
   useEffect(() => {
-    const sync = () => { setSavedCount((JSON.parse(localStorage.getItem("flatfolks_saved_listings") || "[]") as string[]).length); setMessageCount((JSON.parse(localStorage.getItem("flatfolks_chat_requests") || "[]") as string[]).length); };
-    const frame = requestAnimationFrame(sync);
-    window.addEventListener("flatfolks-saved-listings", sync); window.addEventListener("flatfolks-chat-access", sync);
-    return () => { cancelAnimationFrame(frame); window.removeEventListener("flatfolks-saved-listings", sync); window.removeEventListener("flatfolks-chat-access", sync); };
+    const sync = () => setMessageCount((JSON.parse(localStorage.getItem("flatfolks_chat_requests") || "[]") as string[]).length);
+    // Counts only saved posts that are still live, and drops ones that were deleted.
+    const syncSaved = () => { syncSavedListings().then((visible) => setSavedCount(visible.length)).catch(() => {}); };
+    const frame = requestAnimationFrame(() => { sync(); syncSaved(); });
+    window.addEventListener("flatfolks-saved-listings", syncSaved); window.addEventListener("flatfolks-chat-access", sync);
+    return () => { cancelAnimationFrame(frame); window.removeEventListener("flatfolks-saved-listings", syncSaved); window.removeEventListener("flatfolks-chat-access", sync); };
   }, []);
   const cards = [{ title: "Listing Views", value: "0" }, { title: "Saved Listings", value: String(savedCount) }, { title: "Messages", value: String(messageCount) }, { title: "Interests", value: String(messageCount) }];
   return (

@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Eye, LogOut, Trash2 } from "lucide-react";
 
-type AdminListing = { id: string; title: string; location: string; rent: number; status?: string; listingKind?: string; ownerName?: string };
+type AdminListing = { id: string; title: string; location: string; rent: number; status?: string; listingKind?: string; ownerName?: string; managedByAdmin?: boolean };
 
 export function ListingsTable({ initialListings }: { initialListings: AdminListing[] }) {
   const [listings, setListings] = useState(initialListings);
@@ -18,6 +18,13 @@ export function ListingsTable({ initialListings }: { initialListings: AdminListi
     const response = await fetch(`/api/listings?id=${encodeURIComponent(id)}`, { method: "DELETE" });
     if (!response.ok && response.status !== 204) { setMessage("Could not delete this listing."); return; }
     setListings((current) => current.filter((listing) => listing.id !== id));
+  }
+
+  async function setManaged(id: string, managedByAdmin: boolean) {
+    setMessage("");
+    const response = await fetch("/api/admin/listings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, managedByAdmin }) });
+    if (!response.ok) { setMessage("Could not update this listing."); return; }
+    setListings((current) => current.map((listing) => listing.id === id ? { ...listing, managedByAdmin } : listing));
   }
 
   async function logout() {
@@ -44,6 +51,7 @@ export function ListingsTable({ initialListings }: { initialListings: AdminListi
               <th className="pb-2 pr-3">Rent</th>
               <th className="pb-2 pr-3">Owner</th>
               <th className="pb-2 pr-3">Status</th>
+              <th className="pb-2 pr-3" title="Admin-managed posts are never removed for owner inactivity">Admin-managed</th>
               <th className="pb-2">Actions</th>
             </tr>
           </thead>
@@ -56,6 +64,9 @@ export function ListingsTable({ initialListings }: { initialListings: AdminListi
                 <td className="py-2.5 pr-3 text-slate-600">₹{listing.rent.toLocaleString("en-IN")}</td>
                 <td className="py-2.5 pr-3 text-slate-600">{listing.ownerName || "—"}</td>
                 <td className="py-2.5 pr-3 text-slate-600">{listing.status || "published"}</td>
+                <td className="py-2.5 pr-3">
+                  <input type="checkbox" checked={Boolean(listing.managedByAdmin)} onChange={(event) => setManaged(listing.id, event.target.checked)} aria-label={`Admin-managed: ${listing.title}`} className="h-4 w-4" />
+                </td>
                 <td className="py-2.5">
                   <div className="flex items-center gap-3">
                     <Link href={`/property/${listing.id}`} target="_blank" aria-label="View listing" className="text-slate-500 hover:text-blue-600"><Eye className="h-4 w-4" /></Link>
@@ -65,7 +76,7 @@ export function ListingsTable({ initialListings }: { initialListings: AdminListi
               </tr>
             ))}
             {listings.length === 0 && (
-              <tr><td colSpan={7} className="py-6 text-center text-slate-500">No listings yet.</td></tr>
+              <tr><td colSpan={8} className="py-6 text-center text-slate-500">No listings yet.</td></tr>
             )}
           </tbody>
         </table>

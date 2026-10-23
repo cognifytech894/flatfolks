@@ -28,25 +28,19 @@ export function primaryIntent(listing: Listing): Intent {
   return intents.find((intent) => intent.matches(listing)) || intents[1];
 }
 
-/** Listings older than this drop out of the sitemap and get noindex, since rentals go stale fast. */
-const listingLifetimeDays = 90;
-
-export function isExpired(listing: Listing): boolean {
-  if (!listing.createdAt) return false;
-  return Date.now() - new Date(listing.createdAt).getTime() > listingLifetimeDays * 24 * 60 * 60 * 1000;
-}
-
 /** Visible on the site at all (drafts and posts under moderation aren't). */
 export function isLive(listing: Listing): boolean {
   return !listing.status || listing.status === "published";
 }
 
 /**
- * Posted by a real member (the seeded demo listings have no owner), live and
- * not expired. These are the only listings that count as inventory for SEO.
+ * Posted by a real member (the seeded demo listings have no owner) and live.
+ * Stale posts are handled by removing them when their owner goes inactive
+ * (src/lib/inactive-posts.ts). These are the only listings that count as
+ * inventory for SEO.
  */
 export function isGenuine(listing: Listing): boolean {
-  return Boolean(listing.ownerId) && isLive(listing) && !isExpired(listing);
+  return Boolean(listing.ownerId) && isLive(listing);
 }
 
 function slugify(text: string): string {
@@ -85,7 +79,7 @@ export function listingPath(listing: Pick<Listing, "id" | "title" | "location">)
 export type Scope = { city?: City; trail?: Place[]; intent?: Intent };
 
 export function inScope(listing: Listing, scope: Scope): boolean {
-  if (!isLive(listing) || isExpired(listing)) return false;
+  if (!isLive(listing)) return false;
   if (scope.intent && !scope.intent.matches(listing)) return false;
   if (!scope.city) return true;
   const place = placeOf(listing);

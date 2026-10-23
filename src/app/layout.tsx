@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { ActivityPing } from "@/components/layout/activity-ping";
 import { siteUrl as baseUrl } from "@/lib/site-url";
 import "./globals.css";
 
@@ -70,6 +71,7 @@ gtag('config', '${GA_MEASUREMENT_ID}');`,
         <Navbar />
         <div className="flex-1">{children}</div>
         <Footer />
+        <ActivityPing />
       </body>
     </html>
   );

@@ -82,6 +82,11 @@ export default function PrivacyPolicyPage() {
           We keep your account and listings for as long as your account is active. Sign-in codes expire after 10 minutes. You can ask us to delete
           your account and listings at any time.
         </p>
+        <p className="mt-3">
+          If there&apos;s no activity on your account for 30 days, your posts are removed from FlatFolks and we email you a link to restore them.
+          Posts that aren&apos;t restored are permanently deleted, with their photos, 30 days after removal. Your account itself is never deleted
+          or changed by this.
+        </p>
       </section>
 
       <section>

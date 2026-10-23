@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { updateUser } from "@/lib/database";
+import { touchLastSeen, updateUser } from "@/lib/database";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -11,6 +11,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const sessionUserId = verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
   if (!sessionUserId) return NextResponse.json({ error: "Please log in to update your profile." }, { status: 401 });
   if (sessionUserId !== id) return NextResponse.json({ error: "You can only update your own profile." }, { status: 403 });
+  await touchLastSeen(sessionUserId);
 
   const body = await request.json() as { name?: string; email?: string; phone?: string; location?: string; gender?: "Male" | "Female"; photo?: string };
   if (body.name !== undefined && !body.name.trim()) return NextResponse.json({ error: "Name is required." }, { status: 400 });

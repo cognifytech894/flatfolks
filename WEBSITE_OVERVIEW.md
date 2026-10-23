@@ -48,12 +48,19 @@ Two flows, both requiring a contact number:
 ### Dashboard
 
 - Stat cards for views, saved listings, messages and interests.
-- "My Posts": edit or delete your own posts.
+- "My Posts": edit or delete your own posts; removed posts show when they'll be deleted and a Restore button.
+
+### Post lifecycle **(new, 23 Oct)**
+
+- Signed-in activity (login, any signed-in request, a daily ping on page visits) updates `users.last_seen_at`.
+- A daily Vercel Cron (`/api/cron/inactive-posts`, `vercel.json`) removes the posts of owners not seen for 30 days and sends one email per owner with a "Restore my post" link per post (signed, 30-day, single-post tokens; restoring takes a button press on `/restore`). Failed emails retry the next day. Optional 5-day warning email (`INACTIVITY_WARNING_EMAILS`).
+- Removed posts disappear from search, place pages, sitemaps and counts; their URL says "This post is no longer available" (noindex, no phone). 30 days after removal they're permanently deleted with their photos, and the URL returns 410.
+- Accounts are never deleted or changed by this. Admin-managed posts are never removed. Rules: `src/lib/inactive-posts.ts`; tests: `npm run test:inactive` and `npm run test:inactive:e2e` (Docker Postgres).
 
 ### Admin workspace
 
 - `/admin` behind a username/password login set via `ADMIN_USERNAME` / `ADMIN_PASSWORD` env vars.
-- Listing counts, real account count and recent signups, a views/saves table, and view/delete for any listing.
+- Active / removed / permanently deleted post counts, real account count and recent signups, a views/saves table, view/delete for any listing, and an "Admin-managed" toggle (never removed for inactivity).
 
 ### Content and legal pages
 
@@ -70,9 +77,9 @@ Two flows, both requiring a contact number:
 
 ## Pending
 
-### In progress (local, not pushed)
+### Setup on Vercel
 
-- **Search filters upgrade**: flat configuration (1RK–3BHK), room type (private/shared), tenant preference (students / working professionals), min and max budget, near-metro search, and a sort dropdown (newest, rent low→high, high→low); replaces the old gender filter. Touches `data/schema.sql` and `src/lib/database.ts` — run the DB migration before deploying.
+- Set `CRON_SECRET` and `RESTORE_TOKEN_SECRET` (and optionally `INACTIVITY_WARNING_EMAILS=true`) in the Vercel project's environment variables. Until then the cron answers 500 and nothing is removed.
 
 ### Before running Google Ads
 
