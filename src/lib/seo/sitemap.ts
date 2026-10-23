@@ -41,11 +41,21 @@ export async function sitemapIndex() {
   return `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${items.join("\n")}\n</sitemapindex>`;
 }
 
+/** A child sitemap's XML, or null when it has no URLs (so it can 404, matching the index). */
+export async function childSitemap(name: SitemapName) {
+  const entries = await sitemapEntries(name);
+  return entries.length ? urlset(entries) : null;
+}
+
 /** Serves a sitemap, answering 503 if the database is down: Google retries a 503,
- * whereas an empty sitemap would tell it every listing URL had disappeared. */
-export async function sitemapResponse(build: () => Promise<string>) {
+ * whereas an empty sitemap would tell it every listing URL had disappeared.
+ * A null build means the sitemap has no URLs and answers 404, which Search
+ * Console treats as "gone" rather than reporting an empty urlset as an error. */
+export async function sitemapResponse(build: () => Promise<string | null>) {
   try {
-    return xmlResponse(await build());
+    const body = await build();
+    if (body === null) return new Response("Sitemap not found", { status: 404 });
+    return xmlResponse(body);
   } catch (error) {
     console.error("Sitemap generation failed", error);
     return new Response("Sitemap temporarily unavailable", { status: 503, headers: { "Retry-After": "3600" } });
