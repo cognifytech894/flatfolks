@@ -30,6 +30,7 @@ const greaterNoidaWestLinks = [
 ];
 
 const legalLinks = [
+  ["About Us", "/about"],
   ["Privacy Policy", "/privacy-policy"],
   ["Terms", "/terms"],
   ["Contact", "/contact"],

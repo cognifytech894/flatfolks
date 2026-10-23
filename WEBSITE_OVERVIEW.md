@@ -8,7 +8,9 @@ _Last updated: 23 October 2026. Items marked **(new, date)** changed recently; e
 
 ### Home page
 
-- Hero search bar, popular cities, featured rooms (property offers only, from the visitor's city) and "How FlatFolks works".
+- Hero search: on mobile just Location + Search with budget, property type and gender behind a "Filters" button; one-tap area chips (Gaur City 2, Noida Ext., Sector 62, Sector 137). **(new, 23 Oct)**
+- Mobile bottom nav: Home, Find Room, a raised **+ Post** button, Flatmates and Profile/Login; chat is an icon in the mobile header; About is in the footer. **(new, 23 Oct)**
+- Popular cities, featured rooms (property offers only, from the visitor's city) and "How FlatFolks works".
 - Trust stats row (10,000+ users, 5,000+ properties, etc.) is hidden on the home and About pages, not deleted — set `SHOW_STATS = true` in `src/components/home/stats-row.tsx` to show it again. **(new, 23 Oct)**
 
 ### Search and listings

@@ -71,11 +71,11 @@ export default async function Home() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_30%,rgba(37,99,235,0.08),transparent_33%)]" />
             <div className="relative z-10">
               <div className="max-w-[700px]">
-                <h1 className="max-w-xl text-[42px] font-extrabold leading-[1.08] tracking-[-0.045em] text-[#11172d] sm:text-[54px] xl:text-[61px]">
+                <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight text-[#11172d] sm:text-[54px] xl:text-[61px]">
                   Find Your Perfect <span className="block text-[#2563eb]">Room &amp; Flatmate</span>
                 </h1>
                 <p className="mt-3 max-w-[550px] text-[15px] leading-6 text-slate-700 sm:text-[17px]">
-                  Discover verified rooms, trusted flatmates, and shared homes near your office or college.
+                  Rooms, PGs and flatmates near your office or college. Talk to owners directly.
                 </p>
               </div>
               <div className="mt-6 w-full"><SearchCard /></div>

@@ -36,6 +36,9 @@ export const metadata: Metadata = {
 // dark (e.g. a dark button with white text), turning them black-on-black.
 export const viewport: Viewport = {
   colorScheme: "light",
+  // Lets env(safe-area-inset-bottom) report the iPhone home-indicator area,
+  // which the mobile bottom nav pads itself by.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

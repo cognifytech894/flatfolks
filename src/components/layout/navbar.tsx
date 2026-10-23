@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronDown, Globe, Home, Info, MessageCircle, PlusCircle, Search, UserRound, UsersRound } from "lucide-react";
+import { ChevronDown, Globe, Home, MessageCircle, Plus, Search, UserRound, UsersRound } from "lucide-react";
 import { FlatFolksLogo } from "@/components/ui/flatfolks-logo";
 
 export function Navbar() {
@@ -57,15 +57,14 @@ export function Navbar() {
           <Link href="/property?intent=flatmate" className="block rounded-lg px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-600"><b className="block">Looking for a flatmate</b><small className="text-xs text-slate-500">Add your flat, amenities and up to 3 photos</small></Link>
         </div>
       )}
+      {/* Five tabs with Post raised in the middle: listings are the supply the site needs most. */}
       <div className="mx-auto flex max-w-xl items-stretch px-1">
         <Link href="/" className={tabClass(pathname === "/")}><Home className="h-5 w-5" />Home</Link>
         <Link href="/search" className={tabClass(pathname === "/search")}><Search className="h-5 w-5" /><span className="truncate">Find Room</span></Link>
-        <Link href="/flatmates" className={tabClass(pathname === "/flatmates")}><UsersRound className="h-5 w-5" /><span className="truncate">Room Mate</span></Link>
-        <button type="button" onClick={() => setPostMenuOpen((open) => !open)} aria-expanded={postMenuOpen} className={tabClass(postMenuOpen || pathname.startsWith("/property"))}><PlusCircle className="h-5 w-5" />Post</button>
-        {hasChatAccess && <Link href="/chat" className={tabClass(pathname === "/chat")}><MessageCircle className="h-5 w-5" />Chat</Link>}
-        <Link href="/about" className={tabClass(pathname === "/about")}><Info className="h-5 w-5" />About</Link>
+        <button type="button" onClick={() => setPostMenuOpen((open) => !open)} aria-expanded={postMenuOpen} aria-label="Post a listing" className="flex min-w-0 flex-1 flex-col items-center gap-0.5 pb-2 text-[11px] font-semibold text-blue-600"><span className={`-mt-5 grid h-12 w-12 place-items-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-600/30 ring-4 ring-white transition ${postMenuOpen ? "rotate-45" : ""}`}><Plus className="h-6 w-6" /></span>Post</button>
+        <Link href="/flatmates" className={tabClass(pathname === "/flatmates")}><UsersRound className="h-5 w-5" />Flatmates</Link>
         {user
-          ? <Link href="/profile" aria-label="Open profile" className={tabClass(pathname === "/profile" || pathname === "/dashboard")}>{avatar("h-5 w-5")}<span className="max-w-full truncate">{user.name.split(" ")[0] || "Profile"}</span></Link>
+          ? <Link href="/profile" className={tabClass(pathname === "/profile" || pathname === "/dashboard")}>{avatar("h-5 w-5")}Profile</Link>
           : <Link href="/auth" className={tabClass(pathname === "/auth")}><UserRound className="h-5 w-5" />Login</Link>}
       </div>
     </nav>
@@ -85,6 +84,7 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
+          {hasChatAccess && <Link href="/chat" aria-label="One-to-one chat" className="grid h-10 w-10 place-items-center rounded-full bg-slate-100 text-slate-700 lg:hidden"><MessageCircle className="h-5 w-5" /></Link>}
           <button className="hidden items-center gap-2 text-sm font-medium text-slate-800 xl:flex" aria-label="Choose country"><Globe className="h-4 w-4" />India<ChevronDown className="h-3.5 w-3.5" /></button>
           {user ? <Link href="/profile" aria-label="Open profile" className="hidden min-w-14 flex-col items-center text-xs font-semibold text-slate-800 sm:flex">{profilePhoto ? <img src={profilePhoto} alt="Profile" className="h-10 w-10 rounded-full object-cover ring-2 ring-blue-100" /> : <span className="grid h-10 w-10 place-items-center rounded-full bg-blue-600 text-sm font-bold text-white shadow-sm">{user.name.trim().charAt(0).toUpperCase() || "U"}</span>}<span className="mt-1 max-w-20 truncate">{user.name.split(" ")[0]}</span></Link> : <button onClick={() => router.push("/auth")} className="rounded-full bg-slate-100 px-7 py-3 text-sm font-medium text-slate-900 transition hover:bg-blue-50 hover:text-blue-700">Login / Register</button>}
         </div>
