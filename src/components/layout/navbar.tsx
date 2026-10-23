@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronDown, Globe } from "lucide-react";
+import { ChevronDown, Globe, Home, Info, MessageCircle, PlusCircle, Search, UserRound, UsersRound } from "lucide-react";
 import { FlatFolksLogo } from "@/components/ui/flatfolks-logo";
 
 export function Navbar() {
@@ -12,6 +12,7 @@ export function Navbar() {
   const [user, setUser] = useState<{ name: string } | null>(null);
   const [hasChatAccess, setHasChatAccess] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState("");
+  const [postMenuOpen, setPostMenuOpen] = useState(false);
   const navClass = (active: boolean) => `py-4 transition hover:text-blue-600 ${active ? "border-b-2 border-blue-600 text-blue-600" : "border-b-2 border-transparent"}`;
 
   useEffect(() => {
@@ -36,7 +37,38 @@ export function Navbar() {
     return () => window.removeEventListener("flatfolks-chat-access", syncChatAccess);
   }, []);
 
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setPostMenuOpen(false));
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname]);
+
+  const tabClass = (active: boolean) => `flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition ${active ? "text-blue-600" : "text-slate-600"}`;
+  const avatar = (size: string) => profilePhoto
+    ? <img src={profilePhoto} alt="" className={`${size} rounded-full object-cover`} />
+    : <span className={`grid ${size} place-items-center rounded-full bg-blue-600 text-[10px] font-bold text-white`}>{user?.name.trim().charAt(0).toUpperCase() || "U"}</span>;
+
   return (
+    <>
+    {/* Mobile and tablet: the header links are hidden below lg, so they live in this bottom bar instead. */}
+    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/75 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
+      {postMenuOpen && (
+        <div className="absolute inset-x-3 bottom-full mb-2 rounded-xl border border-slate-200 bg-white/95 p-2 shadow-xl backdrop-blur-xl">
+          <Link href="/property?intent=flat" className="block rounded-lg px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-600"><b className="block">Looking for a flat</b><small className="text-xs text-slate-500">Add your location, budget and amenities</small></Link>
+          <Link href="/property?intent=flatmate" className="block rounded-lg px-3 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-600"><b className="block">Looking for a flatmate</b><small className="text-xs text-slate-500">Add your flat, amenities and up to 3 photos</small></Link>
+        </div>
+      )}
+      <div className="mx-auto flex max-w-xl items-stretch px-1">
+        <Link href="/" className={tabClass(pathname === "/")}><Home className="h-5 w-5" />Home</Link>
+        <Link href="/search" className={tabClass(pathname === "/search")}><Search className="h-5 w-5" /><span className="truncate">Find Room</span></Link>
+        <Link href="/flatmates" className={tabClass(pathname === "/flatmates")}><UsersRound className="h-5 w-5" /><span className="truncate">Room Mate</span></Link>
+        <button type="button" onClick={() => setPostMenuOpen((open) => !open)} aria-expanded={postMenuOpen} className={tabClass(postMenuOpen || pathname.startsWith("/property"))}><PlusCircle className="h-5 w-5" />Post</button>
+        {hasChatAccess && <Link href="/chat" className={tabClass(pathname === "/chat")}><MessageCircle className="h-5 w-5" />Chat</Link>}
+        <Link href="/about" className={tabClass(pathname === "/about")}><Info className="h-5 w-5" />About</Link>
+        {user
+          ? <Link href="/profile" aria-label="Open profile" className={tabClass(pathname === "/profile" || pathname === "/dashboard")}>{avatar("h-5 w-5")}<span className="max-w-full truncate">{user.name.split(" ")[0] || "Profile"}</span></Link>
+          : <Link href="/auth" className={tabClass(pathname === "/auth")}><UserRound className="h-5 w-5" />Login</Link>}
+      </div>
+    </nav>
     <header className="sticky top-0 z-50 pointer-events-auto border-b border-slate-200/80 bg-white/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-[1600px] items-center justify-between px-5 py-3 sm:px-8 lg:px-12 xl:px-16">
         <Link href="/" className="flex items-center gap-3">
@@ -58,5 +90,6 @@ export function Navbar() {
         </div>
       </div>
     </header>
+    </>
   );
 }

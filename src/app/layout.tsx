@@ -48,7 +48,8 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      {/* Bottom padding below lg keeps the footer clear of the mobile bottom nav. */}
+      <body className="min-h-full flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
         <Navbar />
         <div className="flex-1">{children}</div>
         <Footer />
