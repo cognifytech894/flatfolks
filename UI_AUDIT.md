@@ -1,5 +1,39 @@
 # FlatFolks UI Audit — 23 October 2026
 
+## Re-audit after the fixes
+
+The same audit, re-run after Phases 1–3 against a local **production** build (`next build && next start`, view tracking disabled):
+
+| | Critical | High | Medium | Low |
+|---|---|---|---|---|
+| First audit (dev server) | 4 | 110 | 173 | 35 |
+| After Phases 1–3 (production build) | **0** | **0** | **0** | **4** |
+
+The 4 Low issues:
+- 404 page city links were 4px apart. Fixed after the run (now 8px).
+- The only listing with photos has one photo, so the carousel arrows couldn't be exercised (×2, informational).
+
+What changed:
+- Phase 1: logged-out `/dashboard` redirects to login; API routes return 401/403 with tests; unproven claims removed; demo listings deleted (backed up).
+- Phase 2: contrast, 12px minimum text, tap targets, search suggestions, aria-labels, "Find Flatmates".
+- Phase 3: image `sizes`, custom 404, inline form errors.
+- Also: pill-link sections removed, place-page intro copy removed, Google Analytics added.
+
+**Lighthouse (mobile, local production build):**
+
+| Page | Performance | Accessibility | Best Practices | SEO |
+|---|---|---|---|---|
+| `/` | 32–55 | 100 | 81 | 100 |
+| `/search` | 60–77 | 98 | 81 | 63 (noindex on purpose) |
+| `/noida` | 61–64 | 100 | 81 | 100 |
+| Listing | 43–68 | 98 | 81 | 100 |
+
+Accessibility went from 94–96 to 98–100. Performance swings between runs: the local server queries Supabase in `ap-northeast-2` on every request ("Reduce initial server response time" ~770 ms on the listing page) and shares the machine with the audit. The remaining opportunity is "Reduce unused JavaScript" (~250–450 ms). Measure on https://flatfolks.in (Vercel, closer to the database) for real numbers.
+
+The original report follows.
+
+---
+
 Automated Playwright + axe-core + Lighthouse audit of 21 pages × 4 viewports (390, 360, 768, 1440), run against the local dev server with listing view tracking disabled. Nothing was submitted or written: every non-GET request from the browser was blocked. Re-run any time with `npm run ui-audit` (script: `ui-audit/audit.mjs`, screenshots: `ui-audit/screenshots/`).
 
 **Result: 4 Critical · 110 High · 173 Medium · 35 Low.** Most of the counts repeat one problem on every page and viewport: it's in the shared footer, header or bottom nav. The 10 fixes below cover almost all of them.

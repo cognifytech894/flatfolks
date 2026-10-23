@@ -5,6 +5,8 @@ import { Footer } from "@/components/layout/footer";
 import { siteUrl as baseUrl } from "@/lib/site-url";
 import "./globals.css";
 
+const GA_MEASUREMENT_ID = "G-VN0CYSJ8R4";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -51,6 +53,18 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Google Analytics 4 (gtag.js), server-rendered in <head> as Google's snippet expects; async, so it never blocks rendering. */}
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_MEASUREMENT_ID}');`,
+          }}
+        />
+      </head>
       {/* Bottom padding below lg keeps the footer clear of the mobile bottom nav. */}
       <body className="min-h-full flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
         <Navbar />

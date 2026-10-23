@@ -56,6 +56,7 @@ export default function PrivacyPolicyPage() {
         <ul>
           <li><b>Supabase</b> for our database and for storing uploaded photos.</li>
           <li><b>Resend</b> for sending sign-in codes by email.</li>
+          <li><b>Google Analytics</b> to understand how visitors use the site (pages viewed, device and approximate location), so we can improve it.</li>
           <li>Our hosting provider, which serves the website.</li>
         </ul>
         <p className="mt-3">We may also share information if required by law or to protect the rights and safety of our users.</p>
@@ -67,6 +68,11 @@ export default function PrivacyPolicyPage() {
           We use a secure cookie to keep you signed in, and your browser&apos;s local storage to remember things like your profile details and
           chat requests on your device. These are needed for the site to work. You can clear them at any time from your browser settings, which
           will sign you out.
+        </p>
+        <p className="mt-3">
+          We also use Google Analytics, which sets its own cookies to count visits and see which pages are used. It doesn&apos;t receive your name,
+          email or phone number. You can block these cookies in your browser or use Google&apos;s{" "}
+          <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer">opt-out add-on</a>.
         </p>
       </section>
 

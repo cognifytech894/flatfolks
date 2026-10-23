@@ -27,7 +27,7 @@ export default function NotFound() {
         </form>
 
         <h2 className="mt-9 text-sm font-semibold text-slate-900">Browse by city</h2>
-        <ul className="mt-2 space-y-1">
+        <ul className="mt-2 space-y-2">
           {cities.map((city) => (
             <li key={city.slug}>
               <Link href={placePath(city)} className="inline-block py-1 text-sm font-medium text-blue-600 hover:underline">
