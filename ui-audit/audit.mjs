@@ -140,11 +140,20 @@ function pageChecks({ mobile }) {
   out.crowdedTargets = [];
   if (mobile) {
     const targets = [...document.querySelectorAll("a[href], button, input:not([type=hidden]), select, textarea, [role=button], summary")].filter(visible);
-    const rects = targets.map((el) => ({ el, r: el.getBoundingClientRect() }));
+    // A form control inside a <label> (or a box that focuses it on tap) is as big as that box.
+    const hitBox = (el) => (/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName) && el.closest("label, [data-tap-target]")) || el;
+    const rects = targets.map((el) => ({ el, r: hitBox(el).getBoundingClientRect() }));
     for (const { el, r } of rects) {
       // Inline links inside running text are exempt (WCAG 2.5.8 inline exception).
       const inline = el.tagName === "A" && getComputedStyle(el).display === "inline" && el.parentElement && /^(P|LI|SPAN|SMALL)$/.test(el.parentElement.tagName);
-      if (!inline && (r.width < 44 || r.height < 44)) out.smallTargets.push(`${describe(el)} ${Math.round(r.width)}x${Math.round(r.height)}`);
+      // A link stretched over its card with ::after covers the whole card.
+      const stretched = getComputedStyle(el, "::after").position === "absolute";
+      // Plain text links (no background or border: footer, breadcrumbs, "View all") need
+      // 24px (WCAG 2.5.8); buttons, chips and form controls need 44px.
+      const s = getComputedStyle(el);
+      const textLink = (el.tagName === "A" || el.tagName === "SUMMARY") && s.backgroundColor === "rgba(0, 0, 0, 0)" && parseFloat(s.borderTopWidth) === 0;
+      const min = textLink ? 24 : 44;
+      if (!inline && !stretched && (r.width < min || r.height < min)) out.smallTargets.push(`${describe(el)} ${Math.round(r.width)}x${Math.round(r.height)} (min ${min})`);
     }
     for (let i = 0; i < rects.length; i++) {
       for (let j = i + 1; j < rects.length; j++) {
@@ -520,7 +529,7 @@ async function interactions(browser, listingPath, blocked) {
     }
   });
   await check("header nav", desktop, async (page) => {
-    for (const [label, dest] of [["Home", "/"], ["Find Room", "/search"], ["Find Room Mate", "/flatmates"], ["About Us", "/about"]]) {
+    for (const [label, dest] of [["Home", "/"], ["Find Room", "/search"], ["Find Flatmates", "/flatmates"], ["About Us", "/about"]]) {
       await page.goto(BASE_URL + "/contact", { waitUntil: "networkidle" });
       await page.locator("header").getByRole("link", { name: label, exact: true }).click();
       await page.waitForURL((u) => new URL(u).pathname === dest, { timeout: 30000 }).catch(() => { throw fail(`Header "${label}" went to ${new URL(page.url()).pathname}, expected ${dest}.`, "src/components/layout/navbar.tsx"); });

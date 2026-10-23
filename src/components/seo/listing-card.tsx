@@ -14,7 +14,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
     return (
       <article className="relative flex h-full flex-col rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
         <div className="flex gap-4">
-          <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl bg-slate-100 text-slate-400">
+          <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl bg-slate-100 text-slate-500">
             {listing.ownerPhoto ? <img src={listing.ownerPhoto} alt={name} className="h-full w-full object-cover" /> : <UserRound className="h-7 w-7" />}
           </div>
           <div className="min-w-0">
@@ -24,9 +24,9 @@ export function ListingCard({ listing }: { listing: Listing }) {
           </div>
         </div>
         <dl className="mt-4 grid grid-cols-3 rounded-2xl bg-slate-50 p-3 text-center">
-          <div><dt className="text-[11px] text-slate-500">Budget</dt><dd className="text-sm font-semibold text-slate-900">₹{listing.rent.toLocaleString("en-IN")}</dd></div>
-          <div className="border-x border-slate-200"><dt className="text-[11px] text-slate-500">Flatmate</dt><dd className="text-sm font-semibold text-slate-900">{listing.genderPreference || "Any"}</dd></div>
-          <div><dt className="text-[11px] text-slate-500">Looking for</dt><dd className="text-sm font-semibold text-slate-900">{listing.propertyType}</dd></div>
+          <div><dt className="text-xs text-slate-500">Budget</dt><dd className="text-sm font-semibold text-slate-900">₹{listing.rent.toLocaleString("en-IN")}</dd></div>
+          <div className="border-x border-slate-200"><dt className="text-xs text-slate-500">Flatmate</dt><dd className="text-sm font-semibold text-slate-900">{listing.genderPreference || "Any"}</dd></div>
+          <div><dt className="text-xs text-slate-500">Looking for</dt><dd className="text-sm font-semibold text-slate-900">{listing.propertyType}</dd></div>
         </dl>
       </article>
     );
@@ -36,7 +36,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
       <div className="relative h-40 w-full shrink-0 bg-slate-100">
         {listing.image
           ? <Image src={listing.image} alt={listing.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 400px" />
-          : <div className="grid h-full w-full place-items-center text-sm font-medium text-slate-400">No photos</div>}
+          : <div className="grid h-full w-full place-items-center text-sm font-medium text-slate-600">No photos</div>}
       </div>
       <div className="flex flex-1 flex-col p-4">
         <h3 className="font-semibold text-slate-900"><Link href={href} className="after:absolute after:inset-0">{listing.title}</Link></h3>

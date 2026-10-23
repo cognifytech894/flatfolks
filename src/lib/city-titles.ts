@@ -29,14 +29,8 @@ const searchIntros: Record<string, string> = {
 };
 searchIntros.gurgaon = searchIntros.gurugram;
 
-const flatmatesIntros: Record<string, string> = {
-  "greater noida": "Greater Noida has dozens of colleges, so most students look for room sharing instead of a whole flat. Find flatmates near Knowledge Park, room sharing in Greater Noida for college students, or a roommate near Pari Chowk. In Greater Noida West, browse flat and flatmates posts and single rooms in shared flats at Gaur City — brokerage-free flatmates in Greater Noida you can contact directly.",
-};
-
+// Only the committed search page still uses this; the local search-filters
+// rewrite drops it. Delete together with that rewrite.
 export function searchPageIntro(location: string): string {
   return searchIntros[location.trim().toLowerCase()] || "";
-}
-
-export function flatmatesPageIntro(location: string): string {
-  return flatmatesIntros[location.trim().toLowerCase()] || "";
 }

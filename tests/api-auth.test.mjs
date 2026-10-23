@@ -43,7 +43,7 @@ before(async () => {
   for (let i = 0; i < 120; i++) {
     try { await fetch(BASE_URL + "/api/listings"); return; } catch { await new Promise((r) => setTimeout(r, 1000)); }
   }
-  throw new Error(`Server at ${BASE_URL} did not start`);
+  throw new Error(`Server at ${BASE_URL} did not start (Next allows one \`next dev\` per folder: stop any other dev server first)`);
 }, { timeout: 180_000 });
 
 after(() => {

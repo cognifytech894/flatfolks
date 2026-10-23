@@ -24,7 +24,7 @@ export function BackLink({ label = "Back" }: { label?: string }) {
     <button
       type="button"
       onClick={goBack}
-      className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm"
+      className="mb-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm"
     >
       <ArrowLeft className="h-4 w-4" />
       {label}

@@ -8,7 +8,8 @@ import { searchLocations } from "@/data/indian-cities";
 type PublicUser = { id: string; name: string; email: string; phone?: string; location?: string; gender?: "Male" | "Female" };
 type Step = "email" | "otp" | "onboarding";
 const fieldClass = "mt-1.5 flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-3 focus-within:border-blue-500";
-const inputClass = "w-full bg-transparent outline-none";
+// -my-3 py-3 stretches the input over the field's padding so the whole box is tappable.
+const inputClass = "-my-3 w-full bg-transparent py-3 outline-none";
 
 export default function AuthPage() {
   const [step, setStep] = useState<Step>("email");
@@ -91,7 +92,7 @@ export default function AuthPage() {
             <form onSubmit={requestOtp} className="mt-6 space-y-4">
               <label className="block text-sm font-medium text-slate-700">
                 Email address
-                <div className={fieldClass}><Mail className="h-4 w-4 text-slate-400" /><input autoFocus required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={inputClass} placeholder="you@example.com" /></div>
+                <div className={fieldClass}><Mail className="h-4 w-4 text-slate-500" /><input autoFocus required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={inputClass} placeholder="you@example.com" /></div>
               </label>
               <button disabled={loading} className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white disabled:opacity-70">{loading ? "Sending..." : "Send OTP"}</button>
             </form>
@@ -101,7 +102,7 @@ export default function AuthPage() {
             <form onSubmit={verifyOtp} className="mt-6 space-y-4">
               <label className="block text-sm font-medium text-slate-700">
                 6-digit OTP
-                <div className={fieldClass}><LockKeyhole className="h-4 w-4 text-slate-400" /><input autoFocus required value={otp} maxLength={6} inputMode="numeric" onChange={(event) => setOtp(event.target.value)} className={inputClass} placeholder="Enter OTP" /></div>
+                <div className={fieldClass}><LockKeyhole className="h-4 w-4 text-slate-500" /><input autoFocus required value={otp} maxLength={6} inputMode="numeric" onChange={(event) => setOtp(event.target.value)} className={inputClass} placeholder="Enter OTP" /></div>
               </label>
               {developmentCode ? (
                 <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Temporary password (valid for 10 minutes): <b>{developmentCode}</b></p>
@@ -117,12 +118,12 @@ export default function AuthPage() {
             <form onSubmit={completeOnboarding} className="mt-6 space-y-4">
               <label className="block text-sm font-medium text-slate-700">
                 Your name
-                <div className={fieldClass}><UserRound className="h-4 w-4 text-slate-400" /><input autoFocus required value={name} onChange={(event) => setName(event.target.value)} className={inputClass} placeholder="Your full name" /></div>
+                <div className={fieldClass}><UserRound className="h-4 w-4 text-slate-500" /><input autoFocus required value={name} onChange={(event) => setName(event.target.value)} className={inputClass} placeholder="Your full name" /></div>
               </label>
               <label className="relative block text-sm font-medium text-slate-700">
                 Location
                 <div className={fieldClass}>
-                  <MapPin className="h-4 w-4 text-slate-400" />
+                  <MapPin className="h-4 w-4 text-slate-500" />
                   <input
                     value={location}
                     onFocus={() => setShowLocationSuggestions(true)}

@@ -6,7 +6,7 @@ import { cities, getCity } from "@/lib/seo/locations";
 
 const trust = [
   [ShieldCheck, "Free to list", "bg-blue-50 text-blue-600"],
-  [Phone, "Contact owners directly", "bg-emerald-50 text-emerald-500"],
+  [Phone, "Contact owners directly", "bg-emerald-50 text-emerald-700"],
   [LockKeyhole, "No fees from FlatFolks", "bg-amber-50 text-amber-500"],
 ] as const;
 
@@ -52,7 +52,7 @@ export function Footer() {
           </div>
           <Link
             href="/property"
-            className="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-600"
+            className="inline-flex items-center gap-2 rounded-full bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-800"
           >
             List a property <ArrowRight className="h-4 w-4" />
           </Link>
@@ -79,12 +79,12 @@ export function Footer() {
                 </div>
               ))}
             </div>
-            <Link href="/blog" className="mt-4 inline-block text-sm font-medium text-blue-600 hover:underline">
+            <Link href="/blog" className="mt-4 inline-block py-1 text-sm font-medium text-blue-600 hover:underline">
               Renting guides &amp; tips
             </Link>
             <nav aria-label="Legal" className="mt-4 flex flex-col gap-2">
               {legalLinks.map(([label, href]) => (
-                <Link key={href} href={href} className="text-sm text-slate-600 hover:text-blue-600 hover:underline">
+                <Link key={href} href={href} className="inline-block py-1 text-sm text-slate-600 hover:text-blue-600 hover:underline">
                   {label}
                 </Link>
               ))}
@@ -98,7 +98,7 @@ export function Footer() {
               {cityLinks.map(({ city, links }) => (
                 <div key={city} className="flex flex-col gap-2">
                   {links.map(([label, href]) => (
-                    <Link key={href} href={href} className="text-sm text-slate-600 hover:text-blue-600 hover:underline">
+                    <Link key={href} href={href} className="inline-block py-1 text-sm text-slate-600 hover:text-blue-600 hover:underline">
                       {label}
                     </Link>
                   ))}
@@ -108,7 +108,7 @@ export function Footer() {
             <p className="mb-2 mt-6 text-sm font-semibold text-slate-700">Greater Noida West</p>
             <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
               {greaterNoidaWestLinks.map(([label, href]) => (
-                <Link key={href} href={href} className="text-sm text-slate-600 hover:text-blue-600 hover:underline">
+                <Link key={href} href={href} className="inline-block py-1 text-sm text-slate-600 hover:text-blue-600 hover:underline">
                   {label}
                 </Link>
               ))}

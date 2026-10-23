@@ -14,16 +14,14 @@ import { cities, placeLabel, type City, type IntentSlug, type Place } from "@/li
 export type LandingFilters = { gender?: string; budget?: string; furnishing?: string };
 
 // Copy for the national intent hubs (/sharing-flat, /flats-for-rent, /flatmates).
-const nationalCopy: Record<IntentSlug, { h1: string; title: string; intro?: string }> = {
+const nationalCopy: Record<IntentSlug, { h1: string; title: string }> = {
   "sharing-flat": {
     h1: "Sharing Flats in Noida, Greater Noida, Gurgaon & Ghaziabad",
     title: "Sharing Flat: Rooms in Shared Flats in Noida, Gurgaon & Ghaziabad",
-    intro: "A sharing flat gives you your own room in a 2 or 3 BHK while you share the kitchen, living room and bills with one or two flatmates. Splitting the rent this way lets you live in a good society close to work. Browse rooms posted by current tenants and owners, and contact them directly with no brokerage.",
   },
   "flats-for-rent": {
     h1: "Flats for Rent in Noida, Greater Noida, Gurgaon & Ghaziabad",
     title: "Flats for Rent in Noida, Gurgaon & Ghaziabad, No Brokerage",
-    intro: "Whole flats and apartments for rent posted directly by owners and current tenants, from compact 1 BHKs to 3 BHKs in gated societies. Filter by budget and contact the poster directly, with no brokerage.",
   },
   flatmates: {
     h1: "Find Flatmates & Roommates",
@@ -82,28 +80,6 @@ function title(scope: Scope, matches: Listing[]): string {
     }
     case "flatmates": return `Flatmates in ${place}: Find a Roommate`;
     default: return deepest(scope)?.seo?.title || (isSmallPlace(scope) ? `Flats & Flatmates in ${place}` : heading(scope));
-  }
-}
-
-function intro(scope: Scope, matches: Listing[]): string[] {
-  const { city, intent } = scope;
-  if (!city) {
-    const text = intent && nationalCopy[intent.slug].intro;
-    return text ? [text] : [];
-  }
-  const node = deepest(scope);
-  const intentText = intent ? city.intentCopy[intent.slug] : undefined;
-  if (!node) return intent ? (intentText ? [intentText] : []) : city.intro;
-  const name = node.kind === "avenue" ? label(scope)! : node.name;
-  // Localities without verified detail get no description rather than an invented one.
-  if (!isSmallPlace(scope)) return [...(node.about ? [node.about] : []), ...(intentText ? [intentText] : [])];
-  const about = node.about || `${name} is a residential ${node.kind === "avenue" ? "avenue" : "society"} in ${titleLabel({ city, trail: (scope.trail || []).slice(0, -1) }) || city.name}.`;
-  if (!intent) return [about];
-  const bhk = bhkSummary(matches);
-  switch (intent.slug) {
-    case "flats-for-rent": return [about, `Flats for rent in ${name} posted directly by owners and current tenants${bhk ? `, currently ${bhk}` : ""}. Compare rent and deposit, then contact the poster yourself, with no brokerage.`];
-    case "flatmates": return [about, `People looking for a flatmate or a room in ${name}. If you have a room free in your flat here, see their budget and preferences and get in touch with the ones that match.`];
-    default: return [about, `A sharing flat in ${name} means your own room (or a shared room) in a flat where the kitchen, living room and bills are shared with your flatmates. Rooms here are posted by the people already living in the flat.`];
   }
 }
 
@@ -193,19 +169,19 @@ function FilterBar({ path, filters }: { path: string; filters: LandingFilters })
     const query = new URLSearchParams(Object.entries({ ...filters, ...next }).filter(([, value]) => value) as [string, string][]);
     return query.size ? `${path}?${query}` : path;
   };
-  const chip = (active: boolean) => `rounded-full border px-3 py-1.5 text-sm font-medium transition ${active ? "border-blue-600 bg-blue-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"}`;
+  const chip = (active: boolean) => `inline-flex min-h-11 items-center rounded-full border px-4 py-1.5 text-sm font-medium transition ${active ? "border-blue-600 bg-blue-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"}`;
   // rel="nofollow" keeps crawlers from walking every filter combination.
   return (
     <div className="mt-6 flex flex-wrap items-center gap-2">
       {/* A plain GET form so the budget works without JavaScript; the other active filters ride along as hidden fields. */}
-      <form action={path} method="get" className="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-3 pr-1 focus-within:border-blue-400">
+      <form action={path} method="get" className="flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white pl-3 focus-within:border-blue-400">
         <SlidersHorizontal className="h-4 w-4 shrink-0 text-blue-600" />
         <label htmlFor="budget-filter" className="text-sm font-medium text-slate-700">Budget</label>
-        <input id="budget-filter" name="budget" type="number" min="1" inputMode="numeric" defaultValue={filters.budget} placeholder="Max ₹" className="w-24 bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400" />
+        <input id="budget-filter" name="budget" type="number" min="1" inputMode="numeric" defaultValue={filters.budget} placeholder="Max ₹" className="-my-3 w-24 bg-transparent py-3 text-sm font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-500" />
         {filters.gender && <input type="hidden" name="gender" value={filters.gender} />}
         {filters.furnishing && <input type="hidden" name="furnishing" value={filters.furnishing} />}
-        {filters.budget && <Link rel="nofollow" href={href({ budget: undefined })} aria-label="Clear budget" className="grid h-7 w-7 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"><X className="h-3.5 w-3.5" /></Link>}
-        <button type="submit" aria-label="Search with this budget" className="grid h-7 w-7 place-items-center rounded-full bg-blue-600 text-white hover:bg-blue-700"><Search className="h-3.5 w-3.5" /></button>
+        {filters.budget && <Link rel="nofollow" href={href({ budget: undefined })} aria-label="Clear budget" className="grid h-11 w-11 place-items-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-600"><X className="h-3.5 w-3.5" /></Link>}
+        <button type="submit" aria-label="Search with this budget" className="grid h-11 w-11 place-items-center rounded-full bg-blue-600 text-white hover:bg-blue-700"><Search className="h-3.5 w-3.5" /></button>
       </form>
       <span className="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />
       {["Any", "Male", "Female"].map((gender) => <Link rel="nofollow" key={gender} href={href({ gender: gender === "Any" ? undefined : gender })} className={chip((filters.gender || "Any") === gender)}>{gender === "Any" ? "Any gender" : gender}</Link>)}
@@ -218,8 +194,10 @@ type PillLink = { label: string; href: string; count?: number };
 function LinkPills({ title: sectionTitle, links, more }: { title: string; links: PillLink[]; more?: PillLink[] }) {
   if (!links.length && !more?.length) return null;
   const pill = (link: PillLink) => (
-    <Link key={link.href} href={link.href} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:border-blue-300 hover:text-blue-600">
-      {link.label}{link.count ? <span className="ml-1.5 text-slate-400">{link.count}</span> : null}
+    <Link key={link.href} href={link.href} aria-label={link.count ? `${link.label}, ${link.count} listing${link.count === 1 ? "" : "s"}` : undefined} className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:border-blue-300 hover:text-blue-600">
+      {link.label}
+      {/* The count is its own badge, separated in the text too, so it never reads as part of the name ("Sector 1371"). */}
+      {link.count ? <><span className="sr-only"> · </span><span aria-hidden="true" className="ml-2 grid h-5 min-w-5 place-items-center rounded-full bg-slate-100 px-1.5 text-xs font-semibold text-slate-600">{link.count}</span></> : null}
     </Link>
   );
   return (
@@ -228,7 +206,7 @@ function LinkPills({ title: sectionTitle, links, more }: { title: string; links:
       {links.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{links.map(pill)}</div>}
       {more && more.length > 0 && (
         <details className="group mt-3">
-          <summary className="cursor-pointer list-none text-sm font-medium text-blue-600 hover:underline [&::-webkit-details-marker]:hidden">
+          <summary className="inline-block cursor-pointer list-none py-1 text-sm font-medium text-blue-600 hover:underline [&::-webkit-details-marker]:hidden">
             {links.length ? "More" : "Show all"} ({more.length}) <span className="inline-block transition group-open:rotate-180">▾</span>
           </summary>
           <div className="mt-3 flex flex-wrap gap-2">{more.map(pill)}</div>
@@ -353,9 +331,8 @@ export function LandingPage({ scope, listings, filters }: { scope: Scope; listin
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl">
               <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{heading(scope)}</h1>
-              {intro(scope, inPage).map((paragraph) => <p key={paragraph} className="mt-3 text-sm leading-7 text-slate-600">{paragraph}</p>)}
             </div>
-            <Link href={postHref} className="inline-flex shrink-0 items-center gap-2 self-start rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-600">
+            <Link href={postHref} className="inline-flex shrink-0 items-center gap-2 self-start rounded-2xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-800">
               <Plus className="h-4 w-4" />{intent?.slug === "flatmates" ? "Add my requirement" : "Post your flat"}
             </Link>
           </div>
@@ -382,7 +359,7 @@ export function LandingPage({ scope, listings, filters }: { scope: Scope; listin
                 <section key={section.slug} className="mt-10">
                   <div className="flex items-baseline justify-between gap-4">
                     <h2 className="text-xl font-semibold text-slate-900">{section.label} in {place}</h2>
-                    <Link href={landingPath({ ...scope, intent: section })} className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-blue-600 hover:underline">View all <ArrowRight className="h-4 w-4" /></Link>
+                    <Link href={landingPath({ ...scope, intent: section })} className="inline-flex shrink-0 items-center gap-1 py-1 text-sm font-semibold text-blue-600 hover:underline">View all <ArrowRight className="h-4 w-4" /></Link>
                   </div>
                   {sectionListings.length
                     ? <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{sectionListings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>
@@ -398,7 +375,7 @@ export function LandingPage({ scope, listings, filters }: { scope: Scope; listin
               <div className="mt-3 divide-y divide-slate-100 rounded-2xl border border-slate-200">
                 {faqs.map((faq) => (
                   <details key={faq.question} className="group p-4">
-                    <summary className="cursor-pointer list-none font-medium text-slate-800 [&::-webkit-details-marker]:hidden">{faq.question}</summary>
+                    <summary className="cursor-pointer list-none py-2 font-medium text-slate-800 [&::-webkit-details-marker]:hidden">{faq.question}</summary>
                     <p className="mt-2 text-sm leading-6 text-slate-600"><RichText text={faq.answer} /></p>
                   </details>
                 ))}

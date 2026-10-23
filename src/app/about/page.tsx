@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 const offers = [
   [ShieldCheck, "Room and flat listings posted by owners and tenants", "bg-blue-50 text-blue-600"],
-  [UsersRound, "Compatible flatmates based on lifestyle and budget", "bg-emerald-50 text-emerald-500"],
+  [UsersRound, "Compatible flatmates based on lifestyle and budget", "bg-emerald-50 text-emerald-700"],
   [MapPin, "Smart location and budget search", "bg-amber-50 text-amber-500"],
   [MessageCircle, "Direct communication with owners and roommates", "bg-violet-50 text-violet-500"],
   [LockKeyhole, "Sign in with a one-time email code, no passwords", "bg-rose-50 text-rose-500"],
@@ -72,7 +72,7 @@ export default function AboutPage() {
               </p>
             </section>
             <section>
-              <span className="grid h-11 w-11 place-items-center rounded-full bg-emerald-50 text-emerald-500">
+              <span className="grid h-11 w-11 place-items-center rounded-full bg-emerald-50 text-emerald-700">
                 <Rocket className="h-5 w-5" />
               </span>
               <h2 className="mt-3 text-2xl font-bold">Our Vision</h2>

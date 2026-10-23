@@ -20,7 +20,7 @@ export function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
           {index > 0 && <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
           {index === crumbs.length - 1
             ? <span aria-current="page" className="truncate text-slate-700">{crumb.name}</span>
-            : <Link href={crumb.href} className="hover:text-blue-600 hover:underline">{crumb.name}</Link>}
+            : <Link href={crumb.href} className="inline-block py-1 hover:text-blue-600 hover:underline">{crumb.name}</Link>}
         </span>
       ))}
     </nav>

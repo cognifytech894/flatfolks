@@ -88,7 +88,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <section className="mt-10">
               <div className="flex items-baseline justify-between gap-4">
                 <h2 className="text-xl font-semibold text-slate-900">Latest listings in {city.name}</h2>
-                <Link href={placePath(city)} className="text-sm font-semibold text-blue-600 hover:underline">View all</Link>
+                <Link href={placePath(city)} className="inline-block py-1 text-sm font-semibold text-blue-600 hover:underline">View all</Link>
               </div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">{cityListings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>
             </section>

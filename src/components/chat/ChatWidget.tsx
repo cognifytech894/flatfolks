@@ -103,7 +103,7 @@ export default function ChatWidget({ userName = "Guest", peer }: { userName?: st
                   <div className="max-w-[85%] rounded-lg px-3 py-2 text-sm shadow-sm" style={{ background: m.user === userName ? "#dcfce7" : "white" }}>
                     <div className="text-xs font-medium text-slate-600">{m.user}</div>
                     <div className="whitespace-pre-wrap text-slate-800">{m.text}</div>
-                    <div className="mt-1 text-right text-[10px] text-slate-400">{new Date(m.ts).toLocaleTimeString()}</div>
+                    <div className="mt-1 text-right text-xs text-slate-500">{new Date(m.ts).toLocaleTimeString()}</div>
                   </div>
                 </li>
               ))}

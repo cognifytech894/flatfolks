@@ -1,6 +1,7 @@
 "use client";
 
-import { Bell, MessageCircle, Settings } from "lucide-react";
+import Link from "next/link";
+import { MessageCircle, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BackLink } from "@/components/ui/back-link";
 import { MyPosts } from "@/components/dashboard/my-posts";
@@ -26,9 +27,8 @@ export function DashboardView() {
               <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Your housing hub</h1>
             </div>
             <div className="flex gap-3">
-              <button className="rounded-full border border-slate-200 p-3 text-slate-700"><MessageCircle className="h-5 w-5" /></button>
-              <button className="rounded-full border border-slate-200 p-3 text-slate-700"><Bell className="h-5 w-5" /></button>
-              <button className="rounded-full border border-slate-200 p-3 text-slate-700"><Settings className="h-5 w-5" /></button>
+              <Link href="/chat" aria-label="Messages" className="rounded-full border border-slate-200 p-3 text-slate-700 hover:bg-slate-50"><MessageCircle className="h-5 w-5" /></Link>
+              <Link href="/profile" aria-label="Profile settings" className="rounded-full border border-slate-200 p-3 text-slate-700 hover:bg-slate-50"><Settings className="h-5 w-5" /></Link>
             </div>
           </div>
 

@@ -92,7 +92,7 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, backLinks, rel
 
   const contactGate = (
     <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-center">
-      <Lock className="mx-auto h-5 w-5 text-slate-400" />
+      <Lock className="mx-auto h-5 w-5 text-slate-500" />
       <p className="mt-2 text-sm font-semibold text-slate-800">Login to view contact details</p>
       <p className="mt-1 text-xs text-slate-500">Sign in to see the phone number and message {isRequirement ? "them" : "the owner"} directly.</p>
       <Link href="/auth" className="mt-3 flex items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white">Login to continue</Link>
@@ -101,9 +101,9 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, backLinks, rel
 
   const contactActions = (centered: boolean) => !isLoggedIn ? contactGate : listing.contactPhone ? (
     <>
-      <p className={`flex items-center gap-2 text-sm font-medium text-slate-700 ${centered ? "justify-center" : ""}`}><Phone className="h-4 w-4 text-slate-400" /> {listing.contactPhone}</p>
+      <p className={`flex items-center gap-2 text-sm font-medium text-slate-700 ${centered ? "justify-center" : ""}`}><Phone className="h-4 w-4 text-slate-500" /> {listing.contactPhone}</p>
       <div className="flex gap-3">
-        <a href={`https://wa.me/${toWhatsAppNumber(listing.contactPhone)}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white"><MessageCircle className="h-4 w-4" /> {isRequirement ? "Chat" : "WhatsApp"}</a>
+        <a href={`https://wa.me/${toWhatsAppNumber(listing.contactPhone)}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-4 py-3 text-sm font-semibold text-white"><MessageCircle className="h-4 w-4" /> {isRequirement ? "Chat" : "WhatsApp"}</a>
         <a href={`tel:${listing.contactPhone}`} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><Phone className="h-4 w-4" /> Call</a>
       </div>
     </>
@@ -135,7 +135,7 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, backLinks, rel
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
       {facts.map(({ icon: Icon, label, value }) => (
         <div key={label} className="rounded-2xl border border-slate-200 p-4 text-center">
-          <Icon className="mx-auto h-5 w-5 text-slate-400" />
+          <Icon className="mx-auto h-5 w-5 text-slate-500" />
           <p className="mt-2 text-xs text-slate-500">{label}</p>
           <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
         </div>
@@ -188,7 +188,7 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, backLinks, rel
                   {listing.verified && <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700"><ShieldCheck className="h-4 w-4" /> Verified listing</div>}
                   <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{listing.title}</h1>
                   <p className="mt-3 flex items-start gap-2 text-slate-600"><MapPin className="mt-1 h-4 w-4 shrink-0" /> {listing.location}</p>
-                  {!isRequirement && listing.nearbyMetro && <p className="mt-2 flex items-start gap-2 text-sm text-slate-600"><TrainFront className="mt-0.5 h-4 w-4 shrink-0" /> Nearest metro: {listing.nearbyMetro} <span className="text-slate-400">(as given by the poster)</span></p>}
+                  {!isRequirement && listing.nearbyMetro && <p className="mt-2 flex items-start gap-2 text-sm text-slate-600"><TrainFront className="mt-0.5 h-4 w-4 shrink-0" /> Nearest metro: {listing.nearbyMetro} <span className="text-slate-500">(as given by the poster)</span></p>}
                   {posted && <p className="mt-2 flex items-center gap-2 text-sm text-slate-500"><Clock className="h-4 w-4" /> Posted {posted}</p>}
                 </div>
                 {!isRequirement && (

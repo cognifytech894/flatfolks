@@ -25,8 +25,6 @@ export type Place = {
   needsCity?: boolean;
   /** Phrases that identify this place on their own even when `needsCity` is set, e.g. "Gaur City 12th Avenue". */
   globalAliases?: string[];
-  /** Hand-written description, left out where we have no verified detail. */
-  about?: string;
   /** Short area name appended to titles of places below this one, e.g. "Greater Noida West". */
   areaName?: string;
   /** Hub page is indexed even before it has listings (it carries enough original copy). */
@@ -41,15 +39,11 @@ export type City = {
   name: string;
   state: string;
   aliases: string[];
-  /** Shown under the H1 of the city hub page. */
-  intro: string[];
-  /** One short, city-specific paragraph per intent page. */
-  intentCopy: Partial<Record<IntentSlug, string>>;
   places: Place[];
 };
 
-function sector(number: number, about?: string): Place {
-  return { slug: `sector-${number}`, name: `Sector ${number}`, aliases: [`sec ${number}`], needsCity: true, about };
+function sector(number: number): Place {
+  return { slug: `sector-${number}`, name: `Sector ${number}`, aliases: [`sec ${number}`], needsCity: true };
 }
 
 function slugify(text: string) {
@@ -70,13 +64,10 @@ function avenue(parent: string, ordinal: string): Place {
   };
 }
 
-/** Description built only from the confirmed avenue list, no other claims. */
 function gaurCity(name: string, ordinals: string[], extra: Partial<Place>): Place {
   const avenues = ordinals.map((ordinal) => avenue(name, ordinal));
-  const list = avenues.map((item) => item.name);
   return society(name, {
     ...extra,
-    about: `${name} is a residential society in Greater Noida West (Noida Extension), which includes ${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}. These pages list sharing flats, flats for rent and people looking for flatmates in ${name}, posted directly by the people living or moving there.`,
     children: avenues,
   });
 }
@@ -90,7 +81,6 @@ const noidaExtension: Place = {
   areaName: "Greater Noida West",
   aliases: ["greater noida west", "gr noida west", "noida extn", "gaur city"],
   alwaysIndex: true,
-  about: "Greater Noida West, also called Noida Extension, is a large cluster of newer high-rise societies, including the Gaur City townships. Many young professionals share a 2 or 3 BHK here instead of renting alone.",
   children: [
     gaurCity("Gaur City 1", ["6th", "7th"], {
       aliases: ["gaur city i", "gaur city one"],
@@ -141,23 +131,15 @@ export const cities: City[] = [
     name: "Noida",
     state: "Uttar Pradesh",
     aliases: ["noida"],
-    intro: [
-      "Many of the people moving to Noida are young professionals sharing a flat close to work. Most people live in the planned sectors, each a mix of gated high-rise societies, independent houses and a local market.",
-      "Two metro lines make sharing a flat without a car easy. The Blue Line has stations at Sector 18, Botanical Garden and Sector 62, among others, and the Aqua Line has stations at Sector 137 and Sector 143, among others. Choosing a flat within walking distance of a station matters more than the exact sector.",
-    ],
-    intentCopy: {
-      "flats-for-rent": "Flats for rent in Noida range from compact 1 BHKs to 3 BHKs in newer high-rise societies, which usually come with power backup, security and a gym.",
-      "sharing-flat": "A sharing flat in Noida usually means a private or shared room in a 2 or 3 BHK, with the kitchen and living room shared with one or two flatmates. It is a common way for working professionals to keep rent down.",
-    },
     places: [
-      sector(62, "Sector 62 has a station on the Blue Line, and many of the flats here and in the nearby sectors are shared."),
-      sector(18, "Sector 18 has a station on the Blue Line, which runs directly into Delhi."),
-      sector(137, "Sector 137 has its own Aqua Line station, and many 2 and 3 BHK flats in its high-rise societies are shared."),
-      sector(75, "Sector 75 is a dense cluster of residential high-rise societies."),
-      sector(76, "Sector 76 is a residential sector of large gated societies with its own Aqua Line station."),
-      sector(78, "Sector 78 is a residential sector of newer gated societies, popular with families and flatmates alike."),
-      sector(150, "Sector 150 is a sector with newer high-rise projects."),
-      sector(143, "Sector 143 has its own Aqua Line station."),
+      sector(62),
+      sector(18),
+      sector(137),
+      sector(75),
+      sector(76),
+      sector(78),
+      sector(150),
+      sector(143),
       sector(135),
     ],
   },
@@ -166,22 +148,13 @@ export const cities: City[] = [
     name: "Greater Noida",
     state: "Uttar Pradesh",
     aliases: ["greater noida", "greater noida west", "noida extension", "gr noida"],
-    intro: [
-      "Greater Noida is a planned city with wide roads and large sectors. A big share of people looking for a room here are students, so room sharing and single rooms in shared flats are far more common than renting a whole flat alone.",
-      "Greater Noida West (also called Noida Extension) is a separate cluster of high-rise societies such as Gaur City. It is popular with young professionals working in Noida.",
-    ],
-    intentCopy: {
-      "flats-for-rent": "Flats for rent in Greater Noida include newer 2 and 3 BHK flats in the gated societies of Greater Noida West.",
-      flatmates: "Many of the people looking for a flatmate in Greater Noida are students and early-career professionals. Browse their requirements and contact anyone whose budget, move-in date and preferences match your flat.",
-      "sharing-flat": "Sharing a flat is how most students near Knowledge Park and most young professionals in Greater Noida West keep rent manageable. Expect a room in a 2 or 3 BHK with the common areas shared.",
-    },
     places: [
       noidaExtension,
-      { slug: "knowledge-park", name: "Knowledge Park", aliases: ["knowledge park 1", "knowledge park 2", "knowledge park 3", "knowledge park i", "knowledge park ii", "knowledge park iii"], about: "Knowledge Park has a station on the Aqua Line (Knowledge Park II). Most people looking for a room here are students sharing a flat or a room." },
-      { slug: "pari-chowk", name: "Pari Chowk", about: "Pari Chowk has a station on the Aqua Line." },
-      { slug: "alpha-1", name: "Alpha 1", aliases: ["alpha i"], about: "Alpha 1 is an established residential sector with its own Aqua Line station and independent houses and floors, many of which are shared." },
-      { slug: "alpha-2", name: "Alpha 2", aliases: ["alpha ii"], about: "Alpha 2 is a residential sector with independent houses and builder floors, popular with students and professionals looking for a place to share." },
-      { slug: "beta-1", name: "Beta 1", aliases: ["beta i"], about: "Beta 1 is a planned residential sector with independent houses and floors that are often rented out room by room." },
+      { slug: "knowledge-park", name: "Knowledge Park", aliases: ["knowledge park 1", "knowledge park 2", "knowledge park 3", "knowledge park i", "knowledge park ii", "knowledge park iii"] },
+      { slug: "pari-chowk", name: "Pari Chowk" },
+      { slug: "alpha-1", name: "Alpha 1", aliases: ["alpha i"] },
+      { slug: "alpha-2", name: "Alpha 2", aliases: ["alpha ii"] },
+      { slug: "beta-1", name: "Beta 1", aliases: ["beta i"] },
       { slug: "beta-2", name: "Beta 2", aliases: ["beta ii"] },
       { slug: "techzone", name: "Techzone", aliases: ["tech zone"] },
     ],
@@ -191,26 +164,17 @@ export const cities: City[] = [
     name: "Gurgaon",
     state: "Haryana",
     aliases: ["gurgaon", "gurugram"],
-    intro: [
-      "Gurgaon (officially Gurugram) has many corporate offices, including in Cyber City, and many single professionals working here share a flat rather than rent alone.",
-      "The Rapid Metro connects Cyber City with Golf Course Road, and the Yellow Line connects Gurgaon to Delhi, so a flat near either line saves a lot of time in traffic. The DLF phases and Golf Course Road are popular for sharing.",
-    ],
-    intentCopy: {
-      "flats-for-rent": "Flats for rent in Gurgaon run from builder floors in the DLF phases and older sectors to high-rise apartments on Golf Course Road and Golf Course Extension Road.",
-      flatmates: "People looking for a flatmate in Gurgaon are mostly working professionals relocating for a job. Browse their requirements and get in touch if you have a room free in your flat.",
-      "sharing-flat": "A sharing flat in Gurgaon lets you split the rent of a flat close to work, for example near Cyber City or Golf Course Road. Expect a private room in a 2 or 3 BHK, often in a builder floor or high-rise society.",
-    },
     places: [
-      { slug: "dlf-phase-1", name: "DLF Phase 1", aliases: ["dlf phase i", "dlf ph 1"], about: "DLF Phase 1 is a residential area with independent houses and builder floors and a Rapid Metro station." },
-      { slug: "dlf-phase-2", name: "DLF Phase 2", aliases: ["dlf phase ii", "dlf ph 2"], about: "DLF Phase 2 sits right next to Cyber City and has a Rapid Metro station. That makes it one of the most practical places to share a flat if you work in the Cyber City offices." },
-      { slug: "dlf-phase-3", name: "DLF Phase 3", aliases: ["dlf phase iii", "dlf ph 3"], about: "DLF Phase 3 is a dense area of builder floors and paying-guest houses with a Rapid Metro station, popular for single rooms and shared flats." },
-      { slug: "cyber-city", name: "Cyber City", aliases: ["dlf cyber city", "cyber hub", "cyberhub"], about: "Cyber City is Gurgaon's main business district, with DLF's office towers and Cyber Hub. Few people live inside it, so many share flats in neighbouring areas such as DLF Phase 2." },
-      { slug: "sohna-road", name: "Sohna Road", about: "Sohna Road is a corridor with many newer high-rise societies." },
-      { slug: "golf-course-road", name: "Golf Course Road", aliases: ["gcr"], about: "Golf Course Road is a high-rise stretch served by the Rapid Metro, and many of its flats are shared by working professionals." },
-      { slug: "golf-course-extension-road", name: "Golf Course Extension Road", aliases: ["golf course extension", "gcer"], about: "Golf Course Extension Road is a newer corridor of high-rise societies with modern flats that are often shared among working professionals." },
-      sector(14, "Sector 14 is an established residential sector with independent houses."),
-      sector(21, "Sector 21 is an established residential sector in Gurgaon with independent houses and builder floors."),
-      sector(57, "Sector 57 is a residential sector with a mix of societies and builder floors that are commonly shared."),
+      { slug: "dlf-phase-1", name: "DLF Phase 1", aliases: ["dlf phase i", "dlf ph 1"] },
+      { slug: "dlf-phase-2", name: "DLF Phase 2", aliases: ["dlf phase ii", "dlf ph 2"] },
+      { slug: "dlf-phase-3", name: "DLF Phase 3", aliases: ["dlf phase iii", "dlf ph 3"] },
+      { slug: "cyber-city", name: "Cyber City", aliases: ["dlf cyber city", "cyber hub", "cyberhub"] },
+      { slug: "sohna-road", name: "Sohna Road" },
+      { slug: "golf-course-road", name: "Golf Course Road", aliases: ["gcr"] },
+      { slug: "golf-course-extension-road", name: "Golf Course Extension Road", aliases: ["golf course extension", "gcer"] },
+      sector(14),
+      sector(21),
+      sector(57),
     ],
   },
   {
@@ -218,22 +182,13 @@ export const cities: City[] = [
     name: "Ghaziabad",
     state: "Uttar Pradesh",
     aliases: ["ghaziabad"],
-    intro: [
-      "Ghaziabad borders Delhi and Noida, and areas such as Indirapuram, Vaishali and Kaushambi are where most people who share a flat here live.",
-      "A branch of the Blue Line ends at Vaishali, with a stop at Kaushambi just before it, which gives these areas a direct metro link into Delhi. Newer high-rise areas like Raj Nagar Extension and Crossings Republik rely more on road transport.",
-    ],
-    intentCopy: {
-      "flats-for-rent": "Flats for rent in Ghaziabad include older apartments and builder floors in Vaishali and Kaushambi, high-rise societies in Indirapuram, and newer projects in Raj Nagar Extension and Crossings Republik.",
-      flatmates: "Many people looking for a flatmate in Ghaziabad work in east Delhi or Noida and want to keep their commute short. Browse their requirements and reach out if you have a room to share.",
-      "sharing-flat": "A sharing flat in Ghaziabad means a room of your own with the rent and bills split between flatmates. Indirapuram and Vaishali are among the most popular areas.",
-    },
     places: [
-      { slug: "indirapuram", name: "Indirapuram", about: "Indirapuram is a popular residential area for professionals, a dense cluster of high-rise societies." },
-      { slug: "vaishali", name: "Vaishali", about: "Vaishali is an established residential area at the end of a Blue Line branch, with a direct metro link into Delhi." },
-      { slug: "kaushambi", name: "Kaushambi", about: "Kaushambi has a Blue Line station, the stop next to Anand Vihar ISBT, with a direct metro link into Delhi." },
-      { slug: "raj-nagar-extension", name: "Raj Nagar Extension", aliases: ["rne"], about: "Raj Nagar Extension is a newer area of high-rise societies, popular with people who don't mind commuting by road." },
-      { slug: "crossings-republik", name: "Crossings Republik", aliases: ["crossing republik", "crossings republic"], about: "Crossings Republik is a township of high-rise societies where flats are often shared." },
-      { slug: "vasundhara", name: "Vasundhara", about: "Vasundhara is a residential area with sectors of apartments and builder floors." },
+      { slug: "indirapuram", name: "Indirapuram" },
+      { slug: "vaishali", name: "Vaishali" },
+      { slug: "kaushambi", name: "Kaushambi" },
+      { slug: "raj-nagar-extension", name: "Raj Nagar Extension", aliases: ["rne"] },
+      { slug: "crossings-republik", name: "Crossings Republik", aliases: ["crossing republik", "crossings republic"] },
+      { slug: "vasundhara", name: "Vasundhara" },
     ],
   },
 ];

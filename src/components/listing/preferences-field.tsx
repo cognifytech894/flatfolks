@@ -5,7 +5,7 @@ import { lifestylePreferences } from "@/data/preferences";
 export function PreferencesField({ selected, onToggle }: { selected: string[]; onToggle: (id: string) => void }) {
   return (
     <fieldset>
-      <legend className="text-sm font-medium text-slate-700">Lifestyle preferences <span className="font-normal text-slate-400">(optional)</span></legend>
+      <legend className="text-sm font-medium text-slate-700">Lifestyle preferences <span className="font-normal text-slate-500">(optional)</span></legend>
       <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
         {lifestylePreferences.map((preference) => {
           const isSelected = selected.includes(preference.id);

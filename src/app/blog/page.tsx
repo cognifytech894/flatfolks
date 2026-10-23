@@ -45,7 +45,7 @@ export default function BlogPage() {
             <section key={city.slug} className="mt-10">
               <div className="flex items-baseline justify-between gap-4">
                 <h2 className="text-xl font-semibold text-slate-900">{city.name}</h2>
-                <Link href={`/${city.slug}`} className="text-sm font-semibold text-blue-600 hover:underline">Flats &amp; flatmates in {city.name}</Link>
+                <Link href={`/${city.slug}`} className="inline-block py-1 text-sm font-semibold text-blue-600 hover:underline">Flats &amp; flatmates in {city.name}</Link>
               </div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{posts.map((post) => <PostCard key={post.slug} post={post} />)}</div>
             </section>

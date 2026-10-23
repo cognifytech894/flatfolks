@@ -47,7 +47,7 @@ export default function AdminLoginPage() {
         <label className="mt-4 block text-sm font-medium text-slate-700">
           Password
           <div className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-blue-500">
-            <Lock className="h-4 w-4 text-slate-400" />
+            <Lock className="h-4 w-4 text-slate-500" />
             <input required type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="w-full bg-transparent outline-none" autoComplete="current-password" />
           </div>
         </label>

@@ -32,8 +32,8 @@ export function Testimonials({ initial }: { initial: Feedback[] }) {
   return (
     <section>
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-bold">Loved by Thousands</h2>
-        <button type="button" onClick={() => setOpen((current) => !current)} className="text-xs font-semibold text-blue-600">
+        <h2 className="text-base font-bold">What people say</h2>
+        <button type="button" onClick={() => setOpen((current) => !current)} className="inline-flex min-h-11 items-center text-xs font-semibold text-blue-600">
           {open ? "Cancel" : "Share your feedback"}
         </button>
       </div>
@@ -65,9 +65,9 @@ export function Testimonials({ initial }: { initial: Feedback[] }) {
             <div className="flex text-amber-400">
               {Array.from({ length: 5 }, (_, i) => <Star key={i} className={`h-3 w-3 ${i < item.rating ? "fill-current" : "text-slate-200"}`} />)}
             </div>
-            <p className="mt-2 min-h-[52px] text-[10px] leading-4 text-slate-700">&ldquo;{item.message}&rdquo;</p>
-            <b className="mt-2 block text-[10px]">{item.name}</b>
-            <small className="text-[9px] text-slate-500">{item.city}</small>
+            <p className="mt-2 min-h-[52px] text-xs leading-4 text-slate-700">&ldquo;{item.message}&rdquo;</p>
+            <b className="mt-2 block text-xs">{item.name}</b>
+            <small className="text-xs text-slate-500">{item.city}</small>
           </article>
         ))}
       </div>
