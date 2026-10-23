@@ -89,10 +89,8 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
           </div>
           <div>
             <p className={sectionTitle}>Budget per month</p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <input value={filters.minBudget || ""} onChange={(event) => update("minBudget", event.target.value)} type="number" min="0" placeholder="Min ₹" aria-label="Minimum budget" className={inputClass} />
-              <input value={filters.maxBudget || ""} onChange={(event) => update("maxBudget", event.target.value)} type="number" min="0" placeholder="Max ₹" aria-label="Maximum budget" className={inputClass} />
-            </div>
+            {/* One "up to" budget; links that still carry minBudget keep working through the active-filter chips. */}
+            <input value={filters.maxBudget || ""} onChange={(event) => update("maxBudget", event.target.value)} type="number" min="0" placeholder="Up to ₹" aria-label="Budget per month" className={`mt-2 ${inputClass}`} />
           </div>
           <div>
             <p className={sectionTitle}>Property</p>

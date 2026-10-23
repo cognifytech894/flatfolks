@@ -14,7 +14,7 @@ type RequiredField = "location" | "budget" | "availableFrom" | "contactPhone";
 
 // Same rule as the listings API, so the form never accepts a number the server rejects.
 function isValidPhone(phone: string) {
-  return /^[ds+-]{7,20}$/.test(phone) && phone.replace(/D/g, "").length >= 10;
+  return /^[\d\s+-]{7,20}$/.test(phone) && phone.replace(/\D/g, "").length >= 10;
 }
 
 type Form = { title: string; description: string; location: string; address: string; budget: string; deposit: string; availableFrom: string; genderPreference: "Male" | "Female" | "Family" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string; furnishing: "" | Furnishing; nearbyMetro: string; flatConfiguration: "" | FlatConfiguration; roomType: "" | RoomType; tenantPreference: "" | TenantPreference };
