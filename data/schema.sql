@@ -128,6 +128,16 @@ CREATE TABLE IF NOT EXISTS feedback (
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+-- Admin login guard (src/lib/admin-login-guard.ts). After 3 wrong passwords in
+-- a row an IP is blocked from admin login until its row is deleted (Unblock
+-- in the admin panel). A correct password clears the count.
+CREATE TABLE IF NOT EXISTS admin_login_blocks (
+  ip VARCHAR(64) PRIMARY KEY,
+  failed_attempts INTEGER NOT NULL DEFAULT 0,
+  blocked_at TIMESTAMPTZ,
+  last_attempt_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Inactive-owner post removal (src/lib/inactive-posts.ts). Posts of owners not
 -- seen for 30 days become 'removed_inactive' and are deleted 30 days later.
 -- No foreign keys on purpose: deleting a post can never cascade to users.

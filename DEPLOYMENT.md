@@ -102,3 +102,10 @@ Notes
 - Listings, users, feedback, and OTP codes all persist in Postgres via Supabase — this works correctly across Vercel's stateless serverless instances (OTPs auto-expire after 10 minutes via `expires_at`).
 - Listing photos upload to Supabase Storage (bucket `listing-photos`, capped at 2MB each — see `src/lib/image-storage.ts`), not the database. Photo uploads fail with a clear error if `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` aren't set, or if that bucket doesn't exist yet.
 - `/admin` is disabled (login always fails) until `ADMIN_USERNAME` and `ADMIN_PASSWORD` are set. Add them to Vercel's env vars, or on a self-hosted server add them directly to the app's `.env` file (e.g. `sudo nano /home/ankit/flatfolks/.env`) and `sudo systemctl restart flatfolks` — never commit real values to `.env.example` or anywhere in git.
+- Admin login blocks an IP for good after 3 wrong passwords in a row (the rest of the site keeps working for it). The `admin_login_blocks` table is created automatically on the first admin login attempt, and is also in `data/schema.sql`. To lift a block, log in from another network and press **Unblock** under "Blocked admin login IPs" on `/admin`. If you've locked yourself out everywhere, run this in the Supabase SQL editor (or `psql` on a self-hosted server), with your IP:
+
+  ```sql
+  DELETE FROM admin_login_blocks WHERE ip = '203.0.113.7';
+  -- or lift every block:
+  DELETE FROM admin_login_blocks;
+  ```
