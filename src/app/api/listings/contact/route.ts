@@ -9,6 +9,9 @@ export const runtime = "nodejs";
 /** "Show number": a post's phone number for a signed-in member, within the daily cap. */
 export async function POST(request: Request) {
   if (await isRateLimited(request, "contact-reveal", 30)) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
+  // Many accounts on one network can't add up their daily caps. Set well above
+  // 30 because mobile networks put many real people behind one IP (CGNAT).
+  if (await isRateLimited(request, "contact-reveal-day", 150, 24 * 60 * 60 * 1000)) return NextResponse.json({ error: "Too many numbers viewed from this network today. Please try again tomorrow." }, { status: 429 });
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Please log in to see contact details." }, { status: 401 });
   const body = await request.json().catch(() => ({})) as { id?: unknown };

@@ -171,6 +171,18 @@ describe("OTP and feedback (database)", () => {
     assert.deepEqual(deleted, [photo("mine")]);
   });
 
+  test("Gmail aliases of one inbox sign in to the same account", async () => {
+    const { normalizeEmail } = await import("../src/lib/email-identity.ts");
+    assert.equal(normalizeEmail(" A.Bc+flats@GMAIL.com "), "abc@gmail.com");
+    assert.equal(normalizeEmail("a.bc@googlemail.com"), "abc@gmail.com");
+    assert.equal(normalizeEmail("a.b+c@outlook.com"), "a.b+c@outlook.com");
+    const signIn = async (email) => (await database.verifyEmailAuthOtp(email, await database.requestEmailAuthOtp(email))).user;
+    const first = await signIn("riya.sharma@gmail.com");
+    const alias = await signIn("RiyaSharma+2@gmail.com");
+    assert.equal(alias.id, first.id);
+    assert.equal(alias.email, "riya.sharma@gmail.com");
+  });
+
   test("new feedback is hidden until approved; older feedback stays visible", async () => {
     // A row from before moderation (it got approved = true when the column was added).
     await db.pool.query("INSERT INTO feedback (id, name, city, rating, message, approved) VALUES (gen_random_uuid(), 'Old', 'Noida', 5, 'From before moderation', true)");

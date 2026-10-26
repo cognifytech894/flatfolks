@@ -195,6 +195,11 @@ UPDATE feedback SET approved = true WHERE id IN ('b0000000-0000-4000-8000-000000
 -- Signing out everywhere: bumping a member's version ends all their cookies.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 0;
 
+-- One account per inbox: the sign-in email normalized (Gmail dots and +tags
+-- removed, see src/lib/email-identity.ts). The app fills it in for older rows.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_key VARCHAR(255);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_key ON users (email_key);
+
 -- Rate limits shared by every server instance (src/lib/rate-limit.ts).
 CREATE TABLE IF NOT EXISTS rate_limits (
   key VARCHAR(255) PRIMARY KEY,
