@@ -9,10 +9,15 @@ import { editBudgetEvent } from "@/components/search/search-filters";
 
 type ResultListing = {
   id: string; href: string; title: string; location: string; rent: number; image: string;
-  propertyType: string; badges: string[];
+  propertyType: string; genderPreference?: string; badges: string[];
 };
 
 /** keepOrder: the visitor picked a sort, so don't move their saved city's listings to the top. */
+/** Who the room is for: "Male", "Female", "Family", or "Anyone" when the poster has no preference. */
+function lookingFor(gender?: string) {
+  return gender && gender !== "Any" ? gender : "Anyone";
+}
+
 /** Post-requirement link carrying only what the visitor typed in this search. */
 function requirementHref(location?: string, budget?: number) {
   const query = new URLSearchParams({ intent: "flat" });
@@ -36,18 +41,22 @@ export function SearchResults({ listings, searchedLocation, budget, keepOrder }:
                 ? <Image src={listing.image} alt={listing.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 480px" />
                 : <div className="grid h-full w-full place-items-center bg-slate-100 text-sm font-medium text-slate-600">No photos</div>}
             </div>
+            {/* Every line is one line high (long text truncates, badges stay on one row), so all cards are the same size. */}
             <div className="flex flex-1 flex-col p-4">
-              <h2 className="mb-2 text-lg font-semibold text-slate-900">{listing.title}</h2>
-              <p className="text-sm text-slate-600">{listing.location}</p>
-              {listing.badges.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {listing.badges.map((badge) => <span key={badge} className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">{badge}</span>)}
-                </div>
-              )}
-              <p className="mt-2 text-sm font-medium text-emerald-700">{perMonth(listing.rent)}</p>
-              <div className="mt-auto flex items-center justify-between pt-4">
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{listing.propertyType}</span>
-                <Link href={listing.href} target="_blank" rel="noopener" className="inline-block py-1 text-sm font-semibold text-slate-700">View details</Link>
+              <div className="flex items-center justify-between gap-3">
+                <h2 title={listing.title} className="min-w-0 truncate text-lg font-semibold text-slate-900">{listing.title}</h2>
+                <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{listing.propertyType}</span>
+              </div>
+              <p title={listing.location} className="mt-1 truncate text-sm text-slate-600">{listing.location}</p>
+              <dl className="mt-3 grid grid-cols-2 gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
+                <div className="min-w-0"><dt className="text-xs text-slate-500">Looking for</dt><dd className="truncate text-sm font-semibold text-slate-900">{lookingFor(listing.genderPreference)}</dd></div>
+                <div className="min-w-0"><dt className="text-xs text-slate-500">Rent</dt><dd className="truncate text-sm font-semibold text-emerald-700">{perMonth(listing.rent)}</dd></div>
+              </dl>
+              <div className="mt-3 flex h-6 gap-1.5 overflow-hidden">
+                {listing.badges.map((badge) => <span key={badge} className="shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">{badge}</span>)}
+              </div>
+              <div className="mt-auto flex justify-end pt-3">
+                <Link href={listing.href} target="_blank" rel="noopener" className="inline-block py-1 text-sm font-semibold text-blue-600 hover:underline">View details</Link>
               </div>
             </div>
           </article>
