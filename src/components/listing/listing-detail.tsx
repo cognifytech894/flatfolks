@@ -113,15 +113,15 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, related }: Lis
   const facts = isRequirement
     ? [
       ...(listing.ownerGender ? [{ icon: UserRound, label: "Gender", value: listing.ownerGender }] : []),
-      { icon: Wallet, label: "Max budget", value: perMonth(listing.rent) },
+      { icon: Wallet, label: "Max budget", value: perMonth(listing.rent), money: true },
       { icon: HomeIcon, label: "Looking for", value: listing.propertyType },
       { icon: UsersRound, label: "Flatmate gender", value: listing.genderPreference || "Any" },
       ...(available ? [{ icon: CalendarDays, label: "Move-in", value: available }] : []),
       ...(furnishing ? [{ icon: Armchair, label: "Preferred furnishing", value: furnishing }] : []),
     ]
     : [
-      { icon: Wallet, label: "Monthly rent", value: perMonth(listing.rent) },
-      { icon: Lock, label: "Security deposit", value: `₹${listing.deposit.toLocaleString("en-IN")}` },
+      { icon: Wallet, label: "Monthly rent", value: perMonth(listing.rent), money: true },
+      { icon: Lock, label: "Security deposit", value: `₹${listing.deposit.toLocaleString("en-IN")}`, money: true },
       { icon: HomeIcon, label: "Room type", value: listing.propertyType },
       { icon: Bed, label: "BHK", value: `${listing.bedrooms} BHK` },
       { icon: Bath, label: "Bathrooms", value: String(listing.bathrooms) },
@@ -130,16 +130,22 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, related }: Lis
       ...(furnishing ? [{ icon: Armchair, label: "Furnishing", value: furnishing }] : []),
     ];
 
+  // Compact tiles: icon beside the text (above it on phones, so values like "₹4,000/month" never break); money facts are tinted green.
   const factGrid = (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-      {facts.map(({ icon: Icon, label, value }) => (
-        <div key={label} className="rounded-2xl border border-slate-200 p-4 text-center">
-          <Icon className="mx-auto h-5 w-5 text-slate-500" />
-          <p className="mt-2 text-xs text-slate-500">{label}</p>
-          <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
-        </div>
-      ))}
-    </div>
+    <dl className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-3">
+      {facts.map(({ icon: Icon, label, value, ...fact }) => {
+        const money = "money" in fact && fact.money;
+        return (
+          <div key={label} className={`flex flex-col items-start gap-2 rounded-2xl border p-3 sm:flex-row sm:items-center sm:gap-3 sm:p-3.5 ${money ? "border-emerald-100 bg-emerald-50/60" : "border-slate-200 bg-white"}`}>
+            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl sm:h-10 sm:w-10 ${money ? "bg-emerald-100 text-emerald-700" : "bg-blue-50 text-blue-600"}`}><Icon className="h-5 w-5" /></span>
+            <div className="min-w-0">
+              <dt className="text-xs leading-4 text-slate-500">{label}</dt>
+              <dd className={`mt-0.5 font-semibold text-slate-900 ${money ? "text-[15px] sm:text-base" : "text-sm"}`}>{value}</dd>
+            </div>
+          </div>
+        );
+      })}
+    </dl>
   );
 
   const extras = (
