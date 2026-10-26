@@ -63,6 +63,8 @@ Two flows, both requiring a contact number:
 
 ### Post lifecycle
 
+**Paused (26 Oct):** the daily job does nothing unless `INACTIVE_POSTS_ENABLED=true`, so no posts are removed, emailed about or deleted. The code and rules below are kept as they are.
+
 - Signed-in activity (login, any signed-in request, a daily ping on page visits) updates `users.last_seen_at`.
 - A daily Vercel Cron (`/api/cron/inactive-posts`, `vercel.json`) removes the posts of owners not seen for 30 days and sends one email per owner with a "Restore my post" link per post (signed, 30-day, single-post tokens; restoring takes a button press on `/restore`). Failed emails retry the next day. Optional 5-day warning email (`INACTIVITY_WARNING_EMAILS`).
 - Removed posts disappear from search, place pages, sitemaps and counts; their URL says "This post is no longer available" (noindex, no phone). 30 days after removal they're permanently deleted with their photos, and the URL returns 410.

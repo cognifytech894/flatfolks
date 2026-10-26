@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { contactEmail } from "@/data/contact";
 
 const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL || "FlatFolks <onboarding@resend.dev>";
 
@@ -22,6 +23,7 @@ export async function sendOtpEmail(to: string, code: string): Promise<boolean> {
   if (!resend) return false;
   const { error } = await resend.emails.send({
     from: FROM_ADDRESS,
+    replyTo: contactEmail,
     to,
     subject: `Your FlatFolks verification code is ${code}`,
     html: `<p>Your one-time password is <b style="font-size:20px;letter-spacing:3px">${code}</b>.</p><p>It expires in 10 minutes. If you didn't request this, you can ignore this email.</p>`,
@@ -42,7 +44,8 @@ export async function sendEmail(email: { to: string; subject: string; html: stri
 export async function sendWelcomeEmail(email: { to: string; subject: string; html: string; text: string }): Promise<boolean> {
   const resend = client();
   if (!resend) return false;
-  const { error } = await resend.emails.send({ from: welcomeFromAddress(), ...email });
+  // Replies go to the support inbox, which is the one that exists on the domain.
+  const { error } = await resend.emails.send({ from: welcomeFromAddress(), replyTo: contactEmail, ...email });
   if (error) throw new Error(error.message);
   return true;
 }

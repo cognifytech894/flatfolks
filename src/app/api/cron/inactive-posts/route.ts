@@ -18,6 +18,11 @@ function authorized(request: Request, secret: string) {
 
 /** Daily Vercel Cron (vercel.json). Vercel sends `Authorization: Bearer $CRON_SECRET`. */
 export async function GET(request: Request) {
+  // Paused for now: the job only runs when INACTIVE_POSTS_ENABLED=true. While
+  // paused nothing is removed, emailed or permanently deleted, and posts
+  // already removed stay restorable. The rules in src/lib/inactive-posts.ts
+  // are unchanged, so setting the variable turns it back on without a deploy.
+  if (process.env.INACTIVE_POSTS_ENABLED !== "true") return NextResponse.json({ skipped: true, reason: "Inactive-post removal is paused (INACTIVE_POSTS_ENABLED is not \"true\")." });
   const cronSecret = process.env.CRON_SECRET;
   const restoreSecret = process.env.RESTORE_TOKEN_SECRET;
   if (!cronSecret || !restoreSecret) return NextResponse.json({ error: "CRON_SECRET and RESTORE_TOKEN_SECRET must be set." }, { status: 500 });

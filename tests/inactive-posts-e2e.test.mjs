@@ -34,6 +34,8 @@ before(async () => {
     stdio: process.env.E2E_LOG ? ["ignore", openSync(process.env.E2E_LOG, "w"), openSync(process.env.E2E_LOG, "a")] : "ignore",
     env: {
       ...process.env, DATABASE_URL: db.url, CRON_SECRET, RESTORE_TOKEN_SECRET: RESTORE_SECRET, DISABLE_VIEW_TRACKING: "1",
+      // The job is paused in production by default; these tests exercise it switched on.
+      INACTIVE_POSTS_ENABLED: "true",
       // An invalid key: OTP and removal emails fail instead of reaching real inboxes.
       RESEND_API_KEY: "re_invalid_test_key",
     },
