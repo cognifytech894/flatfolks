@@ -8,7 +8,7 @@ import { perMonth, rupees } from "@/lib/budget";
 import { editBudgetEvent } from "@/components/search/search-filters";
 
 type ResultListing = {
-  id: string; href: string; title: string; location: string; rent: number; image: string; description?: string;
+  id: string; href: string; title: string; location: string; rent: number; image: string;
   propertyType: string; badges: string[];
 };
 
@@ -53,7 +53,6 @@ export function SearchResults({ listings, mapView, searchedLocation, budget, kee
                   {listing.badges.map((badge) => <span key={badge} className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">{badge}</span>)}
                 </div>
               )}
-              {listing.description && <p className="mt-2 line-clamp-2 text-sm text-slate-500">{listing.description}</p>}
               <p className="mt-2 text-sm font-medium text-emerald-700">{perMonth(listing.rent)}</p>
               <div className="mt-auto flex items-center justify-between pt-4">
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{listing.propertyType}</span>
