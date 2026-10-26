@@ -53,7 +53,7 @@ Two flows, both requiring a contact number:
 - Email OTP login/signup, sent via Resend from `otp@flatfolks.in`; codes expire in 10 minutes and requests are rate-limited. No passwords.
 - Sessions use a secure, httpOnly cookie (30 days).
 - A new account gets a one-time welcome email ("Hi Folks," with Find a Room, List Your Room for Free and Complete My Profile buttons) from `hello@` on the Resend domain, sent after the login response so it never slows or blocks login. Template: `src/lib/welcome-email.ts`; tests: `npm run test:welcome`. **(new, 26 Oct)**
-- Profile page: summary card with a large photo, profile-completion bar, preset avatars (illustrated, 2 male and 3 female), and a personal-details card with edit/save. Tapping the photo opens it large with Change and Remove. **(new, 24 Oct)**
+- Profile page: summary card with a large photo and name, preset avatars (illustrated, 2 male and 3 female), and a personal-details card with edit/save. Tapping the photo opens it large with Change and Remove. **(new, 24 Oct)**
 - Dashboard and log out are linked from the profile.
 
 ### Dashboard

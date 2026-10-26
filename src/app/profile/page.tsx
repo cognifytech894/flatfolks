@@ -75,8 +75,6 @@ export default function ProfilePage() {
 
   const fields = [["name", "Full name", UserRound, "text"], ["email", "Email ID", Mail, "email"], ["phone", "Phone number", Phone, "tel"]] as const;
   const locationSuggestions = searchLocations(draft.location || "");
-  const completion = [profile.name, profile.email, profile.phone, profile.location, profile.gender, photo].filter(Boolean).length;
-  const completionPercent = Math.round((completion / 6) * 100);
 
   const row = (Icon: typeof UserRound, label: string, value?: string) => (
     <div className="flex items-start gap-3 py-4">
@@ -134,28 +132,16 @@ export default function ProfilePage() {
                   </label>
                 </div>
                 <h1 className="mt-4 max-w-full truncate text-2xl font-bold text-slate-900">{profile.name}</h1>
-                <p className="mt-1 max-w-full truncate text-sm text-slate-500">{profile.email}</p>
-                {(profile.location || profile.gender) && (
-                  <div className="mt-3 flex max-w-full flex-wrap justify-center gap-2">
-                    {profile.location && <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"><MapPin className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{profile.location}</span></span>}
-                    {profile.gender && <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{profile.gender}</span>}
+                <div className="mt-6 w-full border-t border-slate-100 pt-5 text-left">
+                  <h2 className="text-sm font-semibold text-slate-900">Choose an avatar</h2>
+                  <p className="mt-1 text-xs text-slate-500">Or tap the camera to upload your own photo.</p>
+                  <div className="mt-4 grid grid-cols-5 gap-2">
+                    {presetAvatars.map((avatar) => {
+                      const selected = photo === avatar.src;
+                      return <button key={avatar.id} type="button" onClick={() => savePhoto(avatar.src)} aria-label={avatar.label} aria-pressed={selected} className={`relative aspect-square overflow-hidden rounded-full ring-2 ring-offset-2 transition ${selected ? "ring-blue-600" : "ring-transparent hover:ring-slate-200"}`}><img src={avatar.src} alt="" className="h-full w-full object-cover" />{selected && <span className="absolute inset-0 grid place-items-center bg-blue-600/30"><Check className="h-4 w-4 text-white" /></span>}</button>;
+                    })}
                   </div>
-                )}
-                <div className="mt-5 w-full text-left">
-                  <div className="flex items-center justify-between text-xs font-medium"><span className="text-slate-500">Profile complete</span><span className="text-blue-600">{completionPercent}%</span></div>
-                  <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${completionPercent}%` }} /></div>
                 </div>
-              </div>
-            </section>
-
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-sm font-semibold text-slate-900">Choose an avatar</h2>
-              <p className="mt-1 text-xs text-slate-500">Or tap the camera to upload your own photo.</p>
-              <div className="mt-4 grid grid-cols-5 gap-2">
-                {presetAvatars.map((avatar) => {
-                  const selected = photo === avatar.src;
-                  return <button key={avatar.id} type="button" onClick={() => savePhoto(avatar.src)} aria-label={avatar.label} aria-pressed={selected} className={`relative aspect-square overflow-hidden rounded-full ring-2 ring-offset-2 transition ${selected ? "ring-blue-600" : "ring-transparent hover:ring-slate-200"}`}><img src={avatar.src} alt="" className="h-full w-full object-cover" />{selected && <span className="absolute inset-0 grid place-items-center bg-blue-600/30"><Check className="h-4 w-4 text-white" /></span>}</button>;
-                })}
               </div>
             </section>
           </aside>
