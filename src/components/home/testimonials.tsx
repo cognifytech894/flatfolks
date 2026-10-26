@@ -5,13 +5,12 @@ import { Star } from "lucide-react";
 import type { Feedback } from "@/lib/database";
 
 export function Testimonials({ initial }: { initial: Feedback[] }) {
-  const [items, setItems] = useState(initial);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [rating, setRating] = useState(5);
   const [message, setMessage] = useState("");
-  const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "saving" | "error" | "sent">("idle");
   const [error, setError] = useState("");
 
   async function submit(event: React.FormEvent) {
@@ -19,10 +18,10 @@ export function Testimonials({ initial }: { initial: Feedback[] }) {
     setStatus("saving"); setError("");
     try {
       const response = await fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, city, rating, message }) });
-      const result = await response.json() as Feedback & { error?: string };
+      const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || "Could not submit your feedback.");
-      setItems((current) => [result, ...current]);
-      setName(""); setCity(""); setRating(5); setMessage(""); setOpen(false); setStatus("idle");
+      // Feedback is reviewed before it's shown, so it isn't added to the list here.
+      setName(""); setCity(""); setRating(5); setMessage(""); setOpen(false); setStatus("sent");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not submit your feedback.");
       setStatus("error");
@@ -38,6 +37,7 @@ export function Testimonials({ initial }: { initial: Feedback[] }) {
         </button>
       </div>
 
+      {status === "sent" && !open && <p role="status" className="mt-3 rounded-xl bg-emerald-50 p-3 text-xs font-medium text-emerald-800">Thanks! Your feedback will appear here after a quick review.</p>}
       {open && (
         <form onSubmit={submit} className="mt-3 space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
           <div className="grid gap-2 sm:grid-cols-2">
@@ -60,7 +60,7 @@ export function Testimonials({ initial }: { initial: Feedback[] }) {
       )}
 
       <div className="mt-3 grid gap-2 sm:grid-cols-3">
-        {items.map((item) => (
+        {initial.map((item) => (
           <article key={item.id} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
             <div className="flex text-amber-400">
               {Array.from({ length: 5 }, (_, i) => <Star key={i} className={`h-3 w-3 ${i < item.rating ? "fill-current" : "text-slate-200"}`} />)}

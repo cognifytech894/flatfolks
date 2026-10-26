@@ -70,7 +70,7 @@ export default function ProfilePage() {
     localStorage.removeItem("flatfolks_profile_photo");
     window.location.assign("/auth");
   }
-  async function save() { if (!draft) return; setSaving(true); setNotice(null); try { const response = await fetch(`/api/users/${draft.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: draft.name, email: draft.email, phone: draft.phone, location: draft.location, gender: draft.gender }) }); const result = await response.json() as { user?: Profile; error?: string }; if (!response.ok || !result.user) throw new Error(result.error || "Could not update profile."); setProfile(result.user); setDraft(result.user); localStorage.setItem("flatfolks_user", JSON.stringify(result.user)); setEditing(false); setNotice({ text: "Profile updated successfully.", ok: true }); } catch (error) { fail(error, "Could not update profile."); } finally { setSaving(false); } }
+  async function save() { if (!draft) return; setSaving(true); setNotice(null); try { const response = await fetch(`/api/users/${draft.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: draft.name, phone: draft.phone, location: draft.location, gender: draft.gender }) }); const result = await response.json() as { user?: Profile; error?: string }; if (!response.ok || !result.user) throw new Error(result.error || "Could not update profile."); setProfile(result.user); setDraft(result.user); localStorage.setItem("flatfolks_user", JSON.stringify(result.user)); setEditing(false); setNotice({ text: "Profile updated successfully.", ok: true }); } catch (error) { fail(error, "Could not update profile."); } finally { setSaving(false); } }
   if (!profile || !draft) return <div className="min-h-screen bg-slate-50 px-4 py-16"><div className="mx-auto max-w-xl rounded-3xl bg-white p-8 text-center shadow-sm"><h1 className="text-2xl font-bold">Please log in first</h1><Link href="/auth" className="mt-5 inline-block rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white">Create account or log in</Link></div></div>;
 
   const fields = [["name", "Full name", UserRound, "text"], ["email", "Email ID", Mail, "email"], ["phone", "Phone number", Phone, "tel"]] as const;
@@ -158,7 +158,7 @@ export default function ProfilePage() {
 
               {editing ? (
                 <div className="mt-6 grid gap-5 sm:grid-cols-2">
-                  {fields.map(([key, label, , type]) => <label key={key} className="block text-xs font-medium text-slate-500">{label}<input type={type} value={draft[key] || ""} onChange={(event) => update(key, event.target.value)} className={inputClass} /></label>)}
+                  {fields.map(([key, label, , type]) => key === "email" ? <div key={key} className="text-xs font-medium text-slate-500">{label}<p className={`${inputClass} truncate bg-slate-50 text-slate-500`}>{draft.email}</p><span className="mt-1 block font-normal text-slate-400">Sign-in email can&apos;t be changed here.</span></div> : <label key={key} className="block text-xs font-medium text-slate-500">{label}<input type={type} value={draft[key] || ""} onChange={(event) => update(key, event.target.value)} className={inputClass} /></label>)}
                   {editField("Location", locationInput)}
                   {editField("You are a", genderInput, true)}
                   <div className="flex flex-wrap gap-3 sm:col-span-2">

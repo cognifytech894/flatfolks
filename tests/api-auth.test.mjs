@@ -31,7 +31,8 @@ function env(name) {
 function sessionCookie(userId) {
   const secret = env("SESSION_SECRET") || env("ADMIN_PASSWORD");
   if (!secret) throw new Error("SESSION_SECRET / ADMIN_PASSWORD not found");
-  return `flatfolks_session=${userId}.${createHmac("sha256", secret).update(userId).digest("hex")}`;
+  const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+  return `flatfolks_session=${userId}.${expiresAt}.${createHmac("sha256", secret).update(`flatfolks-session:${userId}:${expiresAt}`).digest("hex")}`;
 }
 
 const api = (route, init = {}) => fetch(BASE_URL + route, { redirect: "manual", ...init, headers: { "Content-Type": "application/json", ...init.headers } });

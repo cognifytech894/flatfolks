@@ -117,6 +117,8 @@ CREATE TABLE IF NOT EXISTS otps (
   expires_at TIMESTAMP NOT NULL,
   PRIMARY KEY (id, purpose)
 );
+-- Wrong guesses on the current code; after 5 it's deleted (src/lib/database.ts).
+ALTER TABLE otps ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0;
 
 -- Site-wide testimonials shown on the landing page ("Loved by Thousands").
 CREATE TABLE IF NOT EXISTS feedback (
@@ -127,6 +129,9 @@ CREATE TABLE IF NOT EXISTS feedback (
   message VARCHAR(500) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
+-- Shown on the home page only once an admin approves it; rows from before moderation stay visible.
+ALTER TABLE feedback ADD COLUMN IF NOT EXISTS approved BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE feedback ALTER COLUMN approved SET DEFAULT false;
 
 -- Admin login guard (src/lib/admin-login-guard.ts). After 3 wrong passwords in
 -- a row an IP is blocked from admin login until its row is deleted (Unblock
@@ -184,3 +189,5 @@ INSERT INTO feedback (id, name, city, rating, message) VALUES
   ('b0000000-0000-4000-8000-000000000002', 'Aman Verma', 'Noida', 5, 'Finally a platform better than Facebook groups.'),
   ('b0000000-0000-4000-8000-000000000003', 'Kunal Mehta', 'Pune', 5, 'Clean interface, genuine listings and quick responses.')
 ON CONFLICT (id) DO NOTHING;
+-- The sample testimonials above are shown (new feedback waits for approval).
+UPDATE feedback SET approved = true WHERE id IN ('b0000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-000000000002', 'b0000000-0000-4000-8000-000000000003');

@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { randomInt, randomUUID, timingSafeEqual } from "crypto";
 import pool from "@/lib/db";
 import type { Furnishing } from "@/data/furnishing";
 import type { FlatConfiguration, RoomType, TenantPreference } from "@/data/listing-attributes";
@@ -63,22 +63,58 @@ export type PublicUser = { id: string; name: string; email: string; phone?: stri
 
 // OTPs live in Postgres (not in-memory) because Vercel's serverless functions can run the
 // "request" and "verify" calls on two different instances that don't share process memory.
+const OTP_TTL_MS = 10 * 60 * 1000;
+/** Wrong guesses allowed per code; the next one deletes it, so a code can't be brute-forced. */
+const OTP_MAX_ATTEMPTS = 5;
+/** A new code for the same email at most once a minute, so the endpoint can't be used to flood an inbox. */
+const OTP_RESEND_MS = 60 * 1000;
+
+export class OtpError extends Error {
+  readonly status: number;
+  constructor(message: string, status: number) { super(message); this.status = status; }
+}
+
+// Same column as data/schema.sql, added on first use so it works before that file is re-run.
+let otpAttemptsColumn: Promise<unknown> | undefined;
+function ensureOtpAttemptsColumn() {
+  otpAttemptsColumn ??= pool.query("ALTER TABLE otps ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0").catch((error) => { otpAttemptsColumn = undefined; throw error; });
+  return otpAttemptsColumn;
+}
+
 async function setOtp(id: string, purpose: string, otp: string, payload?: unknown) {
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  await ensureOtpAttemptsColumn();
+  const { rows } = await pool.query<{ expires_at: string }>("SELECT expires_at FROM otps WHERE id = $1 AND purpose = $2", [id, purpose]);
+  const issuedAt = rows[0] ? new Date(rows[0].expires_at).getTime() - OTP_TTL_MS : 0;
+  if (Date.now() - issuedAt < OTP_RESEND_MS) throw new OtpError("A code was just sent. Please wait a minute before asking for another.", 429);
+  const expiresAt = new Date(Date.now() + OTP_TTL_MS);
   await pool.query(
-    `INSERT INTO otps (id, purpose, otp, payload, expires_at) VALUES ($1, $2, $3, $4, $5)
-     ON CONFLICT (id, purpose) DO UPDATE SET otp = $3, payload = $4, expires_at = $5`,
+    `INSERT INTO otps (id, purpose, otp, payload, expires_at, attempts) VALUES ($1, $2, $3, $4, $5, 0)
+     ON CONFLICT (id, purpose) DO UPDATE SET otp = $3, payload = $4, expires_at = $5, attempts = 0`,
     [id, purpose, otp, payload ? JSON.stringify(payload) : null, expiresAt],
   );
 }
 
+function sameCode(a: string, b: string) {
+  const left = Buffer.from(a), right = Buffer.from(b);
+  return left.length === right.length && timingSafeEqual(left, right);
+}
+
+/** Counts the guess first (atomically), so parallel requests can't get past the attempt limit. */
 async function consumeOtp<T>(id: string, purpose: string, otp: string): Promise<T | null> {
-  const { rows } = await pool.query<{ otp: string; payload: unknown; expires_at: string }>(
-    "SELECT otp, payload, expires_at FROM otps WHERE id = $1 AND purpose = $2",
+  await ensureOtpAttemptsColumn();
+  const { rows } = await pool.query<{ otp: string; payload: unknown; expires_at: string; attempts: number }>(
+    "UPDATE otps SET attempts = attempts + 1 WHERE id = $1 AND purpose = $2 RETURNING otp, payload, expires_at, attempts",
     [id, purpose],
   );
   const row = rows[0];
-  if (!row || row.otp !== otp || new Date(row.expires_at) < new Date()) return null;
+  if (!row) return null;
+  const expired = new Date(row.expires_at) < new Date();
+  if (expired || row.attempts > OTP_MAX_ATTEMPTS) {
+    await pool.query("DELETE FROM otps WHERE id = $1 AND purpose = $2", [id, purpose]);
+    if (!expired) throw new OtpError("Too many wrong codes. Please request a new OTP.", 429);
+    return null;
+  }
+  if (!sameCode(row.otp, otp)) return null;
   await pool.query("DELETE FROM otps WHERE id = $1 AND purpose = $2", [id, purpose]);
   return (row.payload ?? {}) as T;
 }
@@ -347,7 +383,7 @@ export async function getReviews(listingId: string): Promise<ListingReview[]> {
 }
 
 function generateOtp() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(randomInt(100000, 1000000));
 }
 
 export async function requestEmailAuthOtp(email: string): Promise<string> {
@@ -395,14 +431,45 @@ export async function getUserStats(recentLimit = 8): Promise<{ total: number; re
 
 type FeedbackRow = { id: string; name: string; city: string; rating: number; message: string; created_at: string };
 
+// Testimonials show on the home page only once an admin approves them, so
+// nobody can publish text there by posting the form. Rows that existed before
+// moderation stay visible (the column is added with true, then defaults to false).
+let feedbackApprovedColumn: Promise<unknown> | undefined;
+function ensureFeedbackApproved() {
+  feedbackApprovedColumn ??= pool.query("ALTER TABLE feedback ADD COLUMN IF NOT EXISTS approved BOOLEAN NOT NULL DEFAULT true")
+    .then(() => pool.query("ALTER TABLE feedback ALTER COLUMN approved SET DEFAULT false"))
+    .catch((error) => { feedbackApprovedColumn = undefined; throw error; });
+  return feedbackApprovedColumn;
+}
+
+const toFeedback = (row: FeedbackRow): Feedback => ({ id: row.id, name: row.name, city: row.city, rating: row.rating, message: row.message, createdAt: row.created_at });
+
 export async function getFeedback(limit = 12): Promise<Feedback[]> {
-  const { rows } = await pool.query<FeedbackRow>("SELECT * FROM feedback ORDER BY created_at DESC LIMIT $1", [limit]);
-  return rows.map((row) => ({ id: row.id, name: row.name, city: row.city, rating: row.rating, message: row.message, createdAt: row.created_at }));
+  await ensureFeedbackApproved();
+  const { rows } = await pool.query<FeedbackRow>("SELECT * FROM feedback WHERE approved ORDER BY created_at DESC LIMIT $1", [limit]);
+  return rows.map(toFeedback);
+}
+
+/** Feedback waiting for an admin, newest first. */
+export async function getPendingFeedback(limit = 50): Promise<Feedback[]> {
+  await ensureFeedbackApproved();
+  const { rows } = await pool.query<FeedbackRow>("SELECT * FROM feedback WHERE NOT approved ORDER BY created_at DESC LIMIT $1", [limit]);
+  return rows.map(toFeedback);
+}
+
+export async function approveFeedback(id: string): Promise<boolean> {
+  await ensureFeedbackApproved();
+  return ((await pool.query("UPDATE feedback SET approved = true WHERE id = $1", [id])).rowCount ?? 0) > 0;
+}
+
+export async function deleteFeedback(id: string): Promise<boolean> {
+  return ((await pool.query("DELETE FROM feedback WHERE id = $1", [id])).rowCount ?? 0) > 0;
 }
 
 export async function addFeedback(input: { name: string; city: string; rating: number; message: string }): Promise<Feedback> {
+  await ensureFeedbackApproved();
   const id = randomUUID();
-  await pool.query("INSERT INTO feedback (id, name, city, rating, message) VALUES ($1, $2, $3, $4, $5)", [id, input.name.trim(), input.city.trim(), input.rating, input.message.trim()]);
+  await pool.query("INSERT INTO feedback (id, name, city, rating, message, approved) VALUES ($1, $2, $3, $4, $5, false)", [id, input.name.trim(), input.city.trim(), input.rating, input.message.trim()]);
   return { id, name: input.name.trim(), city: input.city.trim(), rating: input.rating, message: input.message.trim(), createdAt: new Date().toISOString() };
 }
 

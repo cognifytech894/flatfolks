@@ -57,6 +57,23 @@ export async function uploadImage(dataUrl: string): Promise<string> {
  * bucket (stock photos, other hosts) are skipped, so this can be handed a
  * listing's whole image list.
  */
+/** The public URL prefix of photos this site uploaded, or undefined when storage isn't configured. */
+function storedPrefix() {
+  const base = process.env.SUPABASE_URL;
+  return base ? `${base.replace(/\/$/, "")}/storage/v1/object/public/${BUCKET}/` : undefined;
+}
+
+/** True for a photo uploaded through /api/upload; posts and profiles can only point at those. */
+export function isStoredImageUrl(url: unknown): url is string {
+  const prefix = storedPrefix();
+  return typeof url === "string" && Boolean(prefix) && url.startsWith(prefix!) && url.length < 1000;
+}
+
+/** A profile photo is an uploaded photo, one of the preset avatars in /public/avatars, or empty to remove it. */
+export function isAllowedProfilePhoto(url: unknown): url is string {
+  return url === "" || isStoredImageUrl(url) || (typeof url === "string" && /^\/avatars\/[a-z0-9-]+\.webp$/.test(url));
+}
+
 export async function deleteImages(urls: string[]): Promise<void> {
   const base = process.env.SUPABASE_URL;
   if (!base) return;

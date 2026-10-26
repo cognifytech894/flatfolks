@@ -1,10 +1,10 @@
 import { after, NextResponse } from "next/server";
-import { requestEmailAuthOtp, verifyEmailAuthOtp } from "@/lib/database";
+import { OtpError, requestEmailAuthOtp, verifyEmailAuthOtp } from "@/lib/database";
 import { sendOtpEmail, sendWelcomeEmail } from "@/lib/email";
 import { siteUrl } from "@/lib/site-url";
 import { buildWelcomeEmail } from "@/lib/welcome-email";
 import { isRateLimited } from "@/lib/rate-limit";
-import { createSessionToken, isSecureContext, SESSION_COOKIE } from "@/lib/session";
+import { createSessionToken, isSecureContext, SESSION_COOKIE, SESSION_DAYS } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -15,13 +15,20 @@ export async function POST(request: Request) {
       if (isRateLimited(request, "otp-request", 5)) return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });
       if (!body.email?.trim()) return NextResponse.json({ error: "Email address is required." }, { status: 400 });
       const otp = await requestEmailAuthOtp(body.email);
+      // The code only ever goes to the inbox. Showing it on screen when email
+      // can't be sent is a local-development convenience; in production it
+      // would let anyone sign in as any email address.
+      const showCode = process.env.NODE_ENV !== "production";
       try {
         const sent = await sendOtpEmail(body.email, otp);
-        return NextResponse.json({ message: sent ? "OTP sent to your email." : "Temporary OTP created.", developmentCode: sent ? undefined : otp });
+        if (sent) return NextResponse.json({ message: "OTP sent to your email." });
+        if (showCode) return NextResponse.json({ message: "Temporary OTP created.", developmentCode: otp });
+        console.error("OTP email not sent: RESEND_API_KEY is not configured.");
       } catch (error) {
         console.error("Failed to send OTP email:", error);
-        return NextResponse.json({ message: "Temporary OTP created.", developmentCode: otp });
+        if (showCode) return NextResponse.json({ message: "Temporary OTP created.", developmentCode: otp });
       }
+      return NextResponse.json({ error: "We couldn't send the code right now. Please try again in a few minutes." }, { status: 502 });
     }
     if (body.action === "email-auth-verify") {
       // A tighter limit than the request action — this is the step an OTP brute-force would hammer.
@@ -39,12 +46,13 @@ export async function POST(request: Request) {
       }
       const response = NextResponse.json({ user, isNewUser });
       response.cookies.set(SESSION_COOKIE, createSessionToken(user.id), {
-        httpOnly: true, sameSite: "lax", secure: isSecureContext(request), path: "/", maxAge: 60 * 60 * 24 * 30,
+        httpOnly: true, sameSite: "lax", secure: isSecureContext(request), path: "/", maxAge: 60 * 60 * 24 * SESSION_DAYS,
       });
       return response;
     }
     return NextResponse.json({ error: "Unknown action." }, { status: 400 });
   } catch (error) {
+    if (error instanceof OtpError) return NextResponse.json({ error: error.message }, { status: error.status });
     return NextResponse.json({ error: error instanceof Error ? error.message : "Could not verify this account." }, { status: 400 });
   }
 }

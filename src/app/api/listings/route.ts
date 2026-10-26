@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createListing, deleteListing, getListingOwnerId, getListings, getOwnerListings, touchLastSeen, updateListing, type NewListing } from "@/lib/database";
-import { deleteImages } from "@/lib/image-storage";
+import { createListing, deleteListing, getListingById, getListingOwnerId, getListings, getOwnerListings, touchLastSeen, updateListing, type NewListing } from "@/lib/database";
+import { deleteImages, isStoredImageUrl } from "@/lib/image-storage";
 import { lifestylePreferences } from "@/data/preferences";
 import { cleanNearbyMetro, isFurnishing } from "@/data/furnishing";
 import { isFlatConfiguration, isRoomType, isTenantPreference } from "@/data/listing-attributes";
@@ -63,12 +63,12 @@ export async function GET(request: Request) {
   const ownerId = new URL(request.url).searchParams.get("ownerId");
   const sessionUserId = await getSessionUserId();
   // Public callers get live posts only; owners also see their drafts and removed posts.
-  const filtered = ownerId && ownerId === sessionUserId ? await getOwnerListings(ownerId) : (await getListings()).filter((listing) => !ownerId || listing.ownerId === ownerId);
-  // Mirrors the login gate on the property detail page — without this, the
-  // phone number would still be visible to anyone calling this endpoint
-  // directly (e.g. via devtools) even though the page itself hides it.
-  const withGatedContact = sessionUserId ? filtered : filtered.map(withoutContactPhone);
-  return NextResponse.json(withGatedContact);
+  const ownPosts = Boolean(ownerId) && ownerId === sessionUserId;
+  const filtered = ownPosts ? await getOwnerListings(ownerId!) : (await getListings()).filter((listing) => !ownerId || listing.ownerId === ownerId);
+  // Phone numbers only come back for the caller's own posts (My Posts edits
+  // them). Everyone else's number is shown one listing at a time on its page,
+  // behind login, so this endpoint can't be used to scrape every number at once.
+  return NextResponse.json(ownPosts ? filtered : filtered.map(withoutContactPhone));
 }
 
 export async function POST(request: Request) {
@@ -90,7 +90,8 @@ export async function POST(request: Request) {
   if (body.description && body.description.length > 2000) return NextResponse.json({ error: "Description must be 2000 characters or fewer." }, { status: 400 });
   const attributes = parseAttributes(body);
   if ("error" in attributes) return NextResponse.json({ error: attributes.error }, { status: 400 });
-  const images = body.images?.filter((image) => typeof image === "string" && image.length < 2_000_000).slice(0, 3);
+  // Only photos uploaded through /api/upload, never outside links (tracking pixels, other sites' images).
+  const images = body.images?.filter(isStoredImageUrl).slice(0, 3);
   if (body.listingKind === "flat-requirement" && images?.length) return NextResponse.json({ error: "Flat requirements cannot include images." }, { status: 400 });
   await touchLastSeen(sessionUserId);
   const listing = await createListing({
@@ -102,7 +103,7 @@ export async function POST(request: Request) {
     bedrooms: body.bedrooms ? Number(body.bedrooms) : undefined,
     bathrooms: body.bathrooms ? Number(body.bathrooms) : undefined,
     description: body.description,
-    image: body.image,
+    image: images?.[0],
     images,
     tags: body.tags?.filter((tag) => typeof tag === "string").slice(0, 12),
     ownerId: sessionUserId,
@@ -141,7 +142,9 @@ export async function PATCH(request: Request) {
   if (body.description && body.description.length > 2000) return NextResponse.json({ error: "Description must be 2000 characters or fewer." }, { status: 400 });
   if (body.contactPhone !== undefined && body.contactPhone.trim() && !isValidPhone(body.contactPhone.trim())) return NextResponse.json({ error: "A valid contact number is required." }, { status: 400 });
   if (!isValidCount(body.bedrooms) || !isValidCount(body.bathrooms)) return NextResponse.json({ error: "Bedrooms and bathrooms must be between 1 and 10." }, { status: 400 });
-  const images = body.images ? body.images.filter((image) => typeof image === "string" && image.length < 2_000_000).slice(0, 3) : undefined;
+  // New photos must be uploads; photos the post already has are kept as they are.
+  const current = body.images ? new Set((await getListingById(body.id))?.images || []) : undefined;
+  const images = body.images ? body.images.filter((image) => isStoredImageUrl(image) || current!.has(image)).slice(0, 3) : undefined;
   const preferences = sanitizePreferences(body.preferences);
   const attributes = parseAttributes(body);
   if ("error" in attributes) return NextResponse.json({ error: attributes.error }, { status: 400 });

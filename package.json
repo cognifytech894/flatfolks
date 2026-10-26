@@ -14,7 +14,8 @@
     "test:budget": "node --import ./tests/helpers/alias.mjs --test tests/budget.test.mjs",
     "test:admin-login": "node --test tests/admin-login-guard.test.mjs",
     "test:welcome": "node --test tests/welcome-email.test.mjs",
-    "test:admin-auth": "node --test tests/admin-auth.test.mjs"
+    "test:admin-auth": "node --test tests/admin-auth.test.mjs",
+    "test:security": "node --import ./tests/helpers/alias.mjs --test tests/security.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -24,12 +25,13 @@
     "framer-motion": "^12.42.2",
     "heic2any": "^0.0.4",
     "lucide-react": "^1.26.0",
-    "next": "^16.3.5",
+    "next": "^16.4.3",
     "pg": "^8.23.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.82.0",
     "resend": "^6.28.0",
+    "sharp": "^0.35.5",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3"
   },

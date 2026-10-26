@@ -18,6 +18,7 @@ const removedGuides: Record<string, string> = {
 };
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   allowedDevOrigins: ["192.168.3.13"],
   images: {
     remotePatterns: [
@@ -36,7 +37,19 @@ const nextConfig: NextConfig = {
   // session expiry the Back button can't show a cached admin page.
   async headers() {
     const noStore = [{ key: "Cache-Control", value: "no-store, max-age=0" }];
+    // On every page: no framing by other sites (clickjacking), no MIME
+    // sniffing, no full URLs leaked to other sites, and no camera, mic,
+    // location or payment APIs. The CSP only covers framing, <base>, plugins
+    // and form targets, so inline scripts (Next.js, Google Analytics) still run.
+    const security = [
+      { key: "Content-Security-Policy", value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'" },
+      { key: "X-Frame-Options", value: "DENY" },
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+    ];
     return [
+      { source: "/:path*", headers: security },
       { source: "/admin", headers: noStore },
       { source: "/admin/:path*", headers: noStore },
       { source: "/api/admin/:path*", headers: noStore },
