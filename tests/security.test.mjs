@@ -144,17 +144,25 @@ describe("OTP and feedback (database)", () => {
     assert.equal(await userIdFromToken(createSessionToken(user.id, await getSessionVersion(user.id))), user.id);
   });
 
-  test("an email gets at most 10 codes a day, and 20 wrong guesses lock it for the day", async () => {
-    // The 1-minute resend gap is skipped by moving the stored code's expiry back.
-    const age = async (email) => db.pool.query("UPDATE otps SET expires_at = $2 WHERE id = $1", [email, new Date(Date.now() + 8 * 60 * 1000)]);
-    for (let i = 0; i < 10; i++) { await database.requestEmailAuthOtp("daily@example.test"); await age("daily@example.test"); }
-    await assert.rejects(database.requestEmailAuthOtp("daily@example.test"), /today/);
-    await db.pool.query("DELETE FROM otps WHERE id = 'locked@example.test'");
-    for (let round = 0; round < 4; round++) {
-      await database.requestEmailAuthOtp("locked@example.test"); await age("locked@example.test");
-      for (let i = 0; i < 5; i++) await assert.rejects(database.verifyEmailAuthOtp("locked@example.test", "000000"));
+  // The 1-minute resend gap is skipped by moving the stored code's expiry back.
+  const age = (email) => db.pool.query("UPDATE otps SET expires_at = $2 WHERE id = $1", [email, new Date(Date.now() + 8 * 60 * 1000)]);
+
+  test("one network gets 10 codes a day for an email, and all networks together 30", async () => {
+    for (let i = 0; i < 10; i++) { await database.requestEmailAuthOtp("daily@example.test", "1.1.1.1"); await age("daily@example.test"); }
+    await assert.rejects(database.requestEmailAuthOtp("daily@example.test", "1.1.1.1"), /today/);
+    // The owner, on their own network, still gets a code.
+    await database.requestEmailAuthOtp("daily@example.test", "2.2.2.2"); await age("daily@example.test");
+    for (let i = 0; i < 19; i++) { await database.requestEmailAuthOtp("daily@example.test", `3.3.3.${i % 2}`).catch(() => {}); await age("daily@example.test"); }
+    await assert.rejects(database.requestEmailAuthOtp("daily@example.test", "4.4.4.4"), /today/);
+  });
+
+  test("someone typing wrong codes for an email can't lock its owner out", async () => {
+    for (let round = 0; round < 5; round++) {
+      await database.requestEmailAuthOtp("target@example.test", "6.6.6.6"); await age("target@example.test");
+      for (let i = 0; i < 5; i++) await assert.rejects(database.verifyEmailAuthOtp("target@example.test", "000000"));
     }
-    await assert.rejects(database.requestEmailAuthOtp("locked@example.test"), /wrong codes for this email today/);
+    const code = await database.requestEmailAuthOtp("target@example.test", "7.7.7.7");
+    assert.equal((await database.verifyEmailAuthOtp("target@example.test", code)).user.email, "target@example.test");
   });
 
   test("a member sees at most 30 posts' numbers a day; repeats and their own post are free", async () => {

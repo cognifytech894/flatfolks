@@ -70,13 +70,15 @@ const OTP_TTL_MS = 10 * 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
 /** A new code for the same email at most once a minute, so the endpoint can't be used to flood an inbox. */
 const OTP_RESEND_MS = 60 * 1000;
-// Over a day an email gets at most 10 codes and 20 wrong guesses, then it's
-// locked until the next day. Without this, a code a minute with 5 guesses
-// each adds up to ~7,200 guesses a day (a ~20% chance of a match in a month);
-// with it, ~600 a month (~0.06%).
+// Codes a day: 10 per email from one network, 30 per email in all. Each code
+// allows 5 guesses, so an email faces at most 150 guesses a day (~0.45% chance
+// of a match in a month). There's deliberately no "too many wrong codes" lock
+// on the email itself: anyone could type wrong codes for someone else's email
+// and lock them out. Locking out a victim now takes 30 requests from at least
+// 3 networks (and a bot check would stop it).
 const DAY_MS = 24 * 60 * 60 * 1000;
-const OTP_CODES_PER_DAY = 10;
-const OTP_FAILURES_PER_DAY = 20;
+const OTP_CODES_PER_DAY_PER_NETWORK = 10;
+const OTP_CODES_PER_DAY = 30;
 
 export class OtpError extends Error {
   readonly status: number;
@@ -100,13 +102,15 @@ function ensureEmailKeyColumn() {
   return emailKeyColumn;
 }
 
-async function setOtp(id: string, purpose: string, otp: string, payload?: unknown) {
+async function setOtp(id: string, purpose: string, otp: string, ip: string, payload?: unknown) {
   await ensureOtpAttemptsColumn();
-  if (await currentCount(`otp-fails-day:${purpose}:${id}`, DAY_MS) >= OTP_FAILURES_PER_DAY) throw new OtpError("Too many wrong codes for this email today. Please try again tomorrow.", 429);
   const { rows } = await pool.query<{ expires_at: string }>("SELECT expires_at FROM otps WHERE id = $1 AND purpose = $2", [id, purpose]);
   const issuedAt = rows[0] ? new Date(rows[0].expires_at).getTime() - OTP_TTL_MS : 0;
   if (Date.now() - issuedAt < OTP_RESEND_MS) throw new OtpError("A code was just sent. Please wait a minute before asking for another.", 429);
-  if (await countHit(`otp-codes-day:${purpose}:${id}`, DAY_MS) > OTP_CODES_PER_DAY) throw new OtpError("Too many codes for this email today. Please try again tomorrow.", 429);
+  if (await currentCount(`otp-codes-day:${purpose}:${id}:${ip}`, DAY_MS) >= OTP_CODES_PER_DAY_PER_NETWORK
+    || await currentCount(`otp-codes-day:${purpose}:${id}`, DAY_MS) >= OTP_CODES_PER_DAY) throw new OtpError("Too many codes for this email today. Please try again tomorrow.", 429);
+  await countHit(`otp-codes-day:${purpose}:${id}:${ip}`, DAY_MS);
+  await countHit(`otp-codes-day:${purpose}:${id}`, DAY_MS);
   const expiresAt = new Date(Date.now() + OTP_TTL_MS);
   await pool.query(
     `INSERT INTO otps (id, purpose, otp, payload, expires_at, attempts) VALUES ($1, $2, $3, $4, $5, 0)
@@ -123,8 +127,6 @@ function sameCode(a: string, b: string) {
 /** Counts the guess first (atomically), so parallel requests can't get past the attempt limit. */
 async function consumeOtp<T>(id: string, purpose: string, otp: string): Promise<T | null> {
   await ensureOtpAttemptsColumn();
-  const failuresKey = `otp-fails-day:${purpose}:${id}`;
-  if (await currentCount(failuresKey, DAY_MS) >= OTP_FAILURES_PER_DAY) throw new OtpError("Too many wrong codes for this email today. Please try again tomorrow.", 429);
   const { rows } = await pool.query<{ otp: string; payload: unknown; expires_at: string; attempts: number }>(
     "UPDATE otps SET attempts = attempts + 1 WHERE id = $1 AND purpose = $2 RETURNING otp, payload, expires_at, attempts",
     [id, purpose],
@@ -137,7 +139,7 @@ async function consumeOtp<T>(id: string, purpose: string, otp: string): Promise<
     if (!expired) throw new OtpError("Too many wrong codes. Please request a new OTP.", 429);
     return null;
   }
-  if (!sameCode(row.otp, otp)) { await countHit(failuresKey, DAY_MS); return null; }
+  if (!sameCode(row.otp, otp)) return null;
   await pool.query("DELETE FROM otps WHERE id = $1 AND purpose = $2", [id, purpose]);
   return (row.payload ?? {}) as T;
 }
@@ -431,10 +433,11 @@ function generateOtp() {
   return String(randomInt(100000, 1000000));
 }
 
-export async function requestEmailAuthOtp(email: string): Promise<string> {
+/** `ip` is the requesting network (see clientIp), for the per-network daily cap. */
+export async function requestEmailAuthOtp(email: string, ip = "unknown"): Promise<string> {
   const normalizedEmail = normalizeEmail(email);
   const otp = generateOtp();
-  await setOtp(normalizedEmail, "email-auth", otp);
+  await setOtp(normalizedEmail, "email-auth", otp, ip);
   return otp;
 }
 
