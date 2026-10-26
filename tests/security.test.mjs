@@ -232,10 +232,10 @@ describe("OTP and feedback (database)", () => {
     assert.equal(await claimTotpStep(db.pool, 1001), true);
   });
 
-  test("each address is its own account, and \"+\" addresses are refused", async () => {
+  test("each address is its own account; only letters, digits and dots before the @", async () => {
     const { isValidSignInEmail } = await import("../src/lib/email-identity.ts");
-    for (const email of ["ankit.kumar@gmail.com", "AnkitKumar@Gmail.com ", "riya_s@outlook.co.in"]) assert.equal(isValidSignInEmail(email), true, email);
-    for (const email of ["ankit.kumar+2@gmail.com", "a+b@outlook.com", "no-at-sign", "a@b", "a b@gmail.com", ""]) assert.equal(isValidSignInEmail(email), false, email);
+    for (const email of ["ankit.kumar@gmail.com", "ankit.kumar02@gmail.com", "AnkitKumar@Gmail.com ", "riya.s@outlook.co.in", "a1@my-company.in"]) assert.equal(isValidSignInEmail(email), true, email);
+    for (const email of ["ankit.kumar+2@gmail.com", "riya_s@gmail.com", "riya-s@gmail.com", "a!b@gmail.com", ".ankit@gmail.com", "ankit.@gmail.com", "an..kit@gmail.com", "no-at-sign", "a@b", "a b@gmail.com", ""]) assert.equal(isValidSignInEmail(email), false, email);
     const signIn = async (email) => (await database.verifyEmailAuthOtp(email, await database.requestEmailAuthOtp(email))).user;
     const dotted = await signIn("ankit.kumar@gmail.com");
     const plain = await signIn("ankitkumar@gmail.com");
