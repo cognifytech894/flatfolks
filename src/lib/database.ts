@@ -1,7 +1,7 @@
 import { randomInt, randomUUID, timingSafeEqual } from "crypto";
 import pool from "@/lib/db";
 import { countHit, currentCount } from "@/lib/rate-limit";
-import { EMAIL_KEY_SQL, normalizeEmail } from "@/lib/email-identity";
+import { normalizeEmail } from "@/lib/email-identity";
 import { serverHmac } from "@/lib/session";
 import type { Furnishing } from "@/data/furnishing";
 import type { FlatConfiguration, RoomType, TenantPreference } from "@/data/listing-attributes";
@@ -97,11 +97,11 @@ function ensureOtpAttemptsColumn() {
 }
 
 let emailKeyColumn: Promise<unknown> | undefined;
-/** users.email_key: the normalized sign-in email (see src/lib/email-identity.ts), one account per inbox. */
-function ensureEmailKeyColumn() {
-  emailKeyColumn ??= pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS email_key VARCHAR(255)")
-    .then(() => pool.query(`UPDATE users SET email_key = ${EMAIL_KEY_SQL} WHERE email_key IS NULL`))
-    .then(() => pool.query("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_key ON users (email_key)"))
+// users.email_key (one account per Gmail inbox) was live briefly on 27 Oct and
+// was dropped: each address is its own account now, and email is already UNIQUE.
+function dropEmailKeyColumn() {
+  emailKeyColumn ??= pool.query("DROP INDEX IF EXISTS idx_users_email_key")
+    .then(() => pool.query("ALTER TABLE users DROP COLUMN IF EXISTS email_key"))
     .catch((error) => { emailKeyColumn = undefined; throw error; });
   return emailKeyColumn;
 }
@@ -461,20 +461,17 @@ export async function requestEmailAuthOtp(email: string, ip = "unknown"): Promis
 export async function verifyEmailAuthOtp(email: string, otp: string): Promise<{ user: PublicUser; isNewUser: boolean }> {
   const normalizedEmail = normalizeEmail(email);
   if (!(await consumeOtp(normalizedEmail, "email-auth", otp))) throw new Error("Invalid or expired OTP. Please request a new OTP.");
-  await ensureEmailKeyColumn();
-  // Also matches an account another server instance created before email_key was filled in.
-  const { rows } = await pool.query<UserRow>(`SELECT * FROM users WHERE email_key = $1 OR (email_key IS NULL AND ${EMAIL_KEY_SQL} = $1) ORDER BY created_at LIMIT 1`, [normalizedEmail]);
+  await dropEmailKeyColumn();
+  const { rows } = await pool.query<UserRow>("SELECT * FROM users WHERE email = $1", [normalizedEmail]);
   if (rows[0]) {
     // Logging in is activity; it keeps the member's posts from being removed.
     await pool.query("UPDATE users SET last_seen_at = NOW() WHERE id = $1", [rows[0].id]);
     return { user: rowToPublicUser(rows[0]), isNewUser: false };
   }
-  // The account keeps the address as typed (that's where mail goes); email_key is the normalized one.
-  const typedEmail = email.trim().toLowerCase();
   const id = randomUUID();
-  const name = typedEmail.split("@")[0] || "FlatFolks member";
-  await pool.query("INSERT INTO users (id, name, email, email_key) VALUES ($1, $2, $3, $4)", [id, name, typedEmail, normalizedEmail]);
-  return { user: { id, name, email: typedEmail }, isNewUser: true };
+  const name = normalizedEmail.split("@")[0] || "FlatFolks member";
+  await pool.query("INSERT INTO users (id, name, email) VALUES ($1, $2, $3)", [id, name, normalizedEmail]);
+  return { user: { id, name, email: normalizedEmail }, isNewUser: true };
 }
 
 export type UserSignup = { id: string; name: string; email: string; createdAt: string };

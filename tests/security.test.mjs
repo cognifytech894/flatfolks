@@ -232,16 +232,15 @@ describe("OTP and feedback (database)", () => {
     assert.equal(await claimTotpStep(db.pool, 1001), true);
   });
 
-  test("Gmail aliases of one inbox sign in to the same account", async () => {
-    const { normalizeEmail } = await import("../src/lib/email-identity.ts");
-    assert.equal(normalizeEmail(" A.Bc+flats@GMAIL.com "), "abc@gmail.com");
-    assert.equal(normalizeEmail("a.bc@googlemail.com"), "abc@gmail.com");
-    assert.equal(normalizeEmail("a.b+c@outlook.com"), "a.b+c@outlook.com");
+  test("each address is its own account, and \"+\" addresses are refused", async () => {
+    const { isValidSignInEmail } = await import("../src/lib/email-identity.ts");
+    for (const email of ["ankit.kumar@gmail.com", "AnkitKumar@Gmail.com ", "riya_s@outlook.co.in"]) assert.equal(isValidSignInEmail(email), true, email);
+    for (const email of ["ankit.kumar+2@gmail.com", "a+b@outlook.com", "no-at-sign", "a@b", "a b@gmail.com", ""]) assert.equal(isValidSignInEmail(email), false, email);
     const signIn = async (email) => (await database.verifyEmailAuthOtp(email, await database.requestEmailAuthOtp(email))).user;
-    const first = await signIn("riya.sharma@gmail.com");
-    const alias = await signIn("RiyaSharma+2@gmail.com");
-    assert.equal(alias.id, first.id);
-    assert.equal(alias.email, "riya.sharma@gmail.com");
+    const dotted = await signIn("ankit.kumar@gmail.com");
+    const plain = await signIn("ankitkumar@gmail.com");
+    assert.notEqual(dotted.id, plain.id);
+    assert.equal((await signIn("Ankit.Kumar@gmail.com")).id, dotted.id);
   });
 
   test("new feedback is hidden until approved; older feedback stays visible", async () => {

@@ -5,6 +5,7 @@ import { siteUrl } from "@/lib/site-url";
 import { buildWelcomeEmail } from "@/lib/welcome-email";
 import { ADMIN_SESSION_COOKIE } from "@/lib/admin-auth";
 import { clientIp } from "@/lib/admin-login-guard";
+import { isValidSignInEmail } from "@/lib/email-identity";
 import { isRateLimited } from "@/lib/rate-limit";
 import { isDisposableEmail } from "@/data/disposable-email-domains";
 import { createSessionToken, isSecureContext, SESSION_COOKIE, SESSION_DAYS } from "@/lib/session";
@@ -20,6 +21,7 @@ export async function POST(request: Request) {
     if (body.action === "email-auth-request") {
       if (await isRateLimited(request, "otp-request", 5)) return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });
       if (!body.email?.trim()) return NextResponse.json({ error: "Email address is required." }, { status: 400 });
+      if (!isValidSignInEmail(body.email)) return NextResponse.json({ error: "Please enter a valid email address. Addresses with \"+\" aren't accepted." }, { status: 400 });
       if (isDisposableEmail(body.email)) return NextResponse.json({ error: "Please use a permanent email address, not a temporary inbox." }, { status: 400 });
       // One network asking for codes for many different emails (an attacker cycling targets).
       if (await isRateLimited(request, "otp-request-day", 50, 24 * 60 * 60 * 1000)) return NextResponse.json({ error: "Too many requests today. Please try again tomorrow." }, { status: 429 });
@@ -43,6 +45,7 @@ export async function POST(request: Request) {
       // A tighter limit than the request action — this is the step an OTP brute-force would hammer.
       if (await isRateLimited(request, "otp-verify", 10)) return NextResponse.json({ error: "Too many attempts. Please request a new OTP." }, { status: 429 });
       if (!body.email?.trim() || !body.otp?.trim()) return NextResponse.json({ error: "Email address and OTP are required." }, { status: 400 });
+      if (!isValidSignInEmail(body.email)) return NextResponse.json({ error: "Please enter a valid email address. Addresses with \"+\" aren't accepted." }, { status: 400 });
       const { user, isNewUser } = await verifyEmailAuthOtp(body.email, body.otp);
       // Only an account created just now gets the welcome email, once. It goes
       // out after the response so login isn't slowed, and a failure never
