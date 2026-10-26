@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { getSessionUserId } from "@/lib/current-user";
 import pool from "@/lib/db";
 import { restoreOwnPost, restoreWithToken } from "@/lib/inactive-posts";
 import { isRateLimited } from "@/lib/rate-limit";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -13,12 +12,11 @@ export const runtime = "nodejs";
  * - the Restore button in My Posts (JSON `{ id }`, owner's session).
  */
 export async function POST(request: Request) {
-  if (isRateLimited(request, "restore", 20)) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
+  if (await isRateLimited(request, "restore", 20)) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   const now = new Date();
 
   if ((request.headers.get("content-type") || "").includes("application/json")) {
-    const cookieStore = await cookies();
-    const userId = verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
+    const userId = await getSessionUserId();
     if (!userId) return NextResponse.json({ error: "Please log in to restore a post." }, { status: 401 });
     const { id } = await request.json() as { id?: string };
     if (!id || !/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });

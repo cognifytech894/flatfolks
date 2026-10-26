@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { getSessionUserId } from "@/lib/current-user";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ListingDetail } from "@/components/listing/listing-detail";
 import { ListingUnavailable } from "@/components/listing/listing-unavailable";
 import { getListingById, getListings, recordListingView } from "@/lib/database";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 import { listingPath } from "@/lib/seo/listings";
 import { listingContext, listingMetadata } from "@/lib/seo/listing-page";
 
@@ -28,8 +27,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   if (existing.status !== "published") return <ListingUnavailable {...listingContext(existing, await getListings().catch(() => []))} />;
 
   const listing = (await recordListingView(id)) || existing;
-  const cookieStore = await cookies();
-  const isLoggedIn = Boolean(verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value));
+  const isLoggedIn = Boolean(await getSessionUserId());
   const context = listingContext(listing, await getListings().catch(() => []));
   return <ListingDetail listing={listing} isLoggedIn={isLoggedIn} {...context} />;
 }

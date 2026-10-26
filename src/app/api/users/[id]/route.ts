@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { getSessionUserId } from "@/lib/current-user";
 import { touchLastSeen, updateUser } from "@/lib/database";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 import { isAllowedProfilePhoto } from "@/lib/image-storage";
 
 export const runtime = "nodejs";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const cookieStore = await cookies();
-  const sessionUserId = verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
+  const sessionUserId = await getSessionUserId();
   if (!sessionUserId) return NextResponse.json({ error: "Please log in to update your profile." }, { status: 401 });
   if (sessionUserId !== id) return NextResponse.json({ error: "You can only update your own profile." }, { status: 403 });
   await touchLastSeen(sessionUserId);

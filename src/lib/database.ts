@@ -1,5 +1,6 @@
 import { randomInt, randomUUID, timingSafeEqual } from "crypto";
 import pool from "@/lib/db";
+import { countHit, currentCount } from "@/lib/rate-limit";
 import type { Furnishing } from "@/data/furnishing";
 import type { FlatConfiguration, RoomType, TenantPreference } from "@/data/listing-attributes";
 
@@ -68,6 +69,13 @@ const OTP_TTL_MS = 10 * 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
 /** A new code for the same email at most once a minute, so the endpoint can't be used to flood an inbox. */
 const OTP_RESEND_MS = 60 * 1000;
+// Over a day an email gets at most 10 codes and 20 wrong guesses, then it's
+// locked until the next day. Without this, a code a minute with 5 guesses
+// each adds up to ~7,200 guesses a day (a ~20% chance of a match in a month);
+// with it, ~600 a month (~0.06%).
+const DAY_MS = 24 * 60 * 60 * 1000;
+const OTP_CODES_PER_DAY = 10;
+const OTP_FAILURES_PER_DAY = 20;
 
 export class OtpError extends Error {
   readonly status: number;
@@ -83,9 +91,11 @@ function ensureOtpAttemptsColumn() {
 
 async function setOtp(id: string, purpose: string, otp: string, payload?: unknown) {
   await ensureOtpAttemptsColumn();
+  if (await currentCount(`otp-fails-day:${purpose}:${id}`, DAY_MS) >= OTP_FAILURES_PER_DAY) throw new OtpError("Too many wrong codes for this email today. Please try again tomorrow.", 429);
   const { rows } = await pool.query<{ expires_at: string }>("SELECT expires_at FROM otps WHERE id = $1 AND purpose = $2", [id, purpose]);
   const issuedAt = rows[0] ? new Date(rows[0].expires_at).getTime() - OTP_TTL_MS : 0;
   if (Date.now() - issuedAt < OTP_RESEND_MS) throw new OtpError("A code was just sent. Please wait a minute before asking for another.", 429);
+  if (await countHit(`otp-codes-day:${purpose}:${id}`, DAY_MS) > OTP_CODES_PER_DAY) throw new OtpError("Too many codes for this email today. Please try again tomorrow.", 429);
   const expiresAt = new Date(Date.now() + OTP_TTL_MS);
   await pool.query(
     `INSERT INTO otps (id, purpose, otp, payload, expires_at, attempts) VALUES ($1, $2, $3, $4, $5, 0)
@@ -102,6 +112,8 @@ function sameCode(a: string, b: string) {
 /** Counts the guess first (atomically), so parallel requests can't get past the attempt limit. */
 async function consumeOtp<T>(id: string, purpose: string, otp: string): Promise<T | null> {
   await ensureOtpAttemptsColumn();
+  const failuresKey = `otp-fails-day:${purpose}:${id}`;
+  if (await currentCount(failuresKey, DAY_MS) >= OTP_FAILURES_PER_DAY) throw new OtpError("Too many wrong codes for this email today. Please try again tomorrow.", 429);
   const { rows } = await pool.query<{ otp: string; payload: unknown; expires_at: string; attempts: number }>(
     "UPDATE otps SET attempts = attempts + 1 WHERE id = $1 AND purpose = $2 RETURNING otp, payload, expires_at, attempts",
     [id, purpose],
@@ -114,7 +126,7 @@ async function consumeOtp<T>(id: string, purpose: string, otp: string): Promise<
     if (!expired) throw new OtpError("Too many wrong codes. Please request a new OTP.", 429);
     return null;
   }
-  if (!sameCode(row.otp, otp)) return null;
+  if (!sameCode(row.otp, otp)) { await countHit(failuresKey, DAY_MS); return null; }
   await pool.query("DELETE FROM otps WHERE id = $1 AND purpose = $2", [id, purpose]);
   return (row.payload ?? {}) as T;
 }

@@ -1,13 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { Lock, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { KeyRound, Lock, ShieldCheck } from "lucide-react";
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [needsCode, setNeedsCode] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/login").then((response) => response.json()).then((result: { totp?: boolean }) => setNeedsCode(Boolean(result.totp))).catch(() => {});
+  }, []);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -16,7 +22,7 @@ export default function AdminLoginPage() {
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, code }),
       });
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || "Could not log in.");
@@ -53,6 +59,15 @@ export default function AdminLoginPage() {
             <input required type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="w-full bg-transparent outline-none" autoComplete="current-password" />
           </div>
         </label>
+        {needsCode && (
+          <label className="mt-4 block text-sm font-medium text-slate-700">
+            Authenticator code
+            <div className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-blue-500">
+              <KeyRound className="h-4 w-4 text-slate-500" />
+              <input required inputMode="numeric" pattern="[0-9 ]{6,7}" maxLength={7} value={code} onChange={(event) => setCode(event.target.value)} className="w-full bg-transparent tracking-widest outline-none" autoComplete="one-time-code" placeholder="123456" />
+            </div>
+          </label>
+        )}
 
         {error && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
 

@@ -1,11 +1,9 @@
-import { cookies } from "next/headers";
+import { getSessionUserId } from "@/lib/current-user";
 import type { Listing } from "@/lib/database";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 
 /** Whether this request carries a valid member session. */
 export async function isSignedIn(): Promise<boolean> {
-  const cookieStore = await cookies();
-  return Boolean(verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value));
+  return Boolean(await getSessionUserId());
 }
 
 /**

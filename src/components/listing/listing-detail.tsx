@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { withoutOwnerDetails } from "@/lib/visitor";
-import { Armchair, Bath, Bed, CalendarDays, Clock, Home as HomeIcon, Lock, MapPin, MessageCircle, Phone, ShieldAlert, ShieldCheck, TrainFront, UserRound, UsersRound, Wallet } from "lucide-react";
+import { Armchair, Bath, Bed, CalendarDays, Clock, Home as HomeIcon, Lock, MapPin, ShieldAlert, ShieldCheck, TrainFront, UserRound, UsersRound, Wallet } from "lucide-react";
+import { ContactReveal } from "@/components/listing/contact-reveal";
 import { SaveListingButton } from "@/components/listing/save-listing-button";
 import { PhotoCarousel } from "@/components/listing/photo-carousel";
 import { Breadcrumbs, breadcrumbJsonLd, type Crumb } from "@/components/seo/breadcrumbs";
@@ -10,12 +11,6 @@ import { safeJsonLd } from "@/lib/json-ld";
 import { lifestylePreferences } from "@/data/preferences";
 import { furnishingLabel } from "@/data/furnishing";
 import { perMonth } from "@/lib/budget";
-
-// Assumes an Indian mobile number when no country code was entered.
-function toWhatsAppNumber(phone: string) {
-  const digits = phone.replace(/\D/g, "");
-  return digits.length === 10 ? `91${digits}` : digits;
-}
 
 function formatDate(value?: string) {
   if (!value) return undefined;
@@ -101,14 +96,10 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
     </div>
   );
 
+  // The number itself isn't in the page: members ask for it (see ContactReveal),
+  // which is logged and capped per day so numbers can't be scraped in bulk.
   const contactActions = (centered: boolean) => !isLoggedIn ? contactGate : listing.contactPhone ? (
-    <>
-      <p className={`flex items-center gap-2 text-sm font-medium text-slate-700 ${centered ? "justify-center" : ""}`}><Phone className="h-4 w-4 text-slate-500" /> {listing.contactPhone}</p>
-      <div className="flex gap-3">
-        <a href={`https://wa.me/${toWhatsAppNumber(listing.contactPhone)}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-4 py-3 text-sm font-semibold text-white"><MessageCircle className="h-4 w-4" /> {isRequirement ? "Chat" : "WhatsApp"}</a>
-        <a href={`tel:${listing.contactPhone}`} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><Phone className="h-4 w-4" /> Call</a>
-      </div>
-    </>
+    <ContactReveal listingId={listing.id} centered={centered} chatLabel={isRequirement ? "Chat" : "WhatsApp"} />
   ) : (
     <p className="text-sm text-slate-500">No contact number was provided for this listing.</p>
   );

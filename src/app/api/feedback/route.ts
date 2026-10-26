@@ -9,7 +9,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (isRateLimited(request, "feedback", 5, 10 * 60_000)) return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });
+  if (await isRateLimited(request, "feedback", 5, 10 * 60_000)) return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });
   const body = await request.json() as { name?: string; city?: string; rating?: number; message?: string };
   if (!body.name?.trim() || !body.city?.trim() || !body.message?.trim()) {
     return NextResponse.json({ error: "Name, city, and feedback message are required." }, { status: 400 });

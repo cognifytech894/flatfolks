@@ -27,12 +27,25 @@ function env(name) {
   } catch { return undefined; }
 }
 
-// Same signing as src/lib/session.ts.
-function sessionCookie(userId) {
+// Same signing as src/lib/session.ts. A cookie only counts for a real member
+// whose current users.session_version it carries (logging out bumps it).
+function sessionCookie(userId, version) {
   const secret = env("SESSION_SECRET") || env("ADMIN_PASSWORD");
   if (!secret) throw new Error("SESSION_SECRET / ADMIN_PASSWORD not found");
   const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
-  return `flatfolks_session=${userId}.${expiresAt}.${createHmac("sha256", secret).update(`flatfolks-session:${userId}:${expiresAt}`).digest("hex")}`;
+  return `flatfolks_session=${userId}.${version}.${expiresAt}.${createHmac("sha256", secret).update(`flatfolks-session:${userId}:${version}:${expiresAt}`).digest("hex")}`;
+}
+
+// Read-only: some member other than `ownerId`, and their current session
+// version, so the test cookie is accepted.
+async function otherMember(ownerId) {
+  const { default: pg } = await import("pg");
+  const client = new pg.Client({ connectionString: env("DATABASE_URL"), ssl: /localhost|127\.0\.0\.1/.test(env("DATABASE_URL") || "") ? false : { rejectUnauthorized: false } });
+  await client.connect();
+  try {
+    const { rows } = await client.query("SELECT id, COALESCE(session_version, 0) AS version FROM users WHERE id <> $1 LIMIT 1", [ownerId]);
+    return rows[0];
+  } finally { await client.end(); }
 }
 
 const api = (route, init = {}) => fetch(BASE_URL + route, { redirect: "manual", ...init, headers: { "Content-Type": "application/json", ...init.headers } });
@@ -83,20 +96,25 @@ describe("logged-out requests return 401", () => {
 });
 
 describe("a signed-in user can't touch another user's data", () => {
-  const intruder = randomUUID(); // a valid session for a user that owns nothing
+  // Signed in as a real member, acting on another member's post or profile.
+  let target, cookie;
+  before(async () => {
+    target = (await (await api("/api/listings")).json()).find((listing) => listing.ownerId);
+    assert.ok(target, "no user-owned listing to test against");
+    const intruder = await otherMember(target.ownerId);
+    assert.ok(intruder, "need a second member to test with");
+    cookie = sessionCookie(intruder.id, intruder.version);
+  }, { timeout: 120_000 });
 
   test("editing another user's post returns 403", { timeout: 120_000 }, async () => {
-    const listings = await (await api("/api/listings")).json();
-    const target = listings.find((listing) => listing.ownerId && listing.ownerId !== intruder);
-    assert.ok(target, "no user-owned listing to test against");
     // A 2001-char description fails validation, so a broken auth check yields 400, never a write.
-    const res = await api("/api/listings", { method: "PATCH", headers: { Cookie: sessionCookie(intruder) }, body: JSON.stringify({ id: target.id, description: "x".repeat(2001) }) });
+    const res = await api("/api/listings", { method: "PATCH", headers: { Cookie: cookie }, body: JSON.stringify({ id: target.id, description: "x".repeat(2001) }) });
     assert.equal(res.status, 403, `got ${res.status}`);
   });
 
   test("updating another user's profile returns 403", { timeout: 120_000 }, async () => {
     // An empty name fails validation, so a broken auth check yields 400, never a write.
-    const res = await api(`/api/users/${randomUUID()}`, { method: "PATCH", headers: { Cookie: sessionCookie(intruder) }, body: JSON.stringify({ name: "" }) });
+    const res = await api(`/api/users/${randomUUID()}`, { method: "PATCH", headers: { Cookie: cookie }, body: JSON.stringify({ name: "" }) });
     assert.equal(res.status, 403, `got ${res.status}`);
   });
 });

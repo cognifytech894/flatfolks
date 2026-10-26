@@ -191,3 +191,35 @@ INSERT INTO feedback (id, name, city, rating, message) VALUES
 ON CONFLICT (id) DO NOTHING;
 -- The sample testimonials above are shown (new feedback waits for approval).
 UPDATE feedback SET approved = true WHERE id IN ('b0000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-000000000002', 'b0000000-0000-4000-8000-000000000003');
+
+-- Signing out everywhere: bumping a member's version ends all their cookies.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 0;
+
+-- Rate limits shared by every server instance (src/lib/rate-limit.ts).
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key VARCHAR(255) PRIMARY KEY,
+  window_start TIMESTAMPTZ NOT NULL,
+  count INT NOT NULL
+);
+
+-- Each "Show number" a member used, for the 30-a-day cap (src/lib/contact-reveals.ts).
+CREATE TABLE IF NOT EXISTS contact_reveals (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL,
+  listing_id UUID NOT NULL,
+  revealed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_contact_reveals_user_time ON contact_reveals (user_id, revealed_at);
+
+-- Row Level Security with no policies: Supabase's public REST/GraphQL API
+-- (anon and authenticated roles) can read or change nothing. The app connects
+-- as the table owner, which RLS doesn't apply to, so it's unaffected.
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE listings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE listing_reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE otps ENABLE ROW LEVEL SECURITY;
+ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_login_blocks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE deleted_listings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE contact_reveals ENABLE ROW LEVEL SECURITY;

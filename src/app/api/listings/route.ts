@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getSessionUserId } from "@/lib/current-user";
 import { cookies } from "next/headers";
 import { createListing, deleteListing, getListingById, getListingOwnerId, getListings, getOwnerListings, touchLastSeen, updateListing, type NewListing } from "@/lib/database";
 import { deleteImages, isStoredImageUrl } from "@/lib/image-storage";
@@ -8,7 +9,6 @@ import { isFlatConfiguration, isRoomType, isTenantPreference } from "@/data/list
 import { ADMIN_SESSION_COOKIE, isValidAdminSessionToken } from "@/lib/admin-auth";
 import { isRateLimited } from "@/lib/rate-limit";
 import { withoutOwnerDetails } from "@/lib/visitor";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -49,11 +49,6 @@ function rateLimited(request: Request) {
   return isRateLimited(request, "listings", 30);
 }
 
-async function getSessionUserId() {
-  const cookieStore = await cookies();
-  return verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
-}
-
 function withoutContactPhone<T extends { contactPhone?: string }>(listing: T): Omit<T, "contactPhone"> {
   const clone: Partial<T> = { ...listing };
   delete clone.contactPhone;
@@ -75,7 +70,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (rateLimited(request)) return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });
+  if (await rateLimited(request)) return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });
   const sessionUserId = await getSessionUserId();
   if (!sessionUserId) return NextResponse.json({ error: "Please log in again before publishing a post." }, { status: 401 });
   const body = await request.json() as Partial<NewListing>;
@@ -123,14 +118,14 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  if (rateLimited(request)) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
+  if (await rateLimited(request)) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   const body = await request.json() as Partial<NewListing> & { id?: string };
   if (!body.id) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });
 
   const cookieStore = await cookies();
   const isAdmin = isValidAdminSessionToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
   if (!isAdmin) {
-    const sessionUserId = verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
+    const sessionUserId = await getSessionUserId();
     if (!sessionUserId) return NextResponse.json({ error: "Please log in to edit a listing." }, { status: 401 });
     const actualOwnerId = await getListingOwnerId(body.id);
     if (actualOwnerId === undefined) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
@@ -157,7 +152,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (rateLimited(request)) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
+  if (await rateLimited(request)) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });
@@ -168,7 +163,7 @@ export async function DELETE(request: Request) {
     // Authorization comes from the signed session cookie, not the `ownerId` query
     // param — a caller could otherwise read another user's real ownerId off any
     // public listing and replay it here to delete listings they don't own.
-    const sessionUserId = verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
+    const sessionUserId = await getSessionUserId();
     if (!sessionUserId) return NextResponse.json({ error: "Please log in to delete a listing." }, { status: 401 });
     const actualOwnerId = await getListingOwnerId(id);
     if (actualOwnerId === undefined) return NextResponse.json({ error: "Listing not found." }, { status: 404 });

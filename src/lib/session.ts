@@ -20,18 +20,20 @@ function secret() {
   return process.env.ADMIN_PASSWORD;
 }
 
-function sign(userId: string, expiresAt: number) {
-  return createHmac("sha256", secret()).update(`flatfolks-session:${userId}:${expiresAt}`).digest("hex");
+function sign(userId: string, version: number, expiresAt: number) {
+  return createHmac("sha256", secret()).update(`flatfolks-session:${userId}:${version}:${expiresAt}`).digest("hex");
 }
 
 /**
- * "<userId>.<expiry ms>.<signature>": a signed user id that the server trusts
- * back from the cookie until it expires, without a session store. The expiry
- * is signed too, so it can't be pushed back; older tokens without one are refused.
+ * "<userId>.<session version>.<expiry ms>.<signature>". The signature covers
+ * all three, so neither the expiry nor the version can be changed. The
+ * version must also match users.session_version (checked in
+ * src/lib/current-user.ts); logging out bumps it, which ends every copy of
+ * the cookie on every device. Older token formats are refused.
  */
-export function createSessionToken(userId: string, now = Date.now()): string {
+export function createSessionToken(userId: string, version: number, now = Date.now()): string {
   const expiresAt = now + SESSION_MS;
-  return `${userId}.${expiresAt}.${sign(userId, expiresAt)}`;
+  return `${userId}.${version}.${expiresAt}.${sign(userId, version, expiresAt)}`;
 }
 
 /**
@@ -48,18 +50,21 @@ export function isSecureContext(request: Request): boolean {
   return !host.startsWith("localhost") && !host.startsWith("127.0.0.1") && !host.startsWith("0.0.0.0");
 }
 
-/** Returns the user id if the token is signed and not expired, otherwise null. */
-export function verifySessionToken(token: string | undefined | null, now = Date.now()): string | null {
+/**
+ * Checks the signature and expiry only. Callers must also check the version
+ * against the database, so use getSessionUserId() (src/lib/current-user.ts).
+ */
+export function readSessionToken(token: string | undefined | null, now = Date.now()): { userId: string; version: number } | null {
   if (!token) return null;
   const parts = token.split(".");
-  if (parts.length !== 3) return null;
-  const [userId, expiry, signature] = parts;
-  const expiresAt = Number(expiry);
-  if (!userId || !Number.isSafeInteger(expiresAt) || now >= expiresAt || expiresAt > now + SESSION_MS) return null;
+  if (parts.length !== 4) return null;
+  const [userId, versionText, expiry, signature] = parts;
+  const version = Number(versionText), expiresAt = Number(expiry);
+  if (!userId || !Number.isSafeInteger(version) || version < 0 || !Number.isSafeInteger(expiresAt) || now >= expiresAt || expiresAt > now + SESSION_MS) return null;
   let expected: string;
-  try { expected = sign(userId, expiresAt); } catch { return null; }
+  try { expected = sign(userId, version, expiresAt); } catch { return null; }
   const a = Buffer.from(signature);
   const b = Buffer.from(expected);
   if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
-  return userId;
+  return { userId, version };
 }

@@ -5,7 +5,10 @@ import { siteUrl } from "@/lib/site-url";
 import { buildWelcomeEmail } from "@/lib/welcome-email";
 import { ADMIN_SESSION_COOKIE } from "@/lib/admin-auth";
 import { isRateLimited } from "@/lib/rate-limit";
+import { isDisposableEmail } from "@/data/disposable-email-domains";
 import { createSessionToken, isSecureContext, SESSION_COOKIE, SESSION_DAYS } from "@/lib/session";
+import { getSessionVersion, revokeSessions, userIdFromToken } from "@/lib/current-user";
+import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
 
@@ -13,8 +16,11 @@ export async function POST(request: Request) {
   const body = await request.json() as { action?: "email-auth-request" | "email-auth-verify"; email?: string; otp?: string };
   try {
     if (body.action === "email-auth-request") {
-      if (isRateLimited(request, "otp-request", 5)) return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });
+      if (await isRateLimited(request, "otp-request", 5)) return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });
       if (!body.email?.trim()) return NextResponse.json({ error: "Email address is required." }, { status: 400 });
+      if (isDisposableEmail(body.email)) return NextResponse.json({ error: "Please use a permanent email address, not a temporary inbox." }, { status: 400 });
+      // One network asking for codes for many different emails (an attacker cycling targets).
+      if (await isRateLimited(request, "otp-request-day", 50, 24 * 60 * 60 * 1000)) return NextResponse.json({ error: "Too many requests today. Please try again tomorrow." }, { status: 429 });
       const otp = await requestEmailAuthOtp(body.email);
       // The code only ever goes to the inbox. Showing it on screen when email
       // can't be sent is a local-development convenience; in production it
@@ -33,7 +39,7 @@ export async function POST(request: Request) {
     }
     if (body.action === "email-auth-verify") {
       // A tighter limit than the request action — this is the step an OTP brute-force would hammer.
-      if (isRateLimited(request, "otp-verify", 10)) return NextResponse.json({ error: "Too many attempts. Please request a new OTP." }, { status: 429 });
+      if (await isRateLimited(request, "otp-verify", 10)) return NextResponse.json({ error: "Too many attempts. Please request a new OTP." }, { status: 429 });
       if (!body.email?.trim() || !body.otp?.trim()) return NextResponse.json({ error: "Email address and OTP are required." }, { status: 400 });
       const { user, isNewUser } = await verifyEmailAuthOtp(body.email, body.otp);
       // Only an account created just now gets the welcome email, once. It goes
@@ -46,7 +52,7 @@ export async function POST(request: Request) {
         });
       }
       const response = NextResponse.json({ user, isNewUser });
-      response.cookies.set(SESSION_COOKIE, createSessionToken(user.id), {
+      response.cookies.set(SESSION_COOKIE, createSessionToken(user.id, (await getSessionVersion(user.id)) ?? 0), {
         httpOnly: true, sameSite: "lax", secure: isSecureContext(request), path: "/", maxAge: 60 * 60 * 24 * SESSION_DAYS,
       });
       // One sign-in per browser: a member login ends any admin session here.
@@ -60,7 +66,11 @@ export async function POST(request: Request) {
   }
 }
 
+/** Log out: ends this account's sessions on every device (copied cookies too), then clears this browser's cookie. */
 export async function DELETE() {
+  const cookieStore = await cookies();
+  const userId = await userIdFromToken(cookieStore.get(SESSION_COOKIE)?.value);
+  if (userId) await revokeSessions(userId).catch((error) => console.error("Could not revoke sessions on logout.", error));
   const response = NextResponse.json({ ok: true });
   response.cookies.delete(SESSION_COOKIE);
   return response;

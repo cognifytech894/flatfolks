@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { getSessionUserId } from "@/lib/current-user";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ListingDetail } from "@/components/listing/listing-detail";
 import { ListingUnavailable } from "@/components/listing/listing-unavailable";
 import { LandingPage, landingMetadata, pickFilters } from "@/components/seo/landing-page";
 import { getListingByIdSuffix, getListings, recordListingView, type Listing } from "@/lib/database";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 import { getIntent, listingPath, parseListingSlug, type Scope } from "@/lib/seo/listings";
 import { listingContext, listingMetadata } from "@/lib/seo/listing-page";
 import { getCity, walkPlaces } from "@/lib/seo/locations";
@@ -54,7 +53,6 @@ export default async function PlacePage({ params, searchParams }: Props) {
   // A removed post keeps its URL (it may be restored) but shows none of its details.
   if (resolved.listing.status !== "published") return <ListingUnavailable {...listingContext(resolved.listing, listings)} />;
   const listing = (await recordListingView(resolved.listing.id)) || resolved.listing;
-  const cookieStore = await cookies();
-  const isLoggedIn = Boolean(verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value));
+  const isLoggedIn = Boolean(await getSessionUserId());
   return <ListingDetail listing={listing} isLoggedIn={isLoggedIn} {...listingContext(listing, listings)} />;
 }
