@@ -4,6 +4,7 @@ import { useState } from "react";
 import { LockKeyhole, Mail, MapPin, UserRound, UsersRound } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
 import { searchLocations } from "@/data/indian-cities";
+import { safeNext } from "@/lib/safe-next";
 
 type PublicUser = { id: string; name: string; email: string; phone?: string; location?: string; gender?: "Male" | "Female" };
 type Step = "email" | "otp" | "onboarding";
@@ -30,8 +31,7 @@ export default function AuthPage() {
     // A full navigation ensures the home navigation reads the just-saved login
     // session immediately after authentication. `?next=` (e.g. from the
     // dashboard's login redirect) is honoured only for same-site paths.
-    const next = new URLSearchParams(window.location.search).get("next") || "";
-    window.location.assign(next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\") ? next : "/");
+    window.location.assign(safeNext(new URLSearchParams(window.location.search).get("next"), window.location.origin));
   }
 
   async function requestOtp(event: React.FormEvent) {

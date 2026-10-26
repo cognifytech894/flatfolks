@@ -60,6 +60,21 @@ describe("photo URLs", () => {
   });
 });
 
+describe("redirect after login", async () => {
+  const { safeNext } = await import("../src/lib/safe-next.ts");
+  const ORIGIN = "https://flatfolks.in";
+  test("paths on this site are kept", () => {
+    assert.equal(safeNext("/dashboard", ORIGIN), "/dashboard");
+    assert.equal(safeNext("/noida/flatmates?gender=Female#top", ORIGIN), "/noida/flatmates?gender=Female#top");
+    assert.equal(safeNext(null, ORIGIN), "/");
+  });
+  test("anything that leaves the site goes home instead", () => {
+    for (const next of ["//evil.com", "/\\evil.com", "/\t/evil.com", "/\n/evil.com", "https://evil.com/x", "javascript:alert(1)", "\t//evil.com"]) {
+      assert.equal(safeNext(next, ORIGIN), "/", JSON.stringify(next));
+    }
+  });
+});
+
 describe("admin authenticator codes", async () => {
   const { totpCode, verifyTotp } = await import("../src/lib/totp.ts");
   // RFC 6238 test secret ("12345678901234567890" in base32) and its SHA-1 vectors.
