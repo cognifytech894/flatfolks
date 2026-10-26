@@ -29,7 +29,8 @@ export function listingMetadata(listing: Listing): Metadata {
       ? `Looking for a ${listing.propertyType} in ${listingPlaceName(listing)}, budget up to ₹${listing.rent.toLocaleString("en-IN")}/month. Find them on FlatFolks.`
       : `${listing.propertyType} in ${listingPlaceName(listing)} for ₹${listing.rent.toLocaleString("en-IN")}/month, ${listing.bedrooms} BHK. Contact the poster directly on FlatFolks.`);
   const title = `${listing.title} in ${listingPlaceName(listing)}`;
-  const shareImage = isRequirement ? listing.ownerPhoto : listing.image || undefined;
+  // A requirement's only photo is its poster's profile picture, which isn't public, so it gets no share image.
+  const shareImage = isRequirement ? undefined : listing.image || undefined;
   const url = `${baseUrl}${listingPath(listing)}`;
   return {
     title,

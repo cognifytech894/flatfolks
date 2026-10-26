@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { withoutOwnerDetails } from "@/lib/visitor";
 import { Armchair, Bath, Bed, CalendarDays, Clock, Home as HomeIcon, Lock, MapPin, MessageCircle, Phone, ShieldAlert, ShieldCheck, TrainFront, UserRound, UsersRound, Wallet } from "lucide-react";
 import { SaveListingButton } from "@/components/listing/save-listing-button";
 import { PhotoCarousel } from "@/components/listing/photo-carousel";
@@ -38,7 +39,11 @@ export type ListingDetailProps = {
   related: Listing[];
 };
 
-export function ListingDetail({ listing, isLoggedIn, url, crumbs, related }: ListingDetailProps) {
+export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, related: relatedPosts }: ListingDetailProps) {
+  // Signed-out visitors see the place and its details, never the poster's
+  // name, photo, gender or phone (see src/lib/visitor.ts).
+  const listing = isLoggedIn ? original : withoutOwnerDetails(original);
+  const related = isLoggedIn ? relatedPosts : relatedPosts.map(withoutOwnerDetails);
   const ownerName = listing.ownerName || "FlatFolks member";
   const isRequirement = listing.listingKind === "flat-requirement";
   // A flat-requirement listing has no real property photos (it's a person's

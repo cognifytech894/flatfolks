@@ -9,6 +9,7 @@ import { furnishingLabel, furnishingOptions, isFurnishing } from "@/data/furnish
 import type { Listing } from "@/lib/database";
 import { affordsRent, parseBudget, parseRent, rupees, withinBudget } from "@/lib/budget";
 import { safeJsonLd } from "@/lib/json-ld";
+import { listingsForVisitor } from "@/lib/visitor";
 import { baseUrl, inScope, intents, isScopeIndexable, listingPath, placePath, type Scope } from "@/lib/seo/listings";
 import { placeLabel, type City, type IntentSlug, type Place } from "@/lib/seo/locations";
 
@@ -252,7 +253,9 @@ function faqsFor(scope: Scope, matches: Listing[]): { question: string; answer: 
   return faqs;
 }
 
-export function LandingPage({ scope, listings, filters }: { scope: Scope; listings: Listing[]; filters: LandingFilters }) {
+export async function LandingPage({ scope, listings: allListings, filters }: { scope: Scope; listings: Listing[]; filters: LandingFilters }) {
+  // Requirement cards show who posted them only to signed-in members.
+  const listings = await listingsForVisitor(allListings);
   const { city, intent } = scope;
   const trail = scope.trail || [];
   const path = landingPath(scope);

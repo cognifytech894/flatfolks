@@ -7,6 +7,7 @@ import { cleanNearbyMetro, isFurnishing } from "@/data/furnishing";
 import { isFlatConfiguration, isRoomType, isTenantPreference } from "@/data/listing-attributes";
 import { ADMIN_SESSION_COOKIE, isValidAdminSessionToken } from "@/lib/admin-auth";
 import { isRateLimited } from "@/lib/rate-limit";
+import { withoutOwnerDetails } from "@/lib/visitor";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -68,6 +69,8 @@ export async function GET(request: Request) {
   // Phone numbers only come back for the caller's own posts (My Posts edits
   // them). Everyone else's number is shown one listing at a time on its page,
   // behind login, so this endpoint can't be used to scrape every number at once.
+  // Signed-out callers get no owner details at all (name, photo, gender, phone).
+  if (!sessionUserId) return NextResponse.json(filtered.map(withoutOwnerDetails));
   return NextResponse.json(ownPosts ? filtered : filtered.map(withoutContactPhone));
 }
 

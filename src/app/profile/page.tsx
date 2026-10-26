@@ -65,7 +65,11 @@ export default function ProfilePage() {
   }
   function update(field: keyof Profile, value: string) { setDraft((current) => current ? ({ ...current, [field]: value } as Profile) : current); }
   function toggleEditing() { setEditing((value) => !value); setDraft(profile); setNotice(null); }
-  function logout() {
+  async function logout() {
+    // Clear the server's session cookie too, not just this browser's saved
+    // profile; otherwise the server still treats the visitor as signed in
+    // (and shows contact numbers) after "Log out".
+    await fetch("/api/auth/otp", { method: "DELETE" }).catch(() => {});
     localStorage.removeItem("flatfolks_user");
     localStorage.removeItem("flatfolks_profile_photo");
     window.location.assign("/auth");

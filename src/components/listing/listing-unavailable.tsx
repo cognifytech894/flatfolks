@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { listingsForVisitor } from "@/lib/visitor";
 import { Breadcrumbs, type Crumb } from "@/components/seo/breadcrumbs";
 import { ListingCard } from "@/components/seo/listing-card";
 import type { Listing } from "@/lib/database";
@@ -7,7 +8,8 @@ import type { Listing } from "@/lib/database";
  * Shown at a removed post's URL instead of the post. It gets none of the post's
  * details (title, photos, phone): only the place breadcrumbs and similar live posts.
  */
-export function ListingUnavailable({ crumbs, related }: { crumbs: Crumb[]; related: Listing[] }) {
+export async function ListingUnavailable({ crumbs, related: relatedPosts }: { crumbs: Crumb[]; related: Listing[] }) {
+  const related = await listingsForVisitor(relatedPosts);
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
