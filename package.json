@@ -12,7 +12,8 @@
     "test:inactive": "node --test tests/inactive-posts.test.mjs",
     "test:inactive:e2e": "node --test tests/inactive-posts-e2e.test.mjs",
     "test:budget": "node --import ./tests/helpers/alias.mjs --test tests/budget.test.mjs",
-    "test:admin-login": "node --test tests/admin-login-guard.test.mjs"
+    "test:admin-login": "node --test tests/admin-login-guard.test.mjs",
+    "test:welcome": "node --test tests/welcome-email.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

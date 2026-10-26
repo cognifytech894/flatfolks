@@ -1,6 +1,8 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { requestEmailAuthOtp, verifyEmailAuthOtp } from "@/lib/database";
-import { sendOtpEmail } from "@/lib/email";
+import { sendOtpEmail, sendWelcomeEmail } from "@/lib/email";
+import { siteUrl } from "@/lib/site-url";
+import { buildWelcomeEmail } from "@/lib/welcome-email";
 import { isRateLimited } from "@/lib/rate-limit";
 import { createSessionToken, isSecureContext, SESSION_COOKIE } from "@/lib/session";
 
@@ -26,6 +28,15 @@ export async function POST(request: Request) {
       if (isRateLimited(request, "otp-verify", 10)) return NextResponse.json({ error: "Too many attempts. Please request a new OTP." }, { status: 429 });
       if (!body.email?.trim() || !body.otp?.trim()) return NextResponse.json({ error: "Email address and OTP are required." }, { status: 400 });
       const { user, isNewUser } = await verifyEmailAuthOtp(body.email, body.otp);
+      // Only an account created just now gets the welcome email, once. It goes
+      // out after the response so login isn't slowed, and a failure never
+      // blocks login.
+      if (isNewUser) {
+        after(async () => {
+          try { await sendWelcomeEmail(buildWelcomeEmail(user.email, siteUrl)); }
+          catch (error) { console.error("Failed to send welcome email:", error); }
+        });
+      }
       const response = NextResponse.json({ user, isNewUser });
       response.cookies.set(SESSION_COOKIE, createSessionToken(user.id), {
         httpOnly: true, sameSite: "lax", secure: isSecureContext(request), path: "/", maxAge: 60 * 60 * 24 * 30,
