@@ -71,6 +71,7 @@ Two flows, both requiring a contact number:
 ### Admin workspace
 
 - `/admin` behind a username/password login set via `ADMIN_USERNAME` / `ADMIN_PASSWORD` env vars.
+- Admin sessions don't persist: the cookie is a browser-session cookie (gone when the browser closes, `SameSite=strict`), and the signed token inside expires 30 minutes after login however busy the session is. Admin pages and APIs are `Cache-Control: no-store`, and an admin action after expiry goes back to the login page. Tests: `npm run test:admin-auth`. **(new, 26 Oct)**
 - Active / removed / permanently deleted post counts, real account count and recent signups, a views/saves table, view/delete for any listing, and an "Admin-managed" toggle (never removed for inactivity).
 - Login guard: 3 wrong passwords in a row block that IP from admin login for good (the rest of the site still works for it); a blocked IP is refused even with the right password. Attempts are counted in Postgres before the password is checked, so parallel requests get at most 3 guesses. "Blocked admin login IPs" on `/admin` lists blocks with an Unblock button; `DEPLOYMENT.md` has the SQL for a full lock-out. Tests: `npm run test:admin-login` (Docker Postgres). **(new, 24 Oct)**
 

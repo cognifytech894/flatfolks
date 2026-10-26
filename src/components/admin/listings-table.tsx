@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
 import { Eye, LogOut, Trash2 } from "lucide-react";
+import { sessionEnded } from "@/components/admin/session-ended";
 
 type AdminListing = { id: string; title: string; location: string; rent: number; status?: string; listingKind?: string; ownerName?: string; managedByAdmin?: boolean };
 
@@ -16,6 +17,7 @@ export function ListingsTable({ initialListings }: { initialListings: AdminListi
     if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
     setMessage("");
     const response = await fetch(`/api/listings?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    if (sessionEnded(response)) return;
     if (!response.ok && response.status !== 204) { setMessage("Could not delete this listing."); return; }
     setListings((current) => current.filter((listing) => listing.id !== id));
   }
@@ -23,6 +25,7 @@ export function ListingsTable({ initialListings }: { initialListings: AdminListi
   async function setManaged(id: string, managedByAdmin: boolean) {
     setMessage("");
     const response = await fetch("/api/admin/listings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, managedByAdmin }) });
+    if (sessionEnded(response)) return;
     if (!response.ok) { setMessage("Could not update this listing."); return; }
     setListings((current) => current.map((listing) => listing.id === id ? { ...listing, managedByAdmin } : listing));
   }

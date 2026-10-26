@@ -6,6 +6,15 @@ import { useEffect, useState } from "react";
 import { ChevronDown, Home, Plus, Search, UserRound, UsersRound } from "lucide-react";
 import { FlatFolksLogo } from "@/components/ui/flatfolks-logo";
 
+// The account's own photo (saved on login and on every profile change) comes
+// first; the separate photo key is only a fallback for older sessions.
+function storedPhoto() {
+  try {
+    const user = JSON.parse(localStorage.getItem("flatfolks_user") || "null") as { photo?: string } | null;
+    return user?.photo || localStorage.getItem("flatfolks_profile_photo") || "";
+  } catch { return ""; }
+}
+
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -18,13 +27,13 @@ export function Navbar() {
     const frame = window.requestAnimationFrame(() => {
       const savedUser = localStorage.getItem("flatfolks_user");
       if (savedUser) setUser(JSON.parse(savedUser) as { name: string });
-      setProfilePhoto(localStorage.getItem("flatfolks_profile_photo") || "");
+      setProfilePhoto(storedPhoto());
     });
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
-    const syncPhoto = () => setProfilePhoto(localStorage.getItem("flatfolks_profile_photo") || "");
+    const syncPhoto = () => setProfilePhoto(storedPhoto());
     window.addEventListener("flatfolks-profile-photo", syncPhoto);
     return () => window.removeEventListener("flatfolks-profile-photo", syncPhoto);
   }, []);

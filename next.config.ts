@@ -32,6 +32,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Admin pages and APIs are never stored by the browser, so after logout or
+  // session expiry the Back button can't show a cached admin page.
+  async headers() {
+    const noStore = [{ key: "Cache-Control", value: "no-store, max-age=0" }];
+    return [
+      { source: "/admin", headers: noStore },
+      { source: "/admin/:path*", headers: noStore },
+      { source: "/api/admin/:path*", headers: noStore },
+    ];
+  },
   async redirects() {
     return [
       // /gurgaon is the canonical city section; Gurugram URLs are permanent aliases.

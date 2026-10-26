@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ShieldBan } from "lucide-react";
 import type { AdminLoginBlock } from "@/lib/admin-login-guard";
+import { sessionEnded } from "@/components/admin/session-ended";
 
 /** IPs blocked from admin login after 3 wrong passwords; a block lasts until it's lifted here. */
 export function BlockedIps({ initialBlocked }: { initialBlocked: AdminLoginBlock[] }) {
@@ -14,6 +15,7 @@ export function BlockedIps({ initialBlocked }: { initialBlocked: AdminLoginBlock
     setBusy(ip); setError("");
     try {
       const response = await fetch("/api/admin/blocked-ips", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ip }) });
+      if (sessionEnded(response)) return;
       const result = await response.json() as { error?: string };
       if (!response.ok && response.status !== 404) throw new Error(result.error || "Could not unblock.");
       setBlocked((current) => current.filter((item) => item.ip !== ip));

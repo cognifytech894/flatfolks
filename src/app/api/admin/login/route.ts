@@ -26,12 +26,13 @@ export async function POST(request: Request) {
   }
   await passAdminLoginAttempt(pool, ip);
   const response = NextResponse.json({ ok: true });
+  // No maxAge: a browser-session cookie, gone when the browser closes. The
+  // token inside also expires 30 minutes after login (src/lib/admin-auth.ts).
   response.cookies.set(ADMIN_SESSION_COOKIE, createAdminSessionToken(), {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "strict",
     secure: isSecureContext(request),
     path: "/",
-    maxAge: 60 * 60 * 24 * 7,
   });
   return response;
 }
