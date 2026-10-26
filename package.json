@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
     "lint": "eslint",
-    "ui-audit": "node ui-audit/audit.mjs",
+    "ui-audit": "node scripts/ui-audit.mjs",
     "test:api": "node --test tests/api-auth.test.mjs",
     "test:inactive": "node --test tests/inactive-posts.test.mjs",
     "test:inactive:e2e": "node --test tests/inactive-posts-e2e.test.mjs",

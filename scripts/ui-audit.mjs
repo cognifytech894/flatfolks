@@ -1,6 +1,6 @@
 // FlatFolks UI audit: screenshots, layout, tap targets, text, images, axe,
 // console/network, internal links, mobile bottom nav, interactions, content
-// claims and Lighthouse. Writes ui-audit/REPORT.md. Read-only by design:
+// claims and Lighthouse. Writes .ui-audit/REPORT.md (gitignored). Read-only by design:
 // every non-GET request from the browser is blocked, and the local dev server
 // is started with DISABLE_VIEW_TRACKING=1 so listing views aren't counted.
 //
@@ -18,7 +18,9 @@ import { chromium } from "playwright";
 import AxeBuilder from "@axe-core/playwright";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const shotsDir = path.join(here, "screenshots");
+// Each run's output (report, issues, screenshots) goes to .ui-audit/ at the repo root, which git ignores.
+const outDir = path.join(here, "..", ".ui-audit");
+const shotsDir = path.join(outDir, "screenshots");
 const localPort = Number(process.env.AUDIT_PORT || 3100);
 const BASE_URL = (process.env.BASE_URL || `http://localhost:${localPort}`).replace(/\/$/, "");
 const isLocal = !process.env.BASE_URL;
@@ -387,10 +389,10 @@ async function main() {
     if (blocked.length) addIssue({ severity: "Low", page: "(audit)", viewport: "all", what: `Blocked ${blocked.length} write request(s) the pages tried to send during the audit: ${short([...new Set(blocked)], 4)}`, shot: "-", file: "-", fix: "Informational: these were aborted to keep the audit read-only." });
     await browser.close();
 
-    const previous = process.env.REUSE_LIGHTHOUSE ? await import("node:fs/promises").then((fs) => fs.readFile(path.join(here, "issues.json"), "utf8")).then((s) => JSON.parse(s).lighthouse).catch(() => null) : null;
+    const previous = process.env.REUSE_LIGHTHOUSE ? await import("node:fs/promises").then((fs) => fs.readFile(path.join(outDir, "issues.json"), "utf8")).then((s) => JSON.parse(s).lighthouse).catch(() => null) : null;
     const lighthouse = previous || (process.env.SKIP_LIGHTHOUSE ? null : await runLighthouse([["/", "/"], ["/search", "/search"], ["/noida", "/noida"], ...(listingPath ? [["listing", listingPath]] : [])]));
     await writeReport({ pages, lighthouse, linksChecked: allInternalLinks.size, minutes: ((Date.now() - started) / 60000).toFixed(1) });
-    console.log(`\nDone. Report: ui-audit/REPORT.md (${issues.length} issues)`);
+    console.log(`\nDone. Report: .ui-audit/REPORT.md (${issues.length} issues)`);
   } finally {
     stopServer(server);
   }
@@ -597,7 +599,7 @@ async function writeReport({ pages, lighthouse, linksChecked, minutes }) {
   L.push(`- Target: \`${BASE_URL}\`${isLocal ? " (local `next dev`, view tracking disabled)" : ""}`);
   L.push(`- Run: ${new Date().toISOString()} · ${minutes} min · ${pages.length} pages × ${viewports.length} viewports · ${linksChecked} internal links checked`);
   L.push(`- Totals: ${order.map((s) => `**${s}** ${issues.filter((i) => i.severity === s).length}`).join(" · ")}`);
-  L.push("- Screenshots: `ui-audit/screenshots/<viewport>_<page>.png`");
+  L.push("- Screenshots: `.ui-audit/screenshots/<viewport>_<page>.png`");
   if (isLocal) L.push("- Performance scores come from the dev server (unminified, no caching) and will be lower than production. Re-run with `BASE_URL=https://flatfolks.in` for real numbers.");
   L.push("", "## Summary", "", "| Page | Viewport | Critical | High | Medium | Low |", "|---|---|---|---|---|---|");
   const keys = [...pageStats.keys()].sort();
@@ -624,8 +626,8 @@ async function writeReport({ pages, lighthouse, linksChecked, minutes }) {
     }
   }
   L.push("", "## Top 10 fixes", "", "_Written by hand after reviewing the results; see the section below the line if this run was regenerated._", "", "<!-- TOP10 -->", "");
-  await writeFile(path.join(here, "REPORT.md"), L.join("\n"));
-  await writeFile(path.join(here, "issues.json"), JSON.stringify({ issues, lighthouse }, null, 2));
+  await writeFile(path.join(outDir, "REPORT.md"), L.join("\n"));
+  await writeFile(path.join(outDir, "issues.json"), JSON.stringify({ issues, lighthouse }, null, 2));
 }
 
 main().catch((e) => { console.error(e); process.exitCode = 1; });

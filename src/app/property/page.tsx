@@ -267,7 +267,7 @@ function PostListing() {
 
   const propertyTypeField = (
     <label className={labelClass}>
-      {isFlatRequirement ? "Looking for" : "Flat type"}
+      {isFlatRequirement ? "Looking for" : "Property type"}
       <select value={form.propertyType} onChange={(event) => update("propertyType", event.target.value)} className={fieldClass}>
         <option>Flat</option>
         <option>Room</option>

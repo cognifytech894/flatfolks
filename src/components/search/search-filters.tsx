@@ -35,6 +35,13 @@ function Chips({ options, isSelected, onToggle, label }: { options: readonly Opt
 export function SearchFilters({ initialFilters, activeCount }: { initialFilters: Filters; activeCount: number }) {
   const router = useRouter();
   const [filters, setFilters] = useState(initialFilters);
+  // When the URL changes from outside (filter chips above the results, Reset,
+  // back/forward), take the new filters without remounting, so an open mobile
+  // panel and a focused field stay as they are.
+  const urlKey = JSON.stringify(initialFilters);
+  const [syncedKey, setSyncedKey] = useState(urlKey);
+  if (urlKey !== syncedKey) { setSyncedKey(urlKey); setFilters(initialFilters); }
+  const typingTimer = useRef<number | undefined>(undefined);
   const [cityQuery, setCityQuery] = useState("");
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [openOnMobile, setOpenOnMobile] = useState(false);
@@ -51,12 +58,28 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
   const selectedLocations = (filters.location || "").split(",").filter(Boolean);
   const citySuggestions = searchLocations(cityQuery);
 
-  function update(key: keyof Filters, value: string) { setFilters((current) => ({ ...current, [key]: value })); }
+  // Filters apply as soon as they're picked; there's no Search button. Typed
+  // fields (budget, metro) apply once typing pauses, or straight away on Enter.
+  function navigate(next: Filters) {
+    window.clearTimeout(typingTimer.current);
+    const params = new URLSearchParams();
+    Object.entries(next).forEach(([key, value]) => { if (value?.trim() && value !== "Any") params.set(key, value.trim()); });
+    const query = params.toString();
+    router.push(query ? `/search?${query}` : "/search", { scroll: false });
+  }
+  function update(key: keyof Filters, value: string, when: "now" | "typing" = "now") {
+    const next = { ...filters, [key]: value };
+    setFilters(next);
+    if (when === "now") navigate(next);
+    else { window.clearTimeout(typingTimer.current); typingTimer.current = window.setTimeout(() => navigate(next), 700); }
+  }
   const listOf = (key: keyof Filters) => (filters[key] || "").split(",").filter(Boolean);
+  // A second click on a selected chip clears it.
   function toggleInList(key: keyof Filters, value: string) {
     const current = listOf(key);
     update(key, (current.includes(value) ? current.filter((item) => item !== value) : [...current, value]).join(","));
   }
+  const toggleOne = (key: keyof Filters, value: string) => update(key, filters[key] === value ? "" : value);
   function addLocation(location: string) {
     const value = location.trim();
     if (!value || selectedLocations.some((item) => item.toLowerCase() === value.toLowerCase())) return;
@@ -65,14 +88,9 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
     setShowCitySuggestions(false);
   }
   function removeLocation(location: string) { update("location", selectedLocations.filter((item) => item !== location).join(",")); }
-  function submit(event: React.FormEvent) {
-    event.preventDefault();
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => { if (value?.trim() && value !== "Any") params.set(key, value.trim()); });
-    setOpenOnMobile(false);
-    router.push(`/search?${params.toString()}`);
-  }
-  function clear() { setFilters({}); setCityQuery(""); router.push("/search"); }
+  // Enter in a typed field applies it without waiting.
+  function submit(event: React.FormEvent) { event.preventDefault(); navigate(filters); }
+  function clear() { window.clearTimeout(typingTimer.current); setFilters({}); setCityQuery(""); router.push("/search", { scroll: false }); }
 
   const sectionTitle = "font-medium text-slate-700";
   const inputClass = "w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none focus:border-blue-500";
@@ -98,7 +116,7 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
           <div>
             <label htmlFor="search-budget" className={`block ${sectionTitle}`}>Max budget (₹/month)</label>
             {/* Only what the visitor types: empty by default, never prefilled or widened. */}
-            <input id="search-budget" ref={budgetInput} value={filters.budget || ""} onChange={(event) => update("budget", event.target.value)} type="number" min="1" inputMode="numeric" placeholder="₹" className={`mt-2 ${inputClass}`} />
+            <input id="search-budget" ref={budgetInput} value={filters.budget || ""} onChange={(event) => update("budget", event.target.value, "typing")} type="number" min="1" inputMode="numeric" placeholder="₹" className={`mt-2 ${inputClass}`} />
           </div>
           <div>
             <p className={sectionTitle}>Property</p>
@@ -110,19 +128,18 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
           </div>
           <div>
             <p className={sectionTitle}>Preferences</p>
-            <Chips label="Preferred gender" options={genderOptions} isSelected={(value) => (filters.gender || "") === value} onToggle={(value) => update("gender", value)} />
-            <Chips label="Preferred tenants" options={tenantPreferenceOptions} isSelected={(value) => filters.tenant === value} onToggle={(value) => update("tenant", filters.tenant === value ? "" : value)} />
+            <Chips label="Preferred gender" options={genderOptions} isSelected={(value) => (filters.gender || "") === value} onToggle={(value) => toggleOne("gender", value)} />
+            <Chips label="Preferred tenants" options={tenantPreferenceOptions} isSelected={(value) => filters.tenant === value} onToggle={(value) => toggleOne("tenant", value)} />
           </div>
           <div>
             <p className={sectionTitle}>Amenities</p>
             <p className="mt-1 text-xs text-slate-500">Shows places that have all of the selected amenities.</p>
-            <Chips label="Amenities" options={[furnishedAmenity, ...searchableAmenities]} isSelected={(value) => value === furnishedAmenity.value ? filters.furnishing === value : listOf("amenity").includes(value)} onToggle={(value) => value === furnishedAmenity.value ? update("furnishing", filters.furnishing === value ? "" : value) : toggleInList("amenity", value)} />
+            <Chips label="Amenities" options={[furnishedAmenity, ...searchableAmenities]} isSelected={(value) => value === furnishedAmenity.value ? filters.furnishing === value : listOf("amenity").includes(value)} onToggle={(value) => value === furnishedAmenity.value ? toggleOne("furnishing", value) : toggleInList("amenity", value)} />
           </div>
           <label className={`block ${sectionTitle}`}>Listing type<select value={filters.propertyType || ""} onChange={(event) => update("propertyType", event.target.value)} className={`mt-2 ${inputClass}`}><option value="">All types</option><option>Room</option><option>Flat</option><option>Apartment</option><option>PG</option></select></label>
-          <label className={`block ${sectionTitle}`}>Near metro station<input value={filters.metro || ""} onChange={(event) => update("metro", event.target.value)} placeholder="Station name" className={`mt-2 ${inputClass}`} /></label>
+          <label className={`block ${sectionTitle}`}>Near metro station<input value={filters.metro || ""} onChange={(event) => update("metro", event.target.value, "typing")} placeholder="Station name" className={`mt-2 ${inputClass}`} /></label>
         </div>
       </div>
-      <button className="mt-5 w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white">Search</button>
     </form>
   );
 }
