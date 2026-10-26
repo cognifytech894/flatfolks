@@ -2,6 +2,7 @@ import { randomInt, randomUUID, timingSafeEqual } from "crypto";
 import pool from "@/lib/db";
 import { countHit, currentCount } from "@/lib/rate-limit";
 import { EMAIL_KEY_SQL, normalizeEmail } from "@/lib/email-identity";
+import { serverHmac } from "@/lib/session";
 import type { Furnishing } from "@/data/furnishing";
 import type { FlatConfiguration, RoomType, TenantPreference } from "@/data/listing-attributes";
 
@@ -88,7 +89,10 @@ export class OtpError extends Error {
 // Same column as data/schema.sql, added on first use so it works before that file is re-run.
 let otpAttemptsColumn: Promise<unknown> | undefined;
 function ensureOtpAttemptsColumn() {
-  otpAttemptsColumn ??= pool.query("ALTER TABLE otps ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0").catch((error) => { otpAttemptsColumn = undefined; throw error; });
+  otpAttemptsColumn ??= pool.query("ALTER TABLE otps ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0")
+    // Codes are stored as an HMAC (64 hex characters), never the code itself.
+    .then(() => pool.query("ALTER TABLE otps ALTER COLUMN otp TYPE VARCHAR(64)"))
+    .catch((error) => { otpAttemptsColumn = undefined; throw error; });
   return otpAttemptsColumn;
 }
 
@@ -115,8 +119,16 @@ async function setOtp(id: string, purpose: string, otp: string, ip: string, payl
   await pool.query(
     `INSERT INTO otps (id, purpose, otp, payload, expires_at, attempts) VALUES ($1, $2, $3, $4, $5, 0)
      ON CONFLICT (id, purpose) DO UPDATE SET otp = $3, payload = $4, expires_at = $5, attempts = 0`,
-    [id, purpose, otp, payload ? JSON.stringify(payload) : null, expiresAt],
+    [id, purpose, otpDigest(id, purpose, otp), payload ? JSON.stringify(payload) : null, expiresAt],
   );
+}
+
+/**
+ * What's stored for a code: an HMAC with the server secret, so someone who
+ * sees the otps table (a backup, the dashboard) can't sign in with live codes.
+ */
+function otpDigest(id: string, purpose: string, otp: string) {
+  return serverHmac(`flatfolks-otp:${purpose}:${id}:${otp}`);
 }
 
 function sameCode(a: string, b: string) {
@@ -139,7 +151,7 @@ async function consumeOtp<T>(id: string, purpose: string, otp: string): Promise<
     if (!expired) throw new OtpError("Too many wrong codes. Please request a new OTP.", 429);
     return null;
   }
-  if (!sameCode(row.otp, otp)) return null;
+  if (!sameCode(row.otp, otpDigest(id, purpose, otp.trim()))) return null;
   await pool.query("DELETE FROM otps WHERE id = $1 AND purpose = $2", [id, purpose]);
   return (row.payload ?? {}) as T;
 }

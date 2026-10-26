@@ -194,6 +194,22 @@ describe("OTP and feedback (database)", () => {
     assert.deepEqual(deleted, [photo("mine")]);
   });
 
+  test("codes are stored hashed, never as the code itself", async () => {
+    const code = await database.requestEmailAuthOtp("hashed@example.test");
+    const { rows } = await db.pool.query("SELECT otp FROM otps WHERE id = 'hashed@example.test'");
+    assert.match(rows[0].otp, /^[0-9a-f]{64}$/);
+    assert.ok(!rows[0].otp.includes(code));
+    assert.equal((await database.verifyEmailAuthOtp("hashed@example.test", code)).user.email, "hashed@example.test");
+  });
+
+  test("an admin authenticator code works only once", async () => {
+    const { claimTotpStep } = await import("../src/lib/totp.ts");
+    assert.equal(await claimTotpStep(db.pool, 1000), true);
+    assert.equal(await claimTotpStep(db.pool, 1000), false);
+    assert.equal(await claimTotpStep(db.pool, 999), false);
+    assert.equal(await claimTotpStep(db.pool, 1001), true);
+  });
+
   test("Gmail aliases of one inbox sign in to the same account", async () => {
     const { normalizeEmail } = await import("../src/lib/email-identity.ts");
     assert.equal(normalizeEmail(" A.Bc+flats@GMAIL.com "), "abc@gmail.com");

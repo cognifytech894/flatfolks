@@ -20,6 +20,11 @@ function secret() {
   return process.env.ADMIN_PASSWORD;
 }
 
+/** An HMAC of `message` with the server secret, for values stored in the database (e.g. OTP codes). */
+export function serverHmac(message: string): string {
+  return createHmac("sha256", secret()).update(message).digest("hex");
+}
+
 function sign(userId: string, version: number, expiresAt: number) {
   return createHmac("sha256", secret()).update(`flatfolks-session:${userId}:${version}:${expiresAt}`).digest("hex");
 }

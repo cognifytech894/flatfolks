@@ -112,13 +112,14 @@ CREATE INDEX IF NOT EXISTS idx_listing ON listing_reviews (listing_id);
 CREATE TABLE IF NOT EXISTS otps (
   id VARCHAR(190) NOT NULL,
   purpose VARCHAR(20) NOT NULL,
-  otp VARCHAR(6) NOT NULL,
+  otp VARCHAR(64) NOT NULL, -- an HMAC of the code, never the code itself
   payload JSONB,
   expires_at TIMESTAMP NOT NULL,
   PRIMARY KEY (id, purpose)
 );
 -- Wrong guesses on the current code; after 5 it's deleted (src/lib/database.ts).
 ALTER TABLE otps ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE otps ALTER COLUMN otp TYPE VARCHAR(64);
 
 -- Site-wide testimonials shown on the landing page ("Loved by Thousands").
 CREATE TABLE IF NOT EXISTS feedback (

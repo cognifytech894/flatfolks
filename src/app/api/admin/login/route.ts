@@ -3,7 +3,7 @@ import pool from "@/lib/db";
 import { ADMIN_SESSION_COOKIE, createAdminSessionToken, verifyAdminCredentials } from "@/lib/admin-auth";
 import { clientIp, failAdminLoginAttempt, passAdminLoginAttempt, startAdminLoginAttempt } from "@/lib/admin-login-guard";
 import { isRateLimited } from "@/lib/rate-limit";
-import { adminTotpSecret, verifyTotp } from "@/lib/totp";
+import { adminTotpSecret, claimTotpStep, matchTotp } from "@/lib/totp";
 import { isSecureContext, SESSION_COOKIE } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -24,7 +24,9 @@ export async function POST(request: Request) {
   // wrong code counts as a failed attempt just like a wrong password.
   const totpSecret = adminTotpSecret();
   const passwordOk = Boolean(body.username?.trim() && body.password && verifyAdminCredentials(body.username.trim(), body.password));
-  const codeOk = !totpSecret || (typeof body.code === "string" && verifyTotp(totpSecret, body.code));
+  const step = totpSecret && typeof body.code === "string" ? matchTotp(totpSecret, body.code) : null;
+  // Checked only after the password, so a wrong password can't burn a code.
+  const codeOk = !totpSecret || (step !== null && passwordOk && await claimTotpStep(pool, step));
   if (!passwordOk || !codeOk) {
     const left = await failAdminLoginAttempt(pool, ip, attempt.attempt);
     if (!left) return blocked();

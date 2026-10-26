@@ -3,6 +3,7 @@
 // Turned on by setting ADMIN_TOTP_SECRET (base32); `node scripts/admin-totp.mjs`
 // makes one and prints the link to scan.
 import { createHmac, timingSafeEqual } from "node:crypto";
+import type { Pool } from "pg";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 const STEP_SECONDS = 30;
@@ -29,16 +30,39 @@ export function totpCode(secret: string, counter: number): string {
   return String(number).padStart(6, "0");
 }
 
-/** Accepts the current code and the one either side of it, for clock drift. */
-export function verifyTotp(secret: string, code: string, now = Date.now()): boolean {
+/**
+ * The time step a code belongs to, or null. Accepts the current code and the
+ * one either side of it, for clock drift.
+ */
+export function matchTotp(secret: string, code: string, now = Date.now()): number | null {
   const given = code.replace(/\s/g, "");
-  if (!/^\d{6}$/.test(given)) return false;
+  if (!/^\d{6}$/.test(given)) return null;
   const counter = Math.floor(now / 1000 / STEP_SECONDS);
-  let ok = false;
+  let matched: number | null = null;
   for (const drift of [-1, 0, 1]) {
-    ok = timingSafeEqual(Buffer.from(totpCode(secret, counter + drift)), Buffer.from(given)) || ok;
+    if (timingSafeEqual(Buffer.from(totpCode(secret, counter + drift)), Buffer.from(given))) matched = counter + drift;
   }
-  return ok;
+  return matched;
+}
+
+export function verifyTotp(secret: string, code: string, now = Date.now()): boolean {
+  return matchTotp(secret, code, now) !== null;
+}
+
+/**
+ * Marks a code's time step as used. A code works once: false when this step,
+ * or a later one, was already used, so a code seen over someone's shoulder
+ * can't be replayed within its 90 seconds.
+ */
+export async function claimTotpStep(db: Pool, step: number): Promise<boolean> {
+  await db.query("CREATE TABLE IF NOT EXISTS admin_totp_state (id INTEGER PRIMARY KEY, last_step BIGINT NOT NULL)");
+  await db.query("ALTER TABLE admin_totp_state ENABLE ROW LEVEL SECURITY");
+  const { rowCount } = await db.query(
+    `INSERT INTO admin_totp_state (id, last_step) VALUES (1, $1)
+     ON CONFLICT (id) DO UPDATE SET last_step = EXCLUDED.last_step WHERE admin_totp_state.last_step < EXCLUDED.last_step`,
+    [step],
+  );
+  return rowCount === 1;
 }
 
 export function adminTotpSecret(): string | undefined {
