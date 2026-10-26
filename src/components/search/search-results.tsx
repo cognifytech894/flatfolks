@@ -56,7 +56,7 @@ export function SearchResults({ listings, mapView, searchedLocation, budget, kee
               <p className="mt-2 text-sm font-medium text-emerald-700">{perMonth(listing.rent)}</p>
               <div className="mt-auto flex items-center justify-between pt-4">
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{listing.propertyType}</span>
-                <Link href={listing.href} className="inline-block py-1 text-sm font-semibold text-slate-700">View details</Link>
+                <Link href={listing.href} target="_blank" rel="noopener" className="inline-block py-1 text-sm font-semibold text-slate-700">View details</Link>
               </div>
             </div>
           </article>

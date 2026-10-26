@@ -175,7 +175,7 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, related }: Lis
 
   const withGallery = !isRequirement && photos.length > 0;
   const ownerCard = (
-    <aside className={`w-full shrink-0 space-y-4 self-start rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 ${withGallery ? "" : "lg:w-80"}`}>
+    <aside className={`w-full shrink-0 space-y-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 ${withGallery ? "lg:flex lg:h-full lg:flex-col lg:justify-center" : "self-start lg:w-80"}`}>
       <div className="flex items-center gap-3">
         <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-blue-600 text-white">
           {listing.ownerPhoto ? <img src={listing.ownerPhoto} alt={ownerName} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center">{ownerName.trim().charAt(0).toUpperCase() || "F"}</div>}
@@ -199,7 +199,7 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, related }: Lis
           <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
             {/* With photos, the contact card sits beside the gallery; otherwise beside the details. */}
             {withGallery && (
-              <div className="grid gap-5 p-3 sm:p-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6 lg:p-5">
+              <div className="grid gap-5 p-3 sm:p-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-stretch lg:gap-6 lg:p-5">
                 <PhotoCarousel photos={photos} title={listing.title} />
                 {ownerCard}
               </div>
