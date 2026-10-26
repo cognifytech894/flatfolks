@@ -3,6 +3,7 @@ import { getSessionUserId } from "@/lib/current-user";
 import { uploadImage } from "@/lib/image-storage";
 import { touchLastSeen } from "@/lib/database";
 import { isRateLimited } from "@/lib/rate-limit";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,6 @@ export async function POST(request: Request) {
   try {
     return NextResponse.json({ url: await uploadImage(body.image, sessionUserId) });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Could not upload image." }, { status: 400 });
+    return NextResponse.json({ error: publicErrorMessage(error, "Could not upload image.") }, { status: 400 });
   }
 }

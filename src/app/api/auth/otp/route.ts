@@ -10,6 +10,7 @@ import { isDisposableEmail } from "@/data/disposable-email-domains";
 import { createSessionToken, isSecureContext, SESSION_COOKIE, SESSION_DAYS } from "@/lib/session";
 import { getSessionVersion, revokeSessions, userIdFromToken } from "@/lib/current-user";
 import { cookies } from "next/headers";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export const runtime = "nodejs";
 
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unknown action." }, { status: 400 });
   } catch (error) {
     if (error instanceof OtpError) return NextResponse.json({ error: error.message }, { status: error.status });
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Could not verify this account." }, { status: 400 });
+    return NextResponse.json({ error: publicErrorMessage(error, "Could not verify this account.") }, { status: 400 });
   }
 }
 

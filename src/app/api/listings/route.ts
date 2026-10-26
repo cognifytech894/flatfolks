@@ -9,6 +9,7 @@ import { isFlatConfiguration, isRoomType, isTenantPreference } from "@/data/list
 import { ADMIN_SESSION_COOKIE, isValidAdminSessionToken } from "@/lib/admin-auth";
 import { isRateLimited } from "@/lib/rate-limit";
 import { withoutOwnerDetails } from "@/lib/visitor";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export const runtime = "nodejs";
 
@@ -43,6 +44,24 @@ function isValidPhone(phone: string) {
 
 function isValidCount(value: unknown) {
   return value === undefined || (Number.isInteger(Number(value)) && Number(value) >= 1 && Number(value) <= 10);
+}
+
+const propertyTypes = ["Room", "Apartment", "Flat", "PG"];
+
+/** Checks every field that's present; POST and PATCH share it, so an edit can't store what a new post couldn't. */
+function invalidField(body: Partial<NewListing>): string | undefined {
+  if (body.title !== undefined && (typeof body.title !== "string" || !body.title.trim() || body.title.length > 200)) return "Title must be 1 to 200 characters.";
+  if (body.location !== undefined && (typeof body.location !== "string" || !body.location.trim() || body.location.length > 200)) return "Location must be 1 to 200 characters.";
+  if (body.rent !== undefined && (!Number.isFinite(Number(body.rent)) || Number(body.rent) < 1)) return "Budget and deposit must be valid amounts.";
+  if (body.deposit !== undefined && (!Number.isFinite(Number(body.deposit)) || Number(body.deposit) < 0)) return "Budget and deposit must be valid amounts.";
+  if (body.propertyType !== undefined && !propertyTypes.includes(body.propertyType)) return "Invalid property type.";
+  if (!isValidCount(body.bedrooms) || !isValidCount(body.bathrooms)) return "Bedrooms and bathrooms must be between 1 and 10.";
+  if (body.listingKind && body.listingKind !== "flat-offer" && body.listingKind !== "flat-requirement") return "Invalid listing type.";
+  if (body.availableFrom && (typeof body.availableFrom !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(body.availableFrom) || Number.isNaN(Date.parse(body.availableFrom)))) return "Availability date must be valid.";
+  if (body.genderPreference && !["Male", "Female", "Family", "Any"].includes(body.genderPreference)) return "Invalid gender preference.";
+  if (body.description && (typeof body.description !== "string" || body.description.length > 2000)) return "Description must be 2000 characters or fewer.";
+  if (body.contactPhone !== undefined && (typeof body.contactPhone !== "string" || (body.contactPhone.trim() && !isValidPhone(body.contactPhone.trim())))) return "A valid contact number is required.";
+  return undefined;
 }
 
 function rateLimited(request: Request) {
@@ -80,12 +99,8 @@ export async function POST(request: Request) {
   if (!body.contactPhone?.trim() || !isValidPhone(body.contactPhone.trim())) {
     return NextResponse.json({ error: "A valid contact number is required." }, { status: 400 });
   }
-  if (!isValidCount(body.bedrooms) || !isValidCount(body.bathrooms)) return NextResponse.json({ error: "Bedrooms and bathrooms must be between 1 and 10." }, { status: 400 });
-  if (!Number.isFinite(Number(body.rent)) || !Number.isFinite(Number(body.deposit ?? 0)) || Number(body.rent) < 1 || Number(body.deposit ?? 0) < 0) return NextResponse.json({ error: "Budget and deposit must be valid amounts." }, { status: 400 });
-  if (body.listingKind && body.listingKind !== "flat-offer" && body.listingKind !== "flat-requirement") return NextResponse.json({ error: "Invalid listing type." }, { status: 400 });
-  if (body.availableFrom && !/^\d{4}-\d{2}-\d{2}$/.test(body.availableFrom)) return NextResponse.json({ error: "Availability date must be valid." }, { status: 400 });
-  if (body.genderPreference && !["Male", "Female", "Family", "Any"].includes(body.genderPreference)) return NextResponse.json({ error: "Invalid gender preference." }, { status: 400 });
-  if (body.description && body.description.length > 2000) return NextResponse.json({ error: "Description must be 2000 characters or fewer." }, { status: 400 });
+  const invalid = invalidField(body);
+  if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
   const attributes = parseAttributes(body);
   if ("error" in attributes) return NextResponse.json({ error: attributes.error }, { status: 400 });
   // Only the poster's own uploads, never outside links (tracking pixels, other
@@ -138,9 +153,8 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   }
 
-  if (body.description && body.description.length > 2000) return NextResponse.json({ error: "Description must be 2000 characters or fewer." }, { status: 400 });
-  if (body.contactPhone !== undefined && body.contactPhone.trim() && !isValidPhone(body.contactPhone.trim())) return NextResponse.json({ error: "A valid contact number is required." }, { status: 400 });
-  if (!isValidCount(body.bedrooms) || !isValidCount(body.bathrooms)) return NextResponse.json({ error: "Bedrooms and bathrooms must be between 1 and 10." }, { status: 400 });
+  const invalid = invalidField(body);
+  if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
   // New photos must be the owner's own uploads; photos the post already has are kept as they are.
   const current = body.images ? new Set((await getListingById(body.id))?.images || []) : undefined;
   const images = body.images ? body.images.filter((image) => current!.has(image) || (Boolean(actualOwnerId) && isOwnUpload(image, actualOwnerId!))).slice(0, 3) : undefined;
@@ -149,7 +163,7 @@ export async function PATCH(request: Request) {
   if ("error" in attributes) return NextResponse.json({ error: attributes.error }, { status: 400 });
   const nearbyMetro = body.nearbyMetro === undefined ? undefined : cleanNearbyMetro(body.nearbyMetro) ?? null;
   try { return NextResponse.json(await updateListing(body.id, { ...body, images, preferences, ...attributes.values, nearbyMetro })); }
-  catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Could not update listing." }, { status: 404 }); }
+  catch (error) { return NextResponse.json({ error: publicErrorMessage(error, "Could not update listing.") }, { status: 404 }); }
 }
 
 export async function DELETE(request: Request) {
@@ -177,5 +191,5 @@ export async function DELETE(request: Request) {
     await deleteImages(photos).catch((error) => console.error("Could not delete listing photos", id, error));
     return new NextResponse(null, { status: 204 });
   }
-  catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Could not delete listing." }, { status: 404 }); }
+  catch (error) { return NextResponse.json({ error: publicErrorMessage(error, "Could not delete listing.") }, { status: 404 }); }
 }

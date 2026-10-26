@@ -75,6 +75,28 @@ describe("redirect after login", async () => {
   });
 });
 
+describe("cross-site requests", async () => {
+  const { isAllowedOrigin } = await import("../src/lib/same-origin.ts");
+  test("our own pages and requests without an Origin are allowed", () => {
+    assert.equal(isAllowedOrigin("https://flatfolks.in", "flatfolks.in"), true);
+    assert.equal(isAllowedOrigin("http://localhost:3000", "localhost:3000"), true);
+    assert.equal(isAllowedOrigin(null, "flatfolks.in"), true);
+  });
+  test("other sites are refused", () => {
+    for (const origin of ["https://evil.com", "https://flatfolks.in.evil.com", "https://evil.com/flatfolks.in", "null", "not a url"]) assert.equal(isAllowedOrigin(origin, "flatfolks.in"), false, origin);
+  });
+});
+
+describe("internal errors", async () => {
+  const { publicErrorMessage } = await import("../src/lib/public-error.ts");
+  test("our own messages are shown; database errors are not", () => {
+    assert.equal(publicErrorMessage(new Error("Listing not found."), "Could not update listing."), "Listing not found.");
+    const dbError = Object.assign(new Error('invalid input syntax for type date: "x" (column available_from of relation "listings")'), { code: "22007" });
+    const original = console.error; console.error = () => {};
+    try { assert.equal(publicErrorMessage(dbError, "Could not update listing."), "Could not update listing."); } finally { console.error = original; }
+  });
+});
+
 describe("admin authenticator codes", async () => {
   const { totpCode, verifyTotp } = await import("../src/lib/totp.ts");
   // RFC 6238 test secret ("12345678901234567890" in base32) and its SHA-1 vectors.

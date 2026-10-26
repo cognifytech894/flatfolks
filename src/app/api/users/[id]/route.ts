@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/current-user";
 import { getUserPhoto, touchLastSeen, updateUser } from "@/lib/database";
 import { isAllowedProfilePhoto } from "@/lib/image-storage";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export const runtime = "nodejs";
 
@@ -24,5 +25,5 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   // Keeping the current photo is always fine; a new one must be the member's own upload.
   if (body.photo !== undefined && !isAllowedProfilePhoto(body.photo, id) && body.photo !== await getUserPhoto(id)) return NextResponse.json({ error: "Invalid photo." }, { status: 400 });
   try { return NextResponse.json({ user: await updateUser(id, body) }); }
-  catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Could not update profile." }, { status: 400 }); }
+  catch (error) { return NextResponse.json({ error: publicErrorMessage(error, "Could not update profile.") }, { status: 400 }); }
 }

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isDeletedListing } from "@/lib/database";
+import { isAllowedOrigin } from "@/lib/same-origin";
 
 // A permanently deleted post's URL answers 410 Gone (not 404), which tells
 // search engines the page is gone for good. Pages can't set a 410 status, so
@@ -14,6 +15,13 @@ const goneHtml = `<!doctype html><html lang="en"><head><meta charset="utf-8"><me
 
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
+  // API calls that change something must come from our own pages (CSRF).
+  if (path.startsWith("/api/") && !["GET", "HEAD", "OPTIONS"].includes(request.method)) {
+    if (!isAllowedOrigin(request.headers.get("origin"), request.headers.get("host"))) {
+      return NextResponse.json({ error: "Cross-site request refused." }, { status: 403 });
+    }
+    return NextResponse.next();
+  }
   const key = path.match(propertyId)?.[1] || path.match(listingSlug)?.[1];
   if (key && (await isDeletedListing(key).catch(() => false))) {
     return new NextResponse(goneHtml, { status: 410, headers: { "Content-Type": "text/html; charset=utf-8", "X-Robots-Tag": "noindex" } });
@@ -22,6 +30,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Listing URLs only: /property/{id} and /{city}/.../{slug-xxxxxxxx}. Skips assets and APIs.
-  matcher: ["/property/:id", "/((?!_next|api|blog|admin|auth|search|dashboard|profile|restore)[^/.]+)/:path+"],
+  // API calls (for the Origin check), and listing URLs: /property/{id} and
+  // /{city}/.../{slug-xxxxxxxx}. Skips assets.
+  matcher: ["/api/:path*", "/property/:id", "/((?!_next|api|blog|admin|auth|search|dashboard|profile|restore)[^/.]+)/:path+"],
 };

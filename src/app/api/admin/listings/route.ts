@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ADMIN_SESSION_COOKIE, isValidAdminSessionToken } from "@/lib/admin-auth";
 import { setManagedByAdmin } from "@/lib/database";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export const runtime = "nodejs";
 
@@ -15,6 +16,6 @@ export async function PATCH(request: Request) {
     await setManagedByAdmin(body.id, body.managedByAdmin);
     return NextResponse.json({ id: body.id, managedByAdmin: body.managedByAdmin });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Could not update listing." }, { status: 404 });
+    return NextResponse.json({ error: publicErrorMessage(error, "Could not update listing.") }, { status: 404 });
   }
 }

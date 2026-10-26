@@ -38,15 +38,17 @@ function sessionCookie(userId, version) {
 
 // Read-only: some member other than `ownerId`, and their current session
 // version, so the test cookie is accepted.
-async function otherMember(ownerId) {
+async function member(sql, id) {
   const { default: pg } = await import("pg");
   const client = new pg.Client({ connectionString: env("DATABASE_URL"), ssl: /localhost|127\.0\.0\.1/.test(env("DATABASE_URL") || "") ? false : { rejectUnauthorized: false } });
   await client.connect();
   try {
-    const { rows } = await client.query("SELECT id, COALESCE(session_version, 0) AS version FROM users WHERE id <> $1 LIMIT 1", [ownerId]);
+    const { rows } = await client.query(sql, [id]);
     return rows[0];
   } finally { await client.end(); }
 }
+const otherMember = (ownerId) => member("SELECT id, COALESCE(session_version, 0) AS version FROM users WHERE id <> $1 LIMIT 1", ownerId);
+const sameMember = (id) => member("SELECT id, COALESCE(session_version, 0) AS version FROM users WHERE id = $1", id);
 
 const api = (route, init = {}) => fetch(BASE_URL + route, { redirect: "manual", ...init, headers: { "Content-Type": "application/json", ...init.headers } });
 
@@ -116,5 +118,29 @@ describe("a signed-in user can't touch another user's data", () => {
     // An empty name fails validation, so a broken auth check yields 400, never a write.
     const res = await api(`/api/users/${randomUUID()}`, { method: "PATCH", headers: { Cookie: cookie }, body: JSON.stringify({ name: "" }) });
     assert.equal(res.status, 403, `got ${res.status}`);
+  });
+});
+
+describe("requests are checked before anything is written", () => {
+  let target, ownerCookie;
+  before(async () => {
+    target = (await (await api("/api/listings")).json()).find((listing) => listing.ownerId);
+    assert.ok(target, "no user-owned listing to test against");
+    const owner = await sameMember(target.ownerId);
+    ownerCookie = sessionCookie(owner.id, owner.version);
+  }, { timeout: 120_000 });
+
+  test("a request from another site is refused (403)", { timeout: 120_000 }, async () => {
+    // Also invalid (2001 characters), so even if the check were missing nothing would be written.
+    const res = await api("/api/listings", { method: "PATCH", headers: { Cookie: ownerCookie, Origin: "https://evil.example" }, body: JSON.stringify({ id: target.id, description: "x".repeat(2001) }) });
+    assert.equal(res.status, 403, `got ${res.status}`);
+  });
+
+  test("an edit with an invalid date gets a plain 400, not a database error", { timeout: 120_000 }, async () => {
+    // The database refuses this date too, so nothing is written either way.
+    const res = await api("/api/listings", { method: "PATCH", headers: { Cookie: ownerCookie }, body: JSON.stringify({ id: target.id, availableFrom: "2026-13-45" }) });
+    const body = await res.json();
+    assert.equal(res.status, 400, `got ${res.status}: ${body.error}`);
+    assert.equal(body.error, "Availability date must be valid.");
   });
 });
