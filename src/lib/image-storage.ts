@@ -36,7 +36,8 @@ function matchesImageMagicBytes(buffer: Buffer, subtype: string): boolean {
   }
 }
 
-export async function uploadImage(dataUrl: string): Promise<string> {
+/** Stores the photo under the uploader's id (`{userId}/{uuid}.ext`), so a post or profile can only use its own uploads. */
+export async function uploadImage(dataUrl: string, userId: string): Promise<string> {
   const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
   if (!match || !ALLOWED_IMAGE_TYPES.test(match[1].split("/")[1] || "")) throw new Error("A valid image is required.");
   const [, contentType, base64] = match;
@@ -45,7 +46,7 @@ export async function uploadImage(dataUrl: string): Promise<string> {
   if (!matchesImageMagicBytes(buffer, contentType.split("/")[1] || "")) throw new Error("A valid image is required.");
 
   const extension = contentType.split("/")[1] || "jpg";
-  const path = `${randomUUID()}.${extension}`;
+  const path = `${userId}/${randomUUID()}.${extension}`;
   const supabase = storageClient();
   const { error } = await supabase.storage.from(BUCKET).upload(path, buffer, { contentType, upsert: false });
   if (error) throw new Error(error.message);
@@ -69,9 +70,19 @@ export function isStoredImageUrl(url: unknown): url is string {
   return typeof url === "string" && Boolean(prefix) && url.startsWith(prefix!) && url.length < 1000;
 }
 
-/** A profile photo is an uploaded photo, one of the preset avatars in /public/avatars, or empty to remove it. */
-export function isAllowedProfilePhoto(url: unknown): url is string {
-  return url === "" || isStoredImageUrl(url) || (typeof url === "string" && /^\/avatars\/[a-z0-9-]+\.webp$/.test(url));
+/**
+ * True for a photo this user uploaded. Older uploads (before 27 Oct) have no
+ * owner folder, so they only ever stay on the post or profile that has them.
+ */
+export function isOwnUpload(url: unknown, userId: string): url is string {
+  if (!isStoredImageUrl(url)) return false;
+  const path = url.slice(storedPrefix()!.length);
+  return path.startsWith(`${userId}/`) && /^[0-9a-f-]+\/[0-9a-f-]+\.[a-z]+$/.test(path);
+}
+
+/** A new profile photo is the member's own upload, one of the preset avatars in /public/avatars, or empty to remove it. */
+export function isAllowedProfilePhoto(url: unknown, userId: string): url is string {
+  return url === "" || isOwnUpload(url, userId) || (typeof url === "string" && /^\/avatars\/[a-z0-9-]+\.webp$/.test(url));
 }
 
 export async function deleteImages(urls: string[]): Promise<void> {

@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const body = await request.json() as { image?: string };
   if (!body.image) return NextResponse.json({ error: "An image is required." }, { status: 400 });
   try {
-    return NextResponse.json({ url: await uploadImage(body.image) });
+    return NextResponse.json({ url: await uploadImage(body.image, sessionUserId) });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Could not upload image." }, { status: 400 });
   }

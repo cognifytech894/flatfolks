@@ -349,14 +349,36 @@ export async function deleteListing(id: string, reason: "owner" | "admin"): Prom
     await client.query("INSERT INTO deleted_listings (id, owner_id, title, reason) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO NOTHING", [id, rows[0].owner_id, rows[0].title, reason]);
     await client.query("DELETE FROM listing_reviews WHERE listing_id = $1", [id]);
     await client.query("DELETE FROM listings WHERE id = $1", [id]);
+    const photos = await unusedPhotos(client, [...new Set([rows[0].image, ...parseJsonField<string[]>(rows[0].images, [])].filter((url): url is string => Boolean(url)))]);
     await client.query("COMMIT");
-    return [...new Set([rows[0].image, ...parseJsonField<string[]>(rows[0].images, [])].filter((url): url is string => Boolean(url)))];
+    return photos;
   } catch (error) {
     await client.query("ROLLBACK").catch(() => {});
     throw error;
   } finally {
     client.release();
   }
+}
+
+/**
+ * The photos no other post or profile still shows, i.e. the ones safe to
+ * delete from storage. (Before 27 Oct a post could point at someone else's
+ * upload; deleting it must not take their photo with it.)
+ */
+export async function unusedPhotos(db: { query: typeof pool.query }, urls: string[]): Promise<string[]> {
+  if (!urls.length) return [];
+  const { rows } = await db.query<{ url: string }>(
+    `SELECT url FROM unnest($1::text[]) AS url
+     WHERE NOT EXISTS (SELECT 1 FROM listings WHERE listings.image = url OR listings.images @> jsonb_build_array(url))
+       AND NOT EXISTS (SELECT 1 FROM users WHERE users.photo = url)`,
+    [urls],
+  );
+  return rows.map((row) => row.url);
+}
+
+export async function getUserPhoto(id: string): Promise<string | undefined> {
+  const { rows } = await pool.query<{ photo: string | null }>("SELECT photo FROM users WHERE id = $1", [id]);
+  return rows[0]?.photo || undefined;
 }
 
 /** Read-only lookup — use this for anything that shouldn't count as a page view (e.g. generateMetadata, which Next.js may invoke separately from the page render). */

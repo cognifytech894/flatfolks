@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/current-user";
 import { cookies } from "next/headers";
 import { createListing, deleteListing, getListingById, getListingOwnerId, getListings, getOwnerListings, touchLastSeen, updateListing, type NewListing } from "@/lib/database";
-import { deleteImages, isStoredImageUrl } from "@/lib/image-storage";
+import { deleteImages, isOwnUpload } from "@/lib/image-storage";
 import { lifestylePreferences } from "@/data/preferences";
 import { cleanNearbyMetro, isFurnishing } from "@/data/furnishing";
 import { isFlatConfiguration, isRoomType, isTenantPreference } from "@/data/listing-attributes";
@@ -88,8 +88,9 @@ export async function POST(request: Request) {
   if (body.description && body.description.length > 2000) return NextResponse.json({ error: "Description must be 2000 characters or fewer." }, { status: 400 });
   const attributes = parseAttributes(body);
   if ("error" in attributes) return NextResponse.json({ error: attributes.error }, { status: 400 });
-  // Only photos uploaded through /api/upload, never outside links (tracking pixels, other sites' images).
-  const images = body.images?.filter(isStoredImageUrl).slice(0, 3);
+  // Only the poster's own uploads, never outside links (tracking pixels, other
+  // sites' images) or another member's photos (deleting this post would delete them).
+  const images = body.images?.filter((image) => isOwnUpload(image, sessionUserId)).slice(0, 3);
   if (body.listingKind === "flat-requirement" && images?.length) return NextResponse.json({ error: "Flat requirements cannot include images." }, { status: 400 });
   await touchLastSeen(sessionUserId);
   const listing = await createListing({
@@ -124,10 +125,10 @@ export async function PATCH(request: Request) {
 
   const cookieStore = await cookies();
   const isAdmin = isValidAdminSessionToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+  const actualOwnerId = await getListingOwnerId(body.id);
   if (!isAdmin) {
     const sessionUserId = await getSessionUserId();
     if (!sessionUserId) return NextResponse.json({ error: "Please log in to edit a listing." }, { status: 401 });
-    const actualOwnerId = await getListingOwnerId(body.id);
     if (actualOwnerId === undefined) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
     if (actualOwnerId !== sessionUserId) return NextResponse.json({ error: "You can only edit your own listings." }, { status: 403 });
     await touchLastSeen(sessionUserId);
@@ -140,9 +141,9 @@ export async function PATCH(request: Request) {
   if (body.description && body.description.length > 2000) return NextResponse.json({ error: "Description must be 2000 characters or fewer." }, { status: 400 });
   if (body.contactPhone !== undefined && body.contactPhone.trim() && !isValidPhone(body.contactPhone.trim())) return NextResponse.json({ error: "A valid contact number is required." }, { status: 400 });
   if (!isValidCount(body.bedrooms) || !isValidCount(body.bathrooms)) return NextResponse.json({ error: "Bedrooms and bathrooms must be between 1 and 10." }, { status: 400 });
-  // New photos must be uploads; photos the post already has are kept as they are.
+  // New photos must be the owner's own uploads; photos the post already has are kept as they are.
   const current = body.images ? new Set((await getListingById(body.id))?.images || []) : undefined;
-  const images = body.images ? body.images.filter((image) => isStoredImageUrl(image) || current!.has(image)).slice(0, 3) : undefined;
+  const images = body.images ? body.images.filter((image) => current!.has(image) || (Boolean(actualOwnerId) && isOwnUpload(image, actualOwnerId!))).slice(0, 3) : undefined;
   const preferences = sanitizePreferences(body.preferences);
   const attributes = parseAttributes(body);
   if ("error" in attributes) return NextResponse.json({ error: attributes.error }, { status: 400 });

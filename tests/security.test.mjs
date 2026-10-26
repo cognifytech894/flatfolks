@@ -11,7 +11,7 @@ import { startTestDb } from "./helpers/test-db.mjs";
 process.env.SESSION_SECRET = "test-session-secret-long-and-random";
 process.env.SUPABASE_URL = "https://project.supabase.co";
 const { createSessionToken, readSessionToken } = await import("../src/lib/session.ts");
-const { isAllowedProfilePhoto, isStoredImageUrl } = await import("../src/lib/image-storage.ts");
+const { isAllowedProfilePhoto, isOwnUpload, isStoredImageUrl } = await import("../src/lib/image-storage.ts");
 
 const NOW = Date.UTC(2026, 9, 26, 10, 0, 0);
 const DAY = 24 * 60 * 60 * 1000;
@@ -48,9 +48,15 @@ describe("photo URLs", () => {
     assert.equal(isStoredImageUrl(upload), true);
     for (const url of ["https://evil.example/pixel.gif", "data:image/png;base64,AAAA", "https://project.supabase.co.evil.example/x.jpg", 42]) assert.equal(isStoredImageUrl(url), false, String(url));
   });
-  test("profile photos are uploads, preset avatars or empty", () => {
-    for (const url of [upload, "/avatars/boy-1.webp", ""]) assert.equal(isAllowedProfilePhoto(url), true, url);
-    for (const url of ["https://evil.example/me.jpg", "/avatars/../secret.webp", "javascript:alert(1)"]) assert.equal(isAllowedProfilePhoto(url), false, url);
+  const mine = `https://project.supabase.co/storage/v1/object/public/listing-photos/${USER}/0f8e4c2a-1b2a-4c3d-9e8f-0a1b2c3d4e5f.jpeg`;
+  const theirs = mine.replace(USER, "11111111-2222-4333-8444-555555555555");
+  test("a member can only use their own uploads", () => {
+    assert.equal(isOwnUpload(mine, USER), true);
+    for (const url of [theirs, upload, mine.replace(".jpeg", "/../x.jpeg"), "https://evil.example/x.jpg"]) assert.equal(isOwnUpload(url, USER), false, url);
+  });
+  test("new profile photos are own uploads, preset avatars or empty", () => {
+    for (const url of [mine, "/avatars/boy-1.webp", ""]) assert.equal(isAllowedProfilePhoto(url, USER), true, url);
+    for (const url of [theirs, upload, "https://evil.example/me.jpg", "/avatars/../secret.webp", "javascript:alert(1)"]) assert.equal(isAllowedProfilePhoto(url, USER), false, url);
   });
 });
 
@@ -152,6 +158,17 @@ describe("OTP and feedback (database)", () => {
     assert.equal((await revealContact(viewer.id, ids[0])).phone, "9876543210");
     assert.equal((await revealContact(viewer.id, own)).phone, "9999999999");
     assert.deepEqual(await revealContact(viewer.id, "c2000000-0000-4000-8000-000000000000"), { error: "not-found" });
+  });
+
+  test("deleting a post keeps photos another post or profile still shows", async () => {
+    const photo = (name) => `https://project.supabase.co/storage/v1/object/public/listing-photos/${name}.jpeg`;
+    const insert = (id, images) => db.pool.query("INSERT INTO listings (id, title, location, rent, property_type, image, images) VALUES ($1, 'Room', 'Noida', 9000, 'Room', $2, $3)", [id, images[0], JSON.stringify(images)]);
+    await insert("d0000000-0000-4000-8000-000000000001", [photo("victim-a"), photo("victim-b")]);
+    await db.pool.query("INSERT INTO users (id, name, email, photo) VALUES (gen_random_uuid(), 'Victim', 'victim@example.test', $1)", [photo("victim-face")]);
+    // Someone pointed their post at the victim's photos, then deletes it.
+    await insert("d0000000-0000-4000-8000-000000000002", [photo("victim-a"), photo("victim-face"), photo("mine")]);
+    const deleted = await database.deleteListing("d0000000-0000-4000-8000-000000000002", "owner");
+    assert.deepEqual(deleted, [photo("mine")]);
   });
 
   test("new feedback is hidden until approved; older feedback stays visible", async () => {

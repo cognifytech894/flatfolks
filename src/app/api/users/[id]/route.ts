@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/current-user";
-import { touchLastSeen, updateUser } from "@/lib/database";
+import { getUserPhoto, touchLastSeen, updateUser } from "@/lib/database";
 import { isAllowedProfilePhoto } from "@/lib/image-storage";
 
 export const runtime = "nodejs";
@@ -21,7 +21,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (body.location !== undefined && body.location.length > 160) return NextResponse.json({ error: "Location must be 160 characters or fewer." }, { status: 400 });
   if (body.phone !== undefined && body.phone.trim() && !/^[\d\s+-]{7,20}$/.test(body.phone.trim())) return NextResponse.json({ error: "Enter a valid phone number." }, { status: 400 });
   if (body.gender !== undefined && !["Male", "Female"].includes(body.gender)) return NextResponse.json({ error: "Invalid gender." }, { status: 400 });
-  if (body.photo !== undefined && !isAllowedProfilePhoto(body.photo)) return NextResponse.json({ error: "Invalid photo." }, { status: 400 });
+  // Keeping the current photo is always fine; a new one must be the member's own upload.
+  if (body.photo !== undefined && !isAllowedProfilePhoto(body.photo, id) && body.photo !== await getUserPhoto(id)) return NextResponse.json({ error: "Invalid photo." }, { status: 400 });
   try { return NextResponse.json({ user: await updateUser(id, body) }); }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Could not update profile." }, { status: 400 }); }
 }

@@ -179,7 +179,14 @@ export async function runInactivePostsJob(deps: JobDeps): Promise<JobReport> {
   for (const post of expired) {
     try {
       // Photos first: if storage fails, the post stays and is retried next run.
-      await deps.deleteImages(photoUrls(post));
+      // Only photos no other post or profile shows (see unusedPhotos in database.ts).
+      const { rows: unused } = await db.query<{ url: string }>(
+        `SELECT url FROM unnest($1::text[]) AS url
+         WHERE NOT EXISTS (SELECT 1 FROM listings WHERE id <> $2 AND (listings.image = url OR listings.images @> jsonb_build_array(url)))
+           AND NOT EXISTS (SELECT 1 FROM users WHERE users.photo = url)`,
+        [photoUrls(post), post.id],
+      );
+      await deps.deleteImages(unused.map((row) => row.url));
       await inTransaction(db, async (client) => {
         await client.query("INSERT INTO deleted_listings (id, owner_id, title, reason, deleted_at) VALUES ($1, $2, $3, 'inactive_owner', $4) ON CONFLICT (id) DO NOTHING", [post.id, post.owner_id, post.title, now]);
         await client.query("DELETE FROM listing_reviews WHERE listing_id = $1", [post.id]);
