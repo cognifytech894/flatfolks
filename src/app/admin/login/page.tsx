@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Lock, ShieldCheck } from "lucide-react";
 
 export default function AdminLoginPage() {
@@ -9,7 +8,6 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -22,8 +20,12 @@ export default function AdminLoginPage() {
       });
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || "Could not log in.");
-      router.push("/admin");
-      router.refresh();
+      // Signing in as admin signs out any member account in this browser (the
+      // server clears its cookie too), so the header never shows a member
+      // while the admin panel is open. A full load makes the header re-read it.
+      localStorage.removeItem("flatfolks_user");
+      localStorage.removeItem("flatfolks_profile_photo");
+      window.location.assign("/admin");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not log in.");
     } finally {

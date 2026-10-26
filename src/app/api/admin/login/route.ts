@@ -3,7 +3,7 @@ import pool from "@/lib/db";
 import { ADMIN_SESSION_COOKIE, createAdminSessionToken, verifyAdminCredentials } from "@/lib/admin-auth";
 import { clientIp, failAdminLoginAttempt, passAdminLoginAttempt, startAdminLoginAttempt } from "@/lib/admin-login-guard";
 import { isRateLimited } from "@/lib/rate-limit";
-import { isSecureContext } from "@/lib/session";
+import { isSecureContext, SESSION_COOKIE } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -34,6 +34,8 @@ export async function POST(request: Request) {
     secure: isSecureContext(request),
     path: "/",
   });
+  // One sign-in per browser: an admin login ends any member session here.
+  response.cookies.delete(SESSION_COOKIE);
   return response;
 }
 
