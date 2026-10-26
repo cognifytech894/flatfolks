@@ -9,8 +9,12 @@ export function PhotoCarousel({ photos, title }: { photos: string[]; title: stri
   const go = (delta: number) => setIndex((current) => (current + delta + photos.length) % photos.length);
 
   return (
-    <div className="relative h-80 overflow-hidden sm:h-96">
-      <Image src={photos[index]} alt={`${title} photo ${index + 1}`} fill priority className="object-cover" sizes="(max-width: 1024px) 100vw, 800px" />
+    // Fixed frame, whole photo: portrait (9:16) and landscape (16:9) photos are
+    // both shown uncropped, over a blurred copy of themselves instead of bars.
+    // Both layers use the same src and sizes, so the photo is downloaded once.
+    <div className="relative h-80 overflow-hidden rounded-[1.5rem] bg-slate-900 sm:h-[26rem]">
+      <Image src={photos[index]} alt="" aria-hidden fill className="scale-110 object-cover opacity-60 blur-2xl" sizes="(max-width: 1024px) 100vw, 800px" />
+      <Image src={photos[index]} alt={`${title} photo ${index + 1}`} fill priority className="object-contain" sizes="(max-width: 1024px) 100vw, 800px" />
       {photos.length > 1 && (
         <>
           <button type="button" onClick={() => go(-1)} aria-label="Previous photo" className="absolute left-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-slate-700 shadow-md hover:bg-white">

@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ActivityPing } from "@/components/layout/activity-ping";
@@ -7,16 +6,6 @@ import { siteUrl as baseUrl } from "@/lib/site-url";
 import "./globals.css";
 
 const GA_MEASUREMENT_ID = "G-VN0CYSJ8R4";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -52,7 +41,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className="h-full antialiased"
     >
       <head>
         {/* Google Analytics 4 (gtag.js), server-rendered in <head> as Google's snippet expects; async, so it never blocks rendering. */}

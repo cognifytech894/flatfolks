@@ -173,6 +173,23 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, related }: Lis
     </>
   );
 
+  const withGallery = !isRequirement && photos.length > 0;
+  const ownerCard = (
+    <aside className={`w-full shrink-0 space-y-4 self-start rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 ${withGallery ? "" : "lg:w-80"}`}>
+      <div className="flex items-center gap-3">
+        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-blue-600 text-white">
+          {listing.ownerPhoto ? <img src={listing.ownerPhoto} alt={ownerName} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center">{ownerName.trim().charAt(0).toUpperCase() || "F"}</div>}
+        </div>
+        <div>
+          <p className="font-semibold text-slate-900">{ownerName}</p>
+          <p className="text-sm text-slate-600">{isRequirement ? "Looking for a flat" : "Posted by"}</p>
+        </div>
+      </div>
+      {contactActions(isRequirement)}
+      <SaveListingButton listingId={listing.id} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700" />
+    </aside>
+  );
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
@@ -180,8 +197,14 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, related }: Lis
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <Breadcrumbs crumbs={crumbs} />
           <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
-            {!isRequirement && photos.length > 0 && <PhotoCarousel photos={photos} title={listing.title} />}
-            <div className="flex flex-col gap-8 p-5 sm:p-6 lg:flex-row lg:p-8">
+            {/* With photos, the contact card sits beside the gallery; otherwise beside the details. */}
+            {withGallery && (
+              <div className="grid gap-5 p-3 sm:p-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6 lg:p-5">
+                <PhotoCarousel photos={photos} title={listing.title} />
+                {ownerCard}
+              </div>
+            )}
+            <div className={`flex flex-col gap-8 p-5 sm:p-6 lg:flex-row lg:p-8 ${withGallery ? "pt-2 sm:pt-2 lg:pt-3" : ""}`}>
               <div className="min-w-0 flex-1 space-y-6">
                 <div>
                   {listing.verified && <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700"><ShieldCheck className="h-4 w-4" /> Verified listing</div>}
@@ -193,19 +216,7 @@ export function ListingDetail({ listing, isLoggedIn, url, crumbs, related }: Lis
                 {factGrid}
                 {extras}
               </div>
-              <aside className="w-full shrink-0 space-y-4 self-start rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 lg:w-80">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-blue-600 text-white">
-                    {listing.ownerPhoto ? <img src={listing.ownerPhoto} alt={ownerName} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center">{ownerName.trim().charAt(0).toUpperCase() || "F"}</div>}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-900">{ownerName}</p>
-                    <p className="text-sm text-slate-600">{isRequirement ? "Looking for a flat" : "Posted by"}</p>
-                  </div>
-                </div>
-                {contactActions(isRequirement)}
-                <SaveListingButton listingId={listing.id} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700" />
-              </aside>
+              {!withGallery && ownerCard}
             </div>
           </div>
 
