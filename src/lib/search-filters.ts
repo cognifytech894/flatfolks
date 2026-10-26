@@ -6,7 +6,7 @@ import { parseBudget, withinBudget } from "@/lib/budget";
 export type SearchParams = {
   location?: string; budget?: string; maxBudget?: string; propertyType?: string;
   size?: string; room?: string; gender?: string; tenant?: string; amenity?: string; furnishing?: string;
-  metro?: string; sort?: string; moveIn?: string; map?: string;
+  metro?: string; sort?: string; moveIn?: string;
 };
 
 export const sortOptions = [

@@ -21,22 +21,13 @@ function requirementHref(location?: string, budget?: number) {
   return `/property?${query}`;
 }
 
-export function SearchResults({ listings, mapView, searchedLocation, budget, keepOrder }: { listings: ResultListing[]; mapView: boolean; searchedLocation?: string; budget?: number; keepOrder?: boolean }) {
+export function SearchResults({ listings, searchedLocation, budget, keepOrder }: { listings: ResultListing[]; searchedLocation?: string; budget?: number; keepOrder?: boolean }) {
   const [sorted, setSorted] = useState(listings);
   useEffect(() => { if (searchedLocation) rememberCity(searchedLocation); }, [searchedLocation]);
   useEffect(() => { setSorted(keepOrder ? listings : sortByCity(listings, getSavedCity())); }, [listings, keepOrder]);
 
   return (
     <>
-      {mapView && (
-        <div className="relative mb-4 h-48 overflow-hidden rounded-3xl border border-blue-100 bg-[radial-gradient(circle_at_18%_30%,#bfdbfe_0_5%,transparent_6%),radial-gradient(circle_at_74%_48%,#bfdbfe_0_5%,transparent_6%),linear-gradient(135deg,#eff6ff,#f8fafc)] p-5">
-          <b className="text-sm text-slate-700">Map view — matching listings</b>
-          <p className="mt-1 text-xs text-slate-500">Interactive map pins for current results.</p>
-          {sorted.slice(0, 5).map((listing, index) => (
-            <span key={listing.id} className="absolute grid h-8 w-8 place-items-center rounded-full bg-blue-600 text-xs font-bold text-white shadow-lg" style={{ left: `${18 + index * 16}%`, top: `${78 - (index % 3) * 22}px` }}>₹</span>
-          ))}
-        </div>
-      )}
       <div className="grid gap-4 md:grid-cols-2">
         {sorted.map((listing) => (
           <article key={listing.id} className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">

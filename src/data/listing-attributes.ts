@@ -43,8 +43,8 @@ export const listingAmenities = [
   { value: "WiFi", label: "Wi-Fi" },
   { value: "AC", label: "AC" },
   { value: "Parking", label: "Parking" },
-  { value: "Washing Machine & Fridge", label: "Washing machine & fridge" },
   { value: "Power Backup", label: "Power backup" },
+  { value: "Washing Machine & Fridge", label: "Washing machine & fridge" },
   { value: "Kitchen", label: "Kitchen" },
   { value: "Lift", label: "Lift" },
 ] as const;

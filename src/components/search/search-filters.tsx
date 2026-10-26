@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Filter, RotateCcw, X } from "lucide-react";
+import { Filter, X } from "lucide-react";
 import { searchLocations } from "@/data/indian-cities";
 import { flatConfigurationOptions, roomTypeOptions, searchableAmenities, tenantPreferenceOptions } from "@/data/listing-attributes";
 import type { SearchParams } from "@/lib/search-filters";
@@ -10,10 +10,9 @@ import type { SearchParams } from "@/lib/search-filters";
 /** Fired by the empty-results "Change budget" button: open the filters and focus the budget, without changing it. */
 export const editBudgetEvent = "flatfolks-edit-budget";
 
-type Filters = Omit<SearchParams, "map" | "moveIn" | "maxBudget">;
+type Filters = Omit<SearchParams, "moveIn" | "maxBudget">;
 type Option = { readonly value: string; readonly label: string };
 
-const genderOptions = [{ value: "", label: "Any" }, { value: "Male", label: "Male" }, { value: "Female", label: "Female" }];
 // "Furnished" sits with the amenities but filters on listings.furnishing, not a tag.
 const furnishedAmenity = { value: "furnished", label: "Furnished" };
 
@@ -90,10 +89,9 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
   function removeLocation(location: string) { update("location", selectedLocations.filter((item) => item !== location).join(",")); }
   // Enter in a typed field applies it without waiting.
   function submit(event: React.FormEvent) { event.preventDefault(); navigate(filters); }
-  function clear() { window.clearTimeout(typingTimer.current); setFilters({}); setCityQuery(""); router.push("/search", { scroll: false }); }
 
-  const sectionTitle = "font-medium text-slate-700";
-  const inputClass = "w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none focus:border-blue-500";
+  const sectionTitle = "text-base font-bold text-slate-900";
+  const inputClass = "w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none focus:border-blue-500";
 
   return (
     <form id="advanced-filters" onSubmit={submit} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
@@ -103,7 +101,6 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
       <div id="filter-fields" className={`${openOnMobile ? "block" : "hidden"} lg:block`}>
         <div className="mt-5 flex items-center justify-between text-sm font-semibold text-slate-800 lg:mt-0">
           <span className="flex items-center gap-2"><Filter className="h-4 w-4" />Filters{activeCount ? ` (${activeCount})` : ""}</span>
-          <button type="button" onClick={clear} className="flex items-center gap-1 text-xs font-semibold text-blue-600"><RotateCcw className="h-3.5 w-3.5" />Reset</button>
         </div>
         <div className="mt-4 space-y-5 text-sm">
           <div className="relative">
@@ -128,12 +125,10 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
           </div>
           <div>
             <p className={sectionTitle}>Preferences</p>
-            <Chips label="Preferred gender" options={genderOptions} isSelected={(value) => (filters.gender || "") === value} onToggle={(value) => toggleOne("gender", value)} />
             <Chips label="Preferred tenants" options={tenantPreferenceOptions} isSelected={(value) => filters.tenant === value} onToggle={(value) => toggleOne("tenant", value)} />
           </div>
           <div>
             <p className={sectionTitle}>Amenities</p>
-            <p className="mt-1 text-xs text-slate-500">Shows places that have all of the selected amenities.</p>
             <Chips label="Amenities" options={[furnishedAmenity, ...searchableAmenities]} isSelected={(value) => value === furnishedAmenity.value ? filters.furnishing === value : listOf("amenity").includes(value)} onToggle={(value) => value === furnishedAmenity.value ? toggleOne("furnishing", value) : toggleInList("amenity", value)} />
           </div>
           <label className={`block ${sectionTitle}`}>Listing type<select value={filters.propertyType || ""} onChange={(event) => update("propertyType", event.target.value)} className={`mt-2 ${inputClass}`}><option value="">All types</option><option>Room</option><option>Flat</option><option>Apartment</option><option>PG</option></select></label>
