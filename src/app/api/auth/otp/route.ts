@@ -3,6 +3,7 @@ import { OtpError, requestEmailAuthOtp, verifyEmailAuthOtp } from "@/lib/databas
 import { sendOtpEmail, sendWelcomeEmail } from "@/lib/email";
 import { siteUrl } from "@/lib/site-url";
 import { buildWelcomeEmail } from "@/lib/welcome-email";
+import { ADMIN_SESSION_COOKIE } from "@/lib/admin-auth";
 import { isRateLimited } from "@/lib/rate-limit";
 import { createSessionToken, isSecureContext, SESSION_COOKIE, SESSION_DAYS } from "@/lib/session";
 
@@ -48,6 +49,8 @@ export async function POST(request: Request) {
       response.cookies.set(SESSION_COOKIE, createSessionToken(user.id), {
         httpOnly: true, sameSite: "lax", secure: isSecureContext(request), path: "/", maxAge: 60 * 60 * 24 * SESSION_DAYS,
       });
+      // One sign-in per browser: a member login ends any admin session here.
+      response.cookies.delete(ADMIN_SESSION_COOKIE);
       return response;
     }
     return NextResponse.json({ error: "Unknown action." }, { status: 400 });
