@@ -4,6 +4,7 @@ import { ArrowRight, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { Breadcrumbs, breadcrumbJsonLd, type Crumb } from "@/components/seo/breadcrumbs";
 import { ListingCard } from "@/components/seo/listing-card";
 import { RichText } from "@/components/seo/rich-text";
+import { GenderSelect } from "@/components/search/gender-select";
 import { furnishingLabel, furnishingOptions, isFurnishing } from "@/data/furnishing";
 import type { Listing } from "@/lib/database";
 import { affordsRent, parseBudget, parseRent, rupees, withinBudget } from "@/lib/budget";
@@ -176,7 +177,6 @@ function FilterBar({ path, filters, field }: { path: string; filters: LandingFil
     const query = new URLSearchParams(Object.entries({ ...filters, ...next }).filter(([, value]) => value) as [string, string][]);
     return query.size ? `${path}?${query}` : path;
   };
-  const chip = (active: boolean) => `inline-flex min-h-11 items-center rounded-full border px-4 py-1.5 text-sm font-medium transition ${active ? "border-blue-600 bg-blue-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"}`;
   // rel="nofollow" keeps crawlers from walking every filter combination.
   return (
     <div className="mt-6 flex flex-wrap items-center gap-2">
@@ -191,7 +191,7 @@ function FilterBar({ path, filters, field }: { path: string; filters: LandingFil
         <button type="submit" aria-label={copy.submit} className="grid h-11 w-11 place-items-center rounded-full bg-blue-600 text-white hover:bg-blue-700"><Search className="h-3.5 w-3.5" /></button>
       </form>
       <span className="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />
-      {["Any", "Male", "Female"].map((gender) => <Link rel="nofollow" key={gender} href={href({ gender: gender === "Any" ? undefined : gender })} className={chip((filters.gender || "Any") === gender)}>{gender === "Any" ? "Any gender" : gender}</Link>)}
+      <GenderSelect filters={filters} path={path} />
     </div>
   );
 }

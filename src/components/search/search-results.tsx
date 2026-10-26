@@ -45,18 +45,19 @@ export function SearchResults({ listings, searchedLocation, budget, keepOrder }:
             <div className="flex flex-1 flex-col p-4">
               <div className="flex items-center justify-between gap-3">
                 <h2 title={listing.title} className="min-w-0 truncate text-lg font-semibold text-slate-900">{listing.title}</h2>
-                <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{listing.propertyType}</span>
+                <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">{listing.propertyType}</span>
               </div>
               <p title={listing.location} className="mt-1 truncate text-sm text-slate-600">{listing.location}</p>
               <dl className="mt-3 grid grid-cols-2 gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
                 <div className="min-w-0"><dt className="text-xs text-slate-500">Looking for</dt><dd className="truncate text-sm font-semibold text-slate-900">{lookingFor(listing.genderPreference)}</dd></div>
                 <div className="min-w-0"><dt className="text-xs text-slate-500">Rent</dt><dd className="truncate text-sm font-semibold text-emerald-700">{perMonth(listing.rent)}</dd></div>
               </dl>
-              <div className="mt-3 flex h-6 gap-1.5 overflow-hidden">
-                {listing.badges.map((badge) => <span key={badge} className="shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">{badge}</span>)}
-              </div>
-              <div className="mt-auto flex justify-end pt-3">
-                <Link href={listing.href} target="_blank" rel="noopener" className="inline-block py-1 text-sm font-semibold text-blue-600 hover:underline">View details</Link>
+              <div className="mt-3 flex items-center gap-3">
+                {/* Badges wrap onto a hidden second row, so one that doesn't fit is left out rather than cut in half. */}
+                <div className="flex h-6 min-w-0 flex-1 flex-wrap gap-1.5 overflow-hidden">
+                  {listing.badges.map((badge) => <span key={badge} className="shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">{badge}</span>)}
+                </div>
+                <Link href={listing.href} target="_blank" rel="noopener" className="shrink-0 py-1 text-sm font-semibold text-blue-600 hover:underline">View details</Link>
               </div>
             </div>
           </article>
