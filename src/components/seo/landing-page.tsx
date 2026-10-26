@@ -18,15 +18,15 @@ export type LandingFilters = { gender?: string; budget?: string; rent?: string; 
 const nationalCopy: Record<IntentSlug, { h1: string; title: string }> = {
   "sharing-flat": {
     h1: "Sharing Flats in Delhi, Noida, Greater Noida, Gurgaon & Ghaziabad",
-    title: "Sharing Flat & Flat Share in Delhi, Noida, Gurgaon & Ghaziabad",
+    title: "Sharing Flat in Delhi NCR",
   },
   "flats-for-rent": {
     h1: "Flats for Rent in Delhi, Noida, Greater Noida, Gurgaon & Ghaziabad",
-    title: "Flats for Rent in Delhi, Noida, Gurgaon & Ghaziabad, No Brokerage",
+    title: "Flats for Rent in Delhi NCR",
   },
   flatmates: {
     h1: "Find Flatmates & Roommates",
-    title: "Find Flatmates & Roommates in Delhi, Noida, Gurgaon & Ghaziabad",
+    title: "Flatmates in Delhi NCR",
   },
 };
 
@@ -68,16 +68,14 @@ function heading(scope: Scope): string {
   return isSmallPlace(scope) ? `Flats & Flatmates in ${place}` : `Sharing Flat, Flats for Rent & Flatmates in ${place}`;
 }
 
-function title(scope: Scope, matches: Listing[]): string {
+/** Plain page titles, as they read in search results: "Sharing Flat in Greater Noida". No site name, no taglines. */
+function title(scope: Scope): string {
   const place = titleLabel(scope);
   if (!place) return scope.intent ? nationalCopy[scope.intent.slug].title : heading(scope);
   switch (scope.intent?.slug) {
-    case "sharing-flat": return `Sharing Flat in ${place}: Shared Accommodation & Rooms`;
-    case "flats-for-rent": {
-      const bhk = bhkSummary(matches);
-      return bhk ? `${bhk} Flats for Rent in ${place}` : `Flats for Rent in ${place}, No Brokerage`;
-    }
-    case "flatmates": return `Flatmates & Roommates in ${place}: Find a Flatmate`;
+    case "sharing-flat":
+    case "flats-for-rent":
+    case "flatmates": return `${scope.intent.label} in ${place}`;
     default: return deepest(scope)?.seo?.title || (isSmallPlace(scope) ? `Flats & Flatmates in ${place}` : heading(scope));
   }
 }
@@ -106,7 +104,7 @@ function description(scope: Scope, matches: Listing[]): string {
       const mix = counts.length ? `: ${counts.map(([intent, n]) => `${n} ${phrases[intent.slug][n === 1 ? 0 : 1]}`).join(", ")}` : "";
       return isSmallPlace(scope)
         ? `Flats, flatmates and sharing flats in ${place}${mix}${from}. Browse rooms and rental flats posted directly by residents on FlatFolks.`
-        : `Sharing flats, flats for rent and flatmates in ${place}${mix}${from}. Popular areas, current listings and guides, all with no brokerage.`;
+        : `Sharing flats, flats for rent and flatmates in ${place}${mix}${from}. Popular areas and current listings, all with no brokerage.`;
     }
   }
 }
@@ -151,7 +149,7 @@ function hasFilters(filters: LandingFilters) {
 
 export function landingMetadata(scope: Scope, listings: Listing[], filters: LandingFilters): Metadata {
   const matches = listings.filter((listing) => inScope(listing, scope));
-  const pageTitle = title(scope, matches);
+  const pageTitle = title(scope);
   const pageDescription = description(scope, matches);
   const canonical = `${baseUrl}${landingPath(scope)}`;
   // Filtered views (budget, gender) are for visitors, not separate search

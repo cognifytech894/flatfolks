@@ -1,5 +1,22 @@
 import type { NextConfig } from "next";
 
+// Guides that used to live at /blog/{slug}, and the listings page each one now points to.
+const removedGuides: Record<string, string> = {
+  "sharing-flat-in-noida": "/noida/sharing-flat",
+  "best-areas-to-live-in-noida": "/noida",
+  "cost-of-living-in-noida": "/noida",
+  "how-to-find-flatmates-in-noida": "/noida/flatmates",
+  "sharing-flat-in-greater-noida": "/greater-noida/sharing-flat",
+  "best-areas-to-live-in-greater-noida": "/greater-noida",
+  "sharing-flat-in-gurgaon": "/gurgaon/sharing-flat",
+  "best-areas-to-live-in-gurgaon": "/gurgaon",
+  "cost-of-living-in-gurgaon": "/gurgaon",
+  "sharing-flat-in-ghaziabad": "/ghaziabad/sharing-flat",
+  "best-areas-to-live-in-ghaziabad": "/ghaziabad",
+  "cost-of-living-in-ghaziabad": "/ghaziabad",
+  "flatmates-and-sharing-flats-in-delhi": "/delhi/flatmates",
+};
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.3.13"],
   images: {
@@ -20,9 +37,13 @@ const nextConfig: NextConfig = {
       // /gurgaon is the canonical city section; Gurugram URLs are permanent aliases.
       { source: "/gurugram", destination: "/gurgaon", permanent: true },
       { source: "/gurugram/:path*", destination: "/gurgaon/:path*", permanent: true },
-      // The renting guides moved under /blog alongside the city articles.
-      { source: "/guides", destination: "/blog", permanent: true },
-      { source: "/guides/:slug", destination: "/blog/:slug", permanent: true },
+      // The blog and its guides were removed. Each city guide sends its readers
+      // to the live listings for that city; anything else goes home.
+      ...Object.entries(removedGuides).map(([slug, destination]) => ({ source: `/blog/${slug}`, destination, permanent: true })),
+      { source: "/blog", destination: "/", permanent: true },
+      { source: "/blog/:path*", destination: "/", permanent: true },
+      { source: "/guides", destination: "/", permanent: true },
+      { source: "/guides/:path*", destination: "/", permanent: true },
     ];
   },
 };

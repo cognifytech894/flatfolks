@@ -4,7 +4,7 @@ import { parseBudget, withinBudget } from "@/lib/budget";
 
 /** Raw /search query string. List-valued params are comma-separated. `maxBudget` is only read from old links; `budget` is written. */
 export type SearchParams = {
-  q?: string; location?: string; budget?: string; maxBudget?: string; propertyType?: string;
+  location?: string; budget?: string; maxBudget?: string; propertyType?: string;
   size?: string; room?: string; gender?: string; tenant?: string; amenity?: string; furnishing?: string;
   metro?: string; sort?: string; moveIn?: string; map?: string;
 };
@@ -19,7 +19,6 @@ const list = (value?: string) => (value || "").split(",").map((item) => item.tri
 
 export function parseSearchFilters(params: SearchParams) {
   return {
-    keywords: (params.q || "").trim().toLowerCase().split(/\s+/).filter(Boolean),
     locations: list(params.location),
     budget: parseBudget(params),
     propertyType: params.propertyType,
@@ -36,7 +35,7 @@ export function parseSearchFilters(params: SearchParams) {
 
 export type ParsedSearchFilters = ReturnType<typeof parseSearchFilters>;
 
-/** How many filters are on, for the "Filters (n)" badge — location, keywords and sort don't count. */
+/** How many filters are on, for the "Filters (n)" badge — location and sort don't count. */
 export function activeFilterCount(filters: ParsedSearchFilters) {
   return [filters.budget, filters.propertyType, filters.metro, filters.gender, filters.tenant, filters.furnishing].filter(Boolean).length
     + filters.sizes.length + filters.rooms.length + filters.amenities.length;
@@ -51,10 +50,8 @@ export function activeFilterCount(filters: ParsedSearchFilters) {
  */
 export function matchesSearch(listing: Listing, filters: ParsedSearchFilters) {
   if (listing.listingKind === "flat-requirement") return false;
-  const haystack = [listing.title, listing.location, listing.description, listing.nearbyMetro, listing.propertyType, ...listing.tags].join(" ").toLowerCase();
   const furnished = filters.furnishing;
-  return filters.keywords.every((word) => haystack.includes(word))
-    && (filters.locations.length === 0 || filters.locations.some((location) => listing.location.toLowerCase().includes(location.toLowerCase())))
+  return (filters.locations.length === 0 || filters.locations.some((location) => listing.location.toLowerCase().includes(location.toLowerCase())))
     && withinBudget(listing, filters.budget)
     && (!filters.propertyType || listing.propertyType === filters.propertyType)
     && (filters.sizes.length === 0 || (!!listing.flatConfiguration && filters.sizes.includes(listing.flatConfiguration)))

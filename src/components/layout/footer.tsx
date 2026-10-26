@@ -86,9 +86,6 @@ export function Footer() {
                 </Link>
               ))}
             </nav>
-            <Link href="/blog" className="mt-4 inline-block py-1 text-sm font-medium text-blue-600 hover:underline">
-              Renting guides &amp; tips
-            </Link>
           </div>
         </div>
 

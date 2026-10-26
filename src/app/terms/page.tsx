@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "Terms of Use",
   description: "The terms that apply when you use FlatFolks to find or list rooms, flats and flatmates.",
   alternates: { canonical: `${baseUrl}/terms` },
-  openGraph: { title: "Terms of Use | FlatFolks", type: "website", siteName: "FlatFolks", url: `${baseUrl}/terms` },
+  openGraph: { title: "Terms of Use", type: "website", siteName: "FlatFolks", url: `${baseUrl}/terms` },
 };
 
 export default function TermsPage() {

@@ -36,8 +36,6 @@ const fileFor = (route) => {
   if (route.startsWith("/search")) return "src/app/search/page.tsx, src/components/search/*";
   if (route.startsWith("/flatmates")) return "src/app/flatmates/page.tsx, src/components/flatmates/*";
   if (route.startsWith("/property")) return "src/app/property/page.tsx";
-  if (route.startsWith("/blog/")) return "src/app/blog/[slug]/page.tsx, src/data/blog.ts";
-  if (route.startsWith("/blog")) return "src/app/blog/page.tsx";
   if (route.startsWith("/admin")) return "src/app/admin/login/page.tsx";
   if (route.startsWith("/auth")) return "src/app/auth/page.tsx";
   if (route.startsWith("/dashboard")) return "src/app/dashboard/page.tsx";
@@ -274,13 +272,11 @@ async function main() {
   const started = Date.now();
   try {
     const listingPath = await firstSitemapPath("listings");
-    const blogPath = await firstSitemapPath("blog");
     const pages = [
       ["home", "/"], ["search", "/search"], ["flatmates", "/flatmates"], ["noida", "/noida"], ["greater-noida", "/greater-noida"],
       ["gaur-city-2", "/greater-noida/noida-extension/gaur-city-2"], ["gurgaon", "/gurgaon"], ["ghaziabad", "/ghaziabad"],
       ...(listingPath ? [["listing", listingPath]] : []),
-      ["post-flat", "/property?intent=flat"], ["post-flatmate", "/property?intent=flatmate"], ["about", "/about"], ["blog", "/blog"],
-      ...(blogPath ? [["blog-post", blogPath]] : []),
+      ["post-flat", "/property?intent=flat"], ["post-flatmate", "/property?intent=flatmate"], ["about", "/about"],
       ["privacy-policy", "/privacy-policy"], ["terms", "/terms"], ["contact", "/contact"], ["login", "/auth"], ["admin", "/admin"],
       ["not-found", "/this-page-does-not-exist-404"], ["dashboard-logged-out", "/dashboard"],
     ];

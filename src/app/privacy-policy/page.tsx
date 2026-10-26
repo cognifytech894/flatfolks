@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "How FlatFolks collects, uses and protects your personal information when you search for rooms, flats and flatmates.",
   alternates: { canonical: `${baseUrl}/privacy-policy` },
-  openGraph: { title: "Privacy Policy | FlatFolks", type: "website", siteName: "FlatFolks", url: `${baseUrl}/privacy-policy` },
+  openGraph: { title: "Privacy Policy", type: "website", siteName: "FlatFolks", url: `${baseUrl}/privacy-policy` },
 };
 
 export default function PrivacyPolicyPage() {

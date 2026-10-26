@@ -64,14 +64,14 @@ Two flows, both requiring a contact number:
 
 ### Content and legal pages
 
-- About (`/about`) and Blog (`/blog`, 3 renting guides).
-- Privacy Policy (`/privacy-policy`), Terms of Use (`/terms`) and Contact (`/contact`, email only), linked in the footer under "Renting guides & tips". Contact email is set in `src/data/contact.ts`. **(new, 23 Oct)**
+- About (`/about`). There is no blog: old `/blog` and `/guides` URLs redirect to the matching city page or home (`next.config.ts`).
+- Privacy Policy (`/privacy-policy`), Terms of Use (`/terms`) and Contact (`/contact`, email only), linked in the footer under "About". Contact email is set in `src/data/contact.ts`. **(new, 23 Oct)**
 
 ### SEO
 
 - City, locality and society landing pages, each with intent pages (`/flats-for-rent`, `/flatmates`, `/sharing-flat`).
 - A page is indexed only when it has enough real listings. Thin pages, filtered views (`?budget=`, `?gender=`), `/search` and non-target cities (Mumbai, Bangalore, Pune, etc.) are `noindex, follow` on purpose — this is why Search Console shows ~200 pages as "Excluded by noindex", which is expected.
-- Split sitemaps under `/sitemap.xml` (pages, cities, localities, societies, listings, blog). Empty child sitemaps are left out of the index and return 404; the sitemap returns 503 if the database is down. **(new, 12–23 Oct)**
+- Split sitemaps under `/sitemap.xml` (pages, cities, localities, societies, listings). Empty child sitemaps are left out of the index and return 404; the sitemap returns 503 if the database is down. **(new, 12–23 Oct)**
 - Metadata, Open Graph, structured data (Organization/WebSite), and a robots.txt that blocks only private paths.
 - Place copy contains no unverified claims (metro distances, landmarks, rent figures).
 

@@ -40,9 +40,9 @@ export const dynamic = "force-dynamic";
 
 const description = "FlatFolks (Flat Folks): find flatmates, sharing flats and rooms in Delhi, Noida, Greater Noida, Gurgaon and Ghaziabad. No brokerage, direct contact with owners.";
 
-// No `title` here on purpose: it inherits the root layout's `default` title
-// verbatim rather than going through the "%s | FlatFolks" template, which
-// would otherwise double up the brand name for the homepage specifically.
+// No `title` here on purpose: it inherits the root layout's `default` title.
+// Titles never carry the site name ("| FlatFolks"): search results show the
+// page's own title only (layout template "%s").
 export const metadata: Metadata = {
   description,
   alternates: { canonical: baseUrl },

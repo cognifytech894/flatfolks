@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Filter, RotateCcw, Search, X } from "lucide-react";
+import { Filter, RotateCcw, X } from "lucide-react";
 import { searchLocations } from "@/data/indian-cities";
 import { flatConfigurationOptions, roomTypeOptions, searchableAmenities, tenantPreferenceOptions } from "@/data/listing-attributes";
 import type { SearchParams } from "@/lib/search-filters";
@@ -79,16 +79,11 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
 
   return (
     <form id="advanced-filters" onSubmit={submit} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-      <label htmlFor="keyword-search" className="sr-only">Search listings</label>
-      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 focus-within:border-blue-500">
-        <Search className="h-4 w-4 shrink-0 text-slate-500" />
-        <input id="keyword-search" type="search" value={filters.q || ""} onChange={(event) => update("q", event.target.value)} placeholder="Search title, area or metro" className="w-full bg-transparent py-3 text-sm outline-none" />
-      </div>
-      <button type="button" onClick={() => setOpenOnMobile((open) => !open)} aria-expanded={openOnMobile} aria-controls="filter-fields" className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-700 lg:hidden">
+      <button type="button" onClick={() => setOpenOnMobile((open) => !open)} aria-expanded={openOnMobile} aria-controls="filter-fields" className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-700 lg:hidden">
         <Filter className="h-4 w-4" />{openOnMobile ? "Hide filters" : `Filters${activeCount ? ` (${activeCount})` : ""}`}
       </button>
       <div id="filter-fields" className={`${openOnMobile ? "block" : "hidden"} lg:block`}>
-        <div className="mt-5 flex items-center justify-between text-sm font-semibold text-slate-800">
+        <div className="mt-5 flex items-center justify-between text-sm font-semibold text-slate-800 lg:mt-0">
           <span className="flex items-center gap-2"><Filter className="h-4 w-4" />Filters{activeCount ? ` (${activeCount})` : ""}</span>
           <button type="button" onClick={clear} className="flex items-center gap-1 text-xs font-semibold text-blue-600"><RotateCcw className="h-3.5 w-3.5" />Reset</button>
         </div>
