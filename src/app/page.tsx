@@ -23,6 +23,7 @@ import { safeJsonLd } from "@/lib/json-ld";
 import { listingPath } from "@/lib/seo/listings";
 import { siteUrl as baseUrl } from "@/lib/site-url";
 import { rupees } from "@/lib/budget";
+import { socialLinks } from "@/data/contact";
 
 // Target cities link to their city hub.
 const cities = [
@@ -38,7 +39,8 @@ function Unsplash({ id, alt, className, priority, sizes }: { id: string; alt: st
 
 export const dynamic = "force-dynamic";
 
-const description = "FlatFolks (Flat Folks): find flatmates, sharing flats and rooms in Delhi, Noida, Greater Noida, Gurgaon and Ghaziabad. No brokerage, direct contact with owners.";
+// Kept under ~130 characters so search results show it whole.
+const description = "Find flatmates, sharing flats and rooms in Delhi, Noida, Greater Noida, Gurgaon and Ghaziabad. No brokerage, contact owners directly.";
 
 // No `title` here on purpose: it inherits the root layout's `default` title.
 // Titles never carry the site name ("| FlatFolks"): search results show the
@@ -59,8 +61,8 @@ export default async function Home() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
-      { "@type": "Organization", name: "FlatFolks", alternateName: ["Flat Folks", "FlatFolk", "Flatfolks India"], url: baseUrl, logo: `${baseUrl}/icon` },
-      { "@type": "WebSite", name: "FlatFolks", alternateName: ["Flat Folks", "FlatFolk"], url: baseUrl, potentialAction: { "@type": "SearchAction", target: `${baseUrl}/search?location={search_term_string}`, "query-input": "required name=search_term_string" } },
+      { "@type": "Organization", name: "FlatFolks", alternateName: ["Flat Folks", "FlatFolk", "Flatfolks India"], url: baseUrl, logo: { "@type": "ImageObject", url: `${baseUrl}/icon`, width: 512, height: 512 }, sameAs: socialLinks.map((link) => link.href) },
+      { "@type": "WebSite", name: "FlatFolks", alternateName: ["Flat Folks", "FlatFolk"], url: baseUrl },
     ],
   };
   return (
