@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "Contact Us",
   description: "Get in touch with FlatFolks for help with your account, a listing, or to report a problem.",
   alternates: { canonical: `${baseUrl}/contact` },
-  openGraph: { title: "Contact Us", type: "website", siteName: "FlatFolks", url: `${baseUrl}/contact` },
+  openGraph: { title: "Contact FlatFolks", type: "website", siteName: "FlatFolks", url: `${baseUrl}/contact` },
 };
 
 export default function ContactPage() {

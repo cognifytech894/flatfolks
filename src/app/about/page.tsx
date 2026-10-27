@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "About Us",
   description: "FlatFolks helps you find rooms, flats, and compatible flatmates in Delhi NCR — free to list, simple search, and direct contact with owners.",
   alternates: { canonical: `${baseUrl}/about` },
-  openGraph: { title: "About Us", description: "FlatFolks helps you find rooms, flats, and compatible flatmates, with direct contact with owners.", type: "website", siteName: "FlatFolks", url: `${baseUrl}/about` },
+  openGraph: { title: "About FlatFolks", description: "FlatFolks helps you find rooms, flats, and compatible flatmates, with direct contact with owners.", type: "website", siteName: "FlatFolks", url: `${baseUrl}/about` },
 };
 
 const offers = [
