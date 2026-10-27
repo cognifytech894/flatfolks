@@ -16,13 +16,14 @@ type Option = { readonly value: string; readonly label: string };
 // "Furnished" sits with the amenities but filters on listings.furnishing, not a tag.
 const furnishedAmenity = { value: "furnished", label: "Furnished" };
 
-function Chips({ options, isSelected, onToggle, label }: { options: readonly Option[]; isSelected: (value: string) => boolean; onToggle: (value: string) => void; label: string }) {
+/** `oneRow` keeps a short set (1 RK – 3 BHK, Students / Working professionals) on one line, each chip growing to fill it. */
+function Chips({ options, isSelected, onToggle, label, oneRow }: { options: readonly Option[]; isSelected: (value: string) => boolean; onToggle: (value: string) => void; label: string; oneRow?: boolean }) {
   return (
-    <div role="group" aria-label={label} className="mt-2 flex flex-wrap gap-2">
+    <div role="group" aria-label={label} className={oneRow ? "mt-2 flex gap-1.5" : "mt-2 flex flex-wrap gap-2"}>
       {options.map((option) => {
         const selected = isSelected(option.value);
         return (
-          <button type="button" key={option.value || "any"} aria-pressed={selected} onClick={() => onToggle(option.value)} className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${selected ? "border-blue-600 bg-blue-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"}`}>
+          <button type="button" key={option.value || "any"} aria-pressed={selected} onClick={() => onToggle(option.value)} className={`rounded-full border ${oneRow ? "flex-auto px-2" : "px-3"} py-1.5 text-xs font-semibold whitespace-nowrap transition ${selected ? "border-blue-600 bg-blue-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"}`}>
             {option.label}
           </button>
         );
@@ -114,7 +115,7 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
           </div>
           <div>
             <p className={sectionTitle}>Property</p>
-            <Chips label="Property" options={flatConfigurationOptions} isSelected={(value) => listOf("size").includes(value)} onToggle={(value) => toggleInList("size", value)} />
+            <Chips label="Property" oneRow options={flatConfigurationOptions} isSelected={(value) => listOf("size").includes(value)} onToggle={(value) => toggleInList("size", value)} />
           </div>
           <div>
             <p className={sectionTitle}>Room</p>
@@ -122,7 +123,7 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
           </div>
           <div>
             <p className={sectionTitle}>Preferences</p>
-            <Chips label="Preferred tenants" options={tenantPreferenceOptions} isSelected={(value) => filters.tenant === value} onToggle={(value) => toggleOne("tenant", value)} />
+            <Chips label="Preferred tenants" oneRow options={tenantPreferenceOptions} isSelected={(value) => filters.tenant === value} onToggle={(value) => toggleOne("tenant", value)} />
           </div>
           <div>
             <p className={sectionTitle}>Amenities</p>
