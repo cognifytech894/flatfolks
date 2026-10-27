@@ -9,10 +9,10 @@ const GA_MEASUREMENT_ID = "G-VN0CYSJ8R4";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
-  title: { default: "Find Flatmates, Sharing Flats & Rooms in Delhi NCR", template: "%s" },
+  title: { default: "Sharing Flats & Rooms in Delhi", template: "%s" },
   description: "FlatFolks (Flat Folks) helps you find rooms, flatmates, and shared accommodations, with direct contact with owners.",
   openGraph: {
-    title: "Find Flatmates, Sharing Flats & Rooms in Delhi NCR",
+    title: "Sharing Flats & Rooms in Delhi",
     description: "Find rooms and compatible flatmates, and contact owners directly.",
     type: "website",
     siteName: "FlatFolks",
