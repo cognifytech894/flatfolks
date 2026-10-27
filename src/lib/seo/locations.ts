@@ -6,7 +6,7 @@
 // in src/app/[city]/[...path] resolves any depth. Whether a page is indexed
 // depends on real inventory (see src/lib/seo/listings.ts).
 
-export type IntentSlug = "flats-for-rent" | "flatmates" | "sharing-flat";
+export type IntentSlug = "flats-for-rent" | "flatmates" | "sharing-flat" | "room-partner";
 
 export type PlaceKind = "locality" | "society" | "avenue";
 
@@ -45,6 +45,8 @@ export type City = {
   name: string;
   state: string;
   aliases: string[];
+  /** The name used in "How to Find…" titles when it differs from `name`, e.g. Gurugram. */
+  titleName?: string;
   places: Place[];
 };
 
@@ -182,6 +184,7 @@ export const cities: City[] = [
   {
     slug: "gurgaon",
     name: "Gurgaon",
+    titleName: "Gurugram",
     state: "Haryana",
     aliases: ["gurgaon", "gurugram"],
     places: [

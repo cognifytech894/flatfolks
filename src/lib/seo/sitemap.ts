@@ -1,6 +1,6 @@
 import { getListings, type Listing } from "@/lib/database";
 import { isListingIndexable } from "@/lib/seo/listing-page";
-import { allPlaceTrails, baseUrl, cities, inScope, intents, isScopeIndexable, listingPath, placePath, type Scope } from "@/lib/seo/listings";
+import { allPlaceTrails, baseUrl, cities, inScope, intents, isScopeIndexable, listingPath, placePath, roomPartner, type Scope } from "@/lib/seo/listings";
 
 type Entry = { path: string; lastModified?: string; changeFrequency?: string; priority?: number };
 
@@ -93,7 +93,7 @@ export async function sitemapEntries(name: SitemapName, preloaded?: Listing[]): 
   if (name === "pages") {
     return [
       { path: "/", changeFrequency: "daily", priority: 1 },
-      ...intents.map((intent) => ({ path: `/${intent.slug}`, changeFrequency: "daily", priority: 0.9 })),
+      ...[...intents, roomPartner].map((intent) => ({ path: `/${intent.slug}`, changeFrequency: "daily", priority: 0.9 })),
       { path: "/about", changeFrequency: "monthly", priority: 0.3 },
       { path: "/contact", changeFrequency: "yearly", priority: 0.2 },
       { path: "/privacy-policy", changeFrequency: "yearly", priority: 0.1 },
@@ -104,7 +104,7 @@ export async function sitemapEntries(name: SitemapName, preloaded?: Listing[]): 
   if (name === "listings") {
     return listings.filter(isListingIndexable).map((listing) => ({ path: listingPath(listing), lastModified: listing.createdAt, changeFrequency: "weekly", priority: 0.6 }));
   }
-  if (name === "cities") return cities.flatMap((city) => landingEntries(listings, withIntents({ city }), 0.9));
+  if (name === "cities") return cities.flatMap((city) => landingEntries(listings, [...withIntents({ city }), { city, intent: roomPartner }], 0.9));
 
   const places = allPlaceTrails().filter(({ trail }) => (name === "localities" ? trail.length === 1 : trail.length > 1));
   return places.flatMap(({ city, trail }) => landingEntries(listings, withIntents({ city, trail }), name === "localities" ? 0.8 : 0.7));

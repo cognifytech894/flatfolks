@@ -10,7 +10,7 @@ import type { Listing } from "@/lib/database";
 import { affordsRent, parseBudget, parseRent, rupees, withinBudget } from "@/lib/budget";
 import { safeJsonLd } from "@/lib/json-ld";
 import { listingsForVisitor } from "@/lib/visitor";
-import { baseUrl, inScope, intents, isScopeIndexable, listingPath, placePath, type Scope } from "@/lib/seo/listings";
+import { baseUrl, inScope, intents, isScopeIndexable, isSeekerIntent, listingPath, placePath, type Scope } from "@/lib/seo/listings";
 import { placeLabel, type City, type IntentSlug, type Place } from "@/lib/seo/locations";
 
 /** `budget` is a room-seeker's max rent; `rent` is what an owner charges, matched against requirements' max budgets. */
@@ -28,7 +28,11 @@ const nationalCopy: Record<IntentSlug, { h1: string; title: string }> = {
   },
   flatmates: {
     h1: "Find Flatmates & Roommates",
-    title: "Flatmates in Delhi NCR",
+    title: "How to Find Flatmates",
+  },
+  "room-partner": {
+    h1: "Find a Room Partner",
+    title: "How to Find Room Partner",
   },
 };
 
@@ -104,8 +108,10 @@ function title(scope: Scope): string {
   if (!place) return scope.intent ? nationalCopy[scope.intent.slug].title : heading(scope);
   switch (scope.intent?.slug) {
     case "sharing-flat":
-    case "flats-for-rent":
-    case "flatmates": return `${scope.intent.label} in ${place}`;
+    case "flats-for-rent": return `${scope.intent.label} in ${place}`;
+    // City pages answer the "how to find…" searches; deeper places keep the plain form.
+    case "flatmates":
+    case "room-partner": return scope.trail?.length ? `${scope.intent.label} in ${place}` : `How to Find ${scope.intent.label} in ${scope.city!.titleName || place}`;
     default: return deepest(scope)?.seo?.title || (isSmallPlace(scope) ? `Flats & Flatmates in ${place}` : heading(scope));
   }
 }
@@ -128,8 +134,11 @@ function description(scope: Scope, matches: Listing[]): string {
     case "flatmates": return count
       ? `${count} ${count === 1 ? "person" : "people"} looking for a flatmate or room in ${place}. See their budget, preferred flatmate and lifestyle, and contact them directly on FlatFolks.`
       : `Find flatmates, roommates and rooms in ${place}: see people's budget, preferred flatmate and lifestyle, and contact them directly on FlatFolks.`;
+    case "room-partner": return count
+      ? `${count} ${count === 1 ? "person" : "people"} looking for a room partner in ${place}. See their budget and preferences, and contact them directly.`
+      : `Find a room partner in ${place}: see people's budget and preferences, and contact them directly, with no brokerage.`;
     default: {
-      const phrases: Record<IntentSlug, [string, string]> = { "sharing-flat": ["sharing flat", "sharing flats"], "flats-for-rent": ["flat for rent", "flats for rent"], flatmates: ["person looking for a flatmate", "people looking for a flatmate"] };
+      const phrases: Record<IntentSlug, [string, string]> = { "sharing-flat": ["sharing flat", "sharing flats"], "flats-for-rent": ["flat for rent", "flats for rent"], flatmates: ["person looking for a flatmate", "people looking for a flatmate"], "room-partner": ["person looking for a room partner", "people looking for a room partner"] };
       const counts = intents.map((intent) => [intent, matches.filter((listing) => intent.matches(listing)).length] as const).filter(([, n]) => n > 0);
       const mix = counts.length ? `: ${counts.map(([intent, n]) => `${n} ${phrases[intent.slug][n === 1 ? 0 : 1]}`).join(", ")}` : "";
       return isSmallPlace(scope)
@@ -274,7 +283,7 @@ function faqsFor(scope: Scope, matches: Listing[]): { question: string; answer: 
     ? { question: `How much does a sharing flat in ${place} cost?`, answer: `The ${sharing.length} sharing flat listing${sharing.length === 1 ? "" : "s"} in ${place} on FlatFolks right now ask ${range(sharing)} a month. Rent depends on the room, the furnishing and how many people share the flat.` }
     : { question: `Are there sharing flats in ${place}?`, answer: `There are no sharing flat listings in ${place} on FlatFolks right now. You can [post your requirement](/property?intent=flat) so people with a room free can find you.` });
   if ((!scope.intent || scope.intent.slug === "flats-for-rent") && flats.length) faqs.push({ question: `What flats are available for rent in ${place}?`, answer: `There ${flats.length === 1 ? "is 1 flat" : `are ${flats.length} flats`} for rent in ${place} on FlatFolks${bhkSummary(flats) ? ` (${bhkSummary(flats)})` : ""}, at ${range(flats)} a month.` });
-  if (!scope.intent || scope.intent.slug === "flatmates") faqs.push({ question: `How do I find a flatmate in ${place}?`, answer: seekers.length
+  if (!scope.intent || isSeekerIntent(scope.intent)) faqs.push({ question: `How do I find a ${scope.intent?.slug === "room-partner" ? "room partner" : "flatmate"} in ${place}?`, answer: seekers.length
     ? `${seekers.length} ${seekers.length === 1 ? "person is" : "people are"} looking for a place in ${place} on FlatFolks. Open their requirement to see their budget and preferences, and contact them directly once you're logged in.`
     : `Post your flat or room on FlatFolks and people looking for a place in ${place} will be able to find and contact you.` });
   faqs.push({ question: "Do I have to pay brokerage?", answer: "No. Listings on FlatFolks are posted by owners, tenants and people looking for flatmates, and you contact them directly." });
@@ -291,7 +300,7 @@ export async function LandingPage({ scope, listings: allListings, filters }: { s
   const inPage = listings.filter((listing) => inScope(listing, scope));
   const shown = applyFilters(inPage, filters);
   const place = label(scope);
-  const postHref = intent?.slug === "flatmates" ? "/property?intent=flat" : "/property?intent=flatmate";
+  const postHref = isSeekerIntent(intent) ? "/property?intent=flat" : "/property?intent=flatmate";
   const faqs = faqsFor(scope, inPage);
 
 
@@ -328,24 +337,24 @@ export async function LandingPage({ scope, listings: allListings, filters }: { s
               <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{heading(scope)}</h1>
             </div>
             <Link href={postHref} className="inline-flex shrink-0 items-center gap-2 self-start rounded-2xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-800">
-              <Plus className="h-4 w-4" />{intent?.slug === "flatmates" ? "Add my requirement" : "Post your flat"}
+              <Plus className="h-4 w-4" />{isSeekerIntent(intent) ? "Add my requirement" : "Post your flat"}
             </Link>
           </div>
 
           {city && trail.length > 0 && <AtAGlance matches={inPage} />}
-          {intent && <FilterBar path={path} filters={filters} field={intent.slug === "flatmates" ? "rent" : "budget"} />}
+          {intent && <FilterBar path={path} filters={filters} field={isSeekerIntent(intent) ? "rent" : "budget"} />}
 
           {intent ? (
             <section className="mt-6">
               <p className="text-sm text-slate-500">{shown.length} listing{shown.length === 1 ? "" : "s"}{hasFilters(filters) ? " match these filters" : ""}</p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{shown.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>
-              {shown.length === 0 && intent.slug === "flatmates" && filters.rent ? (
+              {shown.length === 0 && isSeekerIntent(intent) && filters.rent ? (
                 // Only the owner's own number: no suggested amounts, no requirements below it.
                 <div className="mt-2 rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-600">
                   <p className="text-base font-semibold text-slate-900">No one is looking at {rupees(Number(filters.rent))} right now.</p>
                   <Link href="/property?intent=flatmate" className="mt-4 inline-flex min-h-11 items-center rounded-full bg-emerald-700 px-5 py-2 font-semibold text-white hover:bg-emerald-800">Post your flat</Link>
                 </div>
-              ) : shown.length === 0 && intent.slug !== "flatmates" && filters.budget ? (
+              ) : shown.length === 0 && !isSeekerIntent(intent) && filters.budget ? (
                 // Only the visitor's own budget: no suggested amounts, nothing above it.
                 <div className="mt-2 rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-600">
                   <p className="text-base font-semibold text-slate-900">No rooms up to {rupees(Number(filters.budget))} right now.</p>

@@ -19,8 +19,17 @@ export const intents: Intent[] = [
   { slug: "flatmates", label: "Flatmates", matches: (listing) => listing.listingKind === "flat-requirement" },
 ];
 
+// The same people as Flatmates, for searchers who say "room partner". Only a
+// national and a city-level page: not a hub section, footer column or locality page.
+export const roomPartner: Intent = { slug: "room-partner", label: "Room Partner", matches: (listing) => listing.listingKind === "flat-requirement" };
+
 export function getIntent(slug: string): Intent | undefined {
-  return intents.find((intent) => intent.slug === slug);
+  return intents.find((intent) => intent.slug === slug) || (slug === roomPartner.slug ? roomPartner : undefined);
+}
+
+/** Pages listing people who are looking for a place (rather than places on offer). */
+export function isSeekerIntent(intent: Intent | undefined): boolean {
+  return intent?.slug === "flatmates" || intent?.slug === "room-partner";
 }
 
 /** The intent a listing is filed under in breadcrumbs. */

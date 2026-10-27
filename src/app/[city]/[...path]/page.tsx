@@ -28,7 +28,8 @@ async function resolve(params: Props["params"]): Promise<Resolved | undefined> {
   if (rest.length === 0) return { kind: "landing", scope: { city, trail } };
   if (rest.length > 1) return undefined;
   const intent = getIntent(rest[0]);
-  if (intent) return { kind: "landing", scope: { city, trail, intent } };
+  // Room Partner pages exist for whole cities only.
+  if (intent && !(intent.slug === "room-partner" && trail.length)) return { kind: "landing", scope: { city, trail, intent } };
   const suffix = parseListingSlug(rest[0]);
   const listing = suffix ? await getListingByIdSuffix(suffix) : undefined;
   return listing ? { kind: "listing", listing, requestedPath: `/${citySlug}/${path.join("/")}` } : undefined;
