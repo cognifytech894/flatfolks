@@ -68,7 +68,7 @@ export default async function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <main>
         <section className="relative border-b border-slate-100 bg-[#f9fbff]">
-          <div className="relative mx-auto max-w-[1600px] px-5 pb-8 pt-8 sm:px-8 lg:px-12 lg:pb-10 lg:pt-9 xl:px-16">
+          <div className="relative mx-auto max-w-7xl px-4 pb-8 pt-8 sm:px-6 lg:px-8 lg:pb-10 lg:pt-9">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_30%,rgba(37,99,235,0.08),transparent_33%)]" />
             <div className="relative z-10">
               <div className="max-w-[700px]">
@@ -84,7 +84,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-[1600px] px-5 py-5 sm:px-8 lg:px-12 xl:px-16">
+        <section className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
           <StatsRow />
           <section className="mt-5">
             <div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-bold">Popular Cities</h2><Link href="/search" className="inline-block py-1 text-xs font-semibold text-blue-600">View all cities <ArrowRight className="inline h-3.5 w-3.5" /></Link></div>
@@ -104,7 +104,7 @@ export default async function Home() {
             <Testimonials initial={feedback} />
           </div>
         </section>
-        <section className="mx-auto max-w-[1600px] px-5 pb-8 sm:px-8 lg:px-12 xl:px-16"><div className="grid gap-4 rounded-xl border border-slate-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-4">{[[Check,"Free to List","Post a room or a flat requirement at no cost."],[Building2,"Direct Contact","Call or WhatsApp the person who posted, no middleman."],[ShieldCheck,"No Fees from FlatFolks","We don't charge renters or owners anything."],[Sparkles,"Simple Filters","Search by area, budget, property type and gender preference."]].map(([Icon,title,description]) => { const C = Icon as typeof ShieldCheck; return <div key={title as string} className="flex items-start gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-50 text-blue-600"><C className="h-5 w-5" /></span><span><b className="block text-xs">{title as string}</b><p className="mt-1 text-xs leading-4 text-slate-500">{description as string}</p></span></div>})}</div></section>
+        <section className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8"><div className="grid gap-4 rounded-xl border border-slate-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-4">{[[Check,"Free to List","Post a room or a flat requirement at no cost."],[Building2,"Direct Contact","Call or WhatsApp the person who posted, no middleman."],[ShieldCheck,"No Fees from FlatFolks","We don't charge renters or owners anything."],[Sparkles,"Simple Filters","Search by area, budget, property type and gender preference."]].map(([Icon,title,description]) => { const C = Icon as typeof ShieldCheck; return <div key={title as string} className="flex items-start gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-50 text-blue-600"><C className="h-5 w-5" /></span><span><b className="block text-xs">{title as string}</b><p className="mt-1 text-xs leading-4 text-slate-500">{description as string}</p></span></div>})}</div></section>
       </main>
     </div>
   );
