@@ -32,11 +32,16 @@ export function urlset(entries: Entry[]) {
 // Search Console flags an empty <urlset> as an error, so child sitemaps with no
 // URLs yet (e.g. societies before any society page is indexable) are left out.
 export async function sitemapIndex() {
-  const now = new Date().toISOString();
   const listings = await getListings();
-  const names = [];
-  for (const name of sitemapNames) if ((await sitemapEntries(name, listings)).length) names.push(name);
-  const items = names.map((name) => `  <sitemap>\n    <loc>${baseUrl}/sitemap-${name}.xml</loc>\n    <lastmod>${now}</lastmod>\n  </sitemap>`);
+  const items: string[] = [];
+  for (const name of sitemapNames) {
+    const entries = await sitemapEntries(name, listings);
+    if (!entries.length) continue;
+    // The child's newest <lastmod>, so it only changes when that sitemap's content does.
+    // Pages carries no dates (its content changes with deploys), so it has none either.
+    const newest = entries.map((entry) => entry.lastModified).filter(Boolean).sort().at(-1);
+    items.push(`  <sitemap>\n    <loc>${baseUrl}/sitemap-${name}.xml</loc>${newest ? `\n    <lastmod>${newest}</lastmod>` : ""}\n  </sitemap>`);
+  }
   return `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${items.join("\n")}\n</sitemapindex>`;
 }
 

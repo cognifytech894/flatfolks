@@ -408,6 +408,8 @@ export async function getUserPhoto(id: string): Promise<string | undefined> {
 
 /** Read-only lookup — use this for anything that shouldn't count as a page view (e.g. generateMetadata, which Next.js may invoke separately from the page render). */
 export async function getListingById(id: string): Promise<Listing | undefined> {
+  // Anything that isn't a UUID can't be a listing (and would make Postgres throw, turning a bad link into a 500).
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return undefined;
   const { rows } = await pool.query<ListingRow>(`${listingSelect} WHERE listings.id = $1`, [id]);
   return rows[0] ? rowToListing(rows[0]) : undefined;
 }

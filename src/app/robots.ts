@@ -7,10 +7,10 @@ import { siteUrl as baseUrl } from "@/lib/site-url";
 // still fetch those pages, so they are deliberately not blocked here.
 export default function robots(): MetadataRoute.Robots {
   return {
-    // "/property$" is the post-a-listing form (client-only, no SEO value, requires
-    // login). The trailing $ anchors it exactly so /property/{id} listing pages
-    // aren't caught by the same rule.
-    rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/auth", "/profile", "/dashboard","/admin", "/property$"] },
+    // "/property$" and "/property?" are the post-a-listing form, bare and with
+    // ?intent= (client-only, no SEO value, requires login). Neither catches
+    // /property/{id} listing pages, which must stay crawlable.
+    rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/auth", "/profile", "/dashboard", "/admin", "/property$", "/property?"] },
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }
