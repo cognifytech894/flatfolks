@@ -67,7 +67,35 @@ function heading(scope: Scope): string {
   if (scope.intent) return `${scope.intent.label} in ${place}`;
   const node = deepest(scope);
   if (node?.seo?.h1) return node.seo.h1;
-  return isSmallPlace(scope) ? `Flats & Flatmates in ${place}` : `Sharing Flat, Flats for Rent & Flatmates in ${place}`;
+  return isSmallPlace(scope) ? `Flats & Flatmates in ${place}` : placeTitle(scope, place);
+}
+
+// Short titles for city and locality pages. Each page gets one of these,
+// picked from its URL, so a page's title never changes while neighbouring
+// pages read differently. None repeats an intent page's own title
+// ("Sharing Flat in …", "Flatmates in …", "Flats for Rent in …").
+const placeTitles = [
+  (place: string) => `Rooms & Flatmates in ${place}`,
+  (place: string) => `Shared Rooms in ${place}`,
+  (place: string) => `Flatmates & Rooms in ${place}`,
+  (place: string) => `Flat & Flatmates in ${place}`,
+  (place: string) => `Rooms for Rent & Flatmates in ${place}`,
+  (place: string) => `Shared Accommodation & Roommates in ${place}`,
+];
+
+// Places whose names would make the picked pattern too long for search results.
+const shortPlaceTitles: Record<string, string> = {
+  "/greater-noida/noida-extension": "Shared Rooms in Greater Noida West",
+  "/gurgaon/golf-course-extension-road": "Rooms & Flatmates in Golf Course Ext. Road, Gurgaon",
+  "/ghaziabad/raj-nagar-extension": "Rooms & Flatmates in Raj Nagar Extension, Ghaziabad",
+};
+
+function placeTitle(scope: Scope, place: string): string {
+  const path = landingPath(scope);
+  if (shortPlaceTitles[path]) return shortPlaceTitles[path];
+  let hash = 0;
+  for (const char of path) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return placeTitles[hash % placeTitles.length](place);
 }
 
 /** Plain page titles, as they read in search results: "Sharing Flat in Greater Noida". No site name, no taglines. */
