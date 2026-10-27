@@ -70,8 +70,8 @@ export function Navbar() {
       </div>
     </nav>
     <header className="sticky top-0 z-50 pointer-events-auto border-b border-slate-200/80 bg-white/80 backdrop-blur-xl">
-      {/* The home page is full width; every other page's content sits in max-w-7xl, so the logo and profile line up with it there. */}
-      <div className={`mx-auto flex items-center justify-between py-3 ${pathname === "/" ? "max-w-[1600px] px-5 sm:px-8 lg:px-12 xl:px-16" : "max-w-7xl px-4 sm:px-6 lg:px-8"}`}>
+      {/* Same width as the page content and footer (max-w-7xl) on every page, home included, so the logo and profile line up with them. */}
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex min-h-11 items-center gap-3">
           <FlatFolksLogo />
         </Link>

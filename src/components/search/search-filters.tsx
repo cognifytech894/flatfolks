@@ -99,10 +99,7 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
         <Filter className="h-4 w-4" />{openOnMobile ? "Hide filters" : `Filters${activeCount ? ` (${activeCount})` : ""}`}
       </button>
       <div id="filter-fields" className={`${openOnMobile ? "block" : "hidden"} lg:block`}>
-        <div className="mt-5 flex items-center justify-between text-sm font-semibold text-slate-800 lg:mt-0">
-          <span className="flex items-center gap-2"><Filter className="h-4 w-4" />Filters{activeCount ? ` (${activeCount})` : ""}</span>
-        </div>
-        <div className="mt-4 space-y-5 text-sm">
+        <div className="mt-5 space-y-5 text-sm lg:mt-0">
           <div className="relative">
             <label className={`block ${sectionTitle}`} htmlFor="city-search">Locations</label>
             <p className="mt-1 text-xs text-slate-500">Add one or more cities or PIN codes.</p>
