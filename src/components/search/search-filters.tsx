@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Filter, X } from "lucide-react";
 import { searchLocations } from "@/data/indian-cities";
-import { flatConfigurationOptions, roomTypeOptions, searchableAmenities, tenantPreferenceOptions } from "@/data/listing-attributes";
+import { roomTypeOptions, searchableAmenities, tenantPreferenceOptions } from "@/data/listing-attributes";
 import type { SearchParams } from "@/lib/search-filters";
 
 /** Fired by the empty-results "Change budget" button: open the filters and focus the budget, without changing it. */
@@ -114,12 +114,8 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
             <input id="search-budget" ref={budgetInput} value={filters.budget || ""} onChange={(event) => update("budget", event.target.value, "typing")} type="number" min="1" inputMode="numeric" placeholder="₹" className={`mt-2 ${inputClass}`} />
           </div>
           <div>
-            <p className={sectionTitle}>Property</p>
-            <Chips label="Property" oneRow options={flatConfigurationOptions} isSelected={(value) => listOf("size").includes(value)} onToggle={(value) => toggleInList("size", value)} />
-          </div>
-          <div>
-            <p className={sectionTitle}>Room</p>
-            <Chips label="Room" options={roomTypeOptions.map((option) => ({ value: option.value, label: option.label.replace(" room", "") }))} isSelected={(value) => listOf("room").includes(value)} onToggle={(value) => toggleInList("room", value)} />
+            <p className={sectionTitle}>Property type</p>
+            <Chips label="Property type" oneRow options={roomTypeOptions.map((option) => ({ value: option.value, label: option.label.replace(" room", " Room") }))} isSelected={(value) => listOf("room").includes(value)} onToggle={(value) => toggleInList("room", value)} />
           </div>
           <div>
             <p className={sectionTitle}>Preferences</p>
