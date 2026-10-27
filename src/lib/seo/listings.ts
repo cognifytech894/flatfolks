@@ -83,7 +83,11 @@ export function inScope(listing: Listing, scope: Scope): boolean {
   if (scope.intent && !scope.intent.matches(listing)) return false;
   if (!scope.city) return true;
   const place = placeOf(listing);
-  if (!place || place.city.slug !== scope.city.slug) return false;
+  if (!place) return false;
+  // A combined page (e.g. /greater-noida/noida) shows every listing in its cities.
+  const covers = scope.trail?.length === 1 ? scope.trail[0].coversCities : undefined;
+  if (covers) return place.city.slug === scope.city.slug || covers.includes(place.city.slug);
+  if (place.city.slug !== scope.city.slug) return false;
   return (scope.trail || []).every((item, index) => place.trail[index]?.slug === item.slug);
 }
 

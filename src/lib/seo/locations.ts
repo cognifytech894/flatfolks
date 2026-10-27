@@ -29,6 +29,12 @@ export type Place = {
   areaName?: string;
   /** Hub page is indexed even before it has listings (it carries enough original copy). */
   alwaysIndex?: boolean;
+  /**
+   * A page that covers whole cities rather than a spot inside its parent:
+   * listings from its parent city and these cities all appear on it. It's
+   * never matched from a listing's address (listings keep their own city).
+   */
+  coversCities?: string[];
   /** Hand-picked hub-page metadata for the highest-priority places. */
   seo?: { h1?: string; title?: string; description?: string };
   children?: Place[];
@@ -157,6 +163,20 @@ export const cities: City[] = [
       { slug: "beta-1", name: "Beta 1", aliases: ["beta i"] },
       { slug: "beta-2", name: "Beta 2", aliases: ["beta ii"] },
       { slug: "techzone", name: "Techzone", aliases: ["tech zone"] },
+      // /greater-noida/noida: Noida and Greater Noida together, for people
+      // searching across both.
+      {
+        slug: "noida",
+        name: "Noida",
+        displayName: "Noida & Greater Noida",
+        coversCities: ["noida"],
+        alwaysIndex: true,
+        seo: {
+          h1: "Rooms & Flatmates in Noida & Greater Noida",
+          title: "Rooms & Flatmates in Noida & Greater Noida",
+          description: "Rooms, flatmates and sharing flats across Noida and Greater Noida, including Greater Noida West (Noida Extension). Posted directly by owners and tenants, with no brokerage.",
+        },
+      },
     ],
   },
   {
@@ -278,6 +298,7 @@ export function resolvePlace(location: string): { city: City; trail: Place[] } |
   let best: { city: City; trail: Place[]; score: number } | undefined;
   const visit = (city: City, trail: Place[]) => {
     for (const place of childPlaces(city, trail)) {
+      if (place.coversCities) continue;
       const path = [...trail, place];
       const length = longestMention(haystack, place.needsCity ? place.globalAliases || [] : phrasesOf(place));
       const score = length ? path.length * 1000 + length : 0;
@@ -298,6 +319,7 @@ export function resolvePlace(location: string): { city: City; trail: Place[] } |
   //    that only make sense once their parent is known.
   for (;;) {
     const candidates = childPlaces(found.city, found.trail)
+      .filter((place) => !place.coversCities)
       .map((place) => ({ place, length: longestMention(haystack, phrasesOf(place)) }))
       .filter(({ length }) => length > 0)
       .sort((a, b) => b.length - a.length);

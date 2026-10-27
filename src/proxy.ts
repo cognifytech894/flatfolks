@@ -22,6 +22,13 @@ export async function proxy(request: NextRequest) {
     }
     return NextResponse.next();
   }
+  // Place and listing URLs are lowercase: /greater-noida/Noida → /greater-noida/noida.
+  // (Done here because next.config redirects match paths case-insensitively.)
+  if (/[A-Z]/.test(path)) {
+    const url = request.nextUrl.clone();
+    url.pathname = path.toLowerCase();
+    return NextResponse.redirect(url, 308);
+  }
   const key = path.match(propertyId)?.[1] || path.match(listingSlug)?.[1];
   if (key && (await isDeletedListing(key).catch(() => false))) {
     return new NextResponse(goneHtml, { status: 410, headers: { "Content-Type": "text/html; charset=utf-8", "X-Robots-Tag": "noindex" } });
