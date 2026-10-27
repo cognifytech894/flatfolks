@@ -44,7 +44,7 @@ export function PhotoCarousel({ photos, title }: { photos: string[]; title: stri
     <div className="relative h-80 overflow-hidden rounded-[1.5rem] bg-slate-900 sm:h-[26rem]">
       <Image src={photos[index]} alt="" aria-hidden fill className="scale-110 object-cover opacity-60 blur-2xl" sizes="(max-width: 1024px) 100vw, 800px" />
       <button type="button" onClick={() => setViewing(true)} aria-label="View photo full screen" className="absolute inset-0 cursor-zoom-in">
-        <Image src={photos[index]} alt={`${title} photo ${index + 1}`} fill priority className="object-contain" sizes="(max-width: 1024px) 100vw, 800px" />
+        <Image src={photos[index]} alt={`${title} photo ${index + 1}`} fill preload className="object-contain" sizes="(max-width: 1024px) 100vw, 800px" />
       </button>
       <span aria-hidden className="pointer-events-none absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white"><Maximize2 className="h-4 w-4" /></span>
       {arrows("h-9 w-9")}
