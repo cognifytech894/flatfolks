@@ -15,6 +15,7 @@ import { activeFilterCount, matchesSearch, parseSearchFilters, sortListings, typ
 import { parseBudget, perMonth } from "@/lib/budget";
 import { flatConfigurationLabel, listingAmenities, roomTypeLabel, tenantPreferenceLabel } from "@/data/listing-attributes";
 import { furnishingLabel } from "@/data/furnishing";
+import { listingName } from "@/lib/seo/listing-page";
 
 export const dynamic = "force-dynamic";
 
@@ -76,7 +77,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   // the full listing (contactPhone, ownerId, ...) here previously leaked the
   // phone number the login gate on /property/[id] is supposed to hide.
   const publicListings = filteredListings.map((listing) => ({
-    id: listing.id, href: listingPath(listing), title: listing.title, location: listing.location, rent: listing.rent,
+    id: listing.id, href: listingPath(listing), title: listingName(listing), location: listing.location, rent: listing.rent,
     image: listing.image, propertyType: listing.propertyType, genderPreference: listing.genderPreference,
     badges: [
       flatConfigurationLabel(listing.flatConfiguration),
@@ -92,7 +93,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       "@type": "ListItem",
       position: index + 1,
       url: `${baseUrl}${listingPath(listing)}`,
-      name: listing.title,
+      name: listingName(listing),
     })),
   };
 

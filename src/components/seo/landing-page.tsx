@@ -12,6 +12,7 @@ import { safeJsonLd } from "@/lib/json-ld";
 import { listingsForVisitor } from "@/lib/visitor";
 import { baseUrl, inScope, intents, isScopeIndexable, isSeekerIntent, listingPath, placePath, type Scope } from "@/lib/seo/listings";
 import { placeLabel, type City, type IntentSlug, type Place } from "@/lib/seo/locations";
+import { listingName } from "@/lib/seo/listing-page";
 
 /** `budget` is a room-seeker's max rent; `rent` is what an owner charges, matched against requirements' max budgets. */
 export type LandingFilters = { gender?: string; budget?: string; rent?: string; furnishing?: string };
@@ -326,7 +327,7 @@ export async function LandingPage({ scope, listings: allListings, filters }: { s
         mainEntity: {
           "@type": "ItemList",
           numberOfItems: inPage.length,
-          itemListElement: inPage.slice(0, 20).map((listing, index) => ({ "@type": "ListItem", position: index + 1, url: `${baseUrl}${listingPath(listing)}`, name: listing.title })),
+          itemListElement: inPage.slice(0, 20).map((listing, index) => ({ "@type": "ListItem", position: index + 1, url: `${baseUrl}${listingPath(listing)}`, name: listingName(listing) })),
         },
       },
       breadcrumbJsonLd(crumbs),

@@ -5,6 +5,7 @@ import type { Listing } from "@/lib/database";
 import { listingPath } from "@/lib/seo/listings";
 import { furnishingLabel } from "@/data/furnishing";
 import { perMonth, rupees } from "@/lib/budget";
+import { listingName } from "@/lib/seo/listing-page";
 
 // Server-rendered so search engines see every card in the page HTML. Only
 // display fields are read here — never contactPhone.
@@ -20,7 +21,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
           </div>
           <div className="min-w-0">
             <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">Need a flat</span>
-            <h3 className="mt-2 truncate font-semibold text-slate-900"><Link href={href} className="after:absolute after:inset-0">{listing.title}</Link></h3>
+            <h3 className="mt-2 truncate font-semibold text-slate-900"><Link href={href} className="after:absolute after:inset-0">{listingName(listing)}</Link></h3>
             <p className="mt-1 flex items-center gap-1 truncate text-sm text-slate-500"><MapPin className="h-3.5 w-3.5 shrink-0" />{listing.location}</p>
           </div>
         </div>
@@ -36,11 +37,11 @@ export function ListingCard({ listing }: { listing: Listing }) {
     <article className="relative flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
       <div className="relative h-40 w-full shrink-0 bg-slate-100">
         {listing.image
-          ? <Image src={listing.image} alt={listing.title} fill className="object-cover" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px" />
+          ? <Image src={listing.image} alt={listingName(listing)} fill className="object-cover" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px" />
           : <div className="grid h-full w-full place-items-center text-sm font-medium text-slate-600">No photos</div>}
       </div>
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="font-semibold text-slate-900"><Link href={href} className="after:absolute after:inset-0">{listing.title}</Link></h3>
+        <h3 className="font-semibold text-slate-900"><Link href={href} className="after:absolute after:inset-0">{listingName(listing)}</Link></h3>
         <p className="mt-1 flex items-center gap-1 text-sm text-slate-500"><MapPin className="h-3.5 w-3.5 shrink-0" />{listing.location}</p>
         <p className="mt-auto pt-3 text-sm text-slate-600">
           <span className="text-base font-semibold text-slate-900">{rupees(listing.rent)}</span>/month · {listing.propertyType}{listing.bedrooms > 1 ? ` · ${listing.bedrooms} BHK` : ""}{listing.furnishing ? ` · ${furnishingLabel(listing.furnishing)}` : ""}

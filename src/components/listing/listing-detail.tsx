@@ -11,6 +11,7 @@ import { safeJsonLd } from "@/lib/json-ld";
 import { lifestylePreferences } from "@/data/preferences";
 import { furnishingLabel } from "@/data/furnishing";
 import { perMonth } from "@/lib/budget";
+import { listingName } from "@/lib/seo/listing-page";
 
 function formatDate(value?: string) {
   if (!value) return undefined;
@@ -58,7 +59,7 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
     "@graph": [
       isRequirement ? {
         "@type": "WebPage",
-        name: listing.title,
+        name: listingName(listing),
         description: listing.description || `Looking for a ${listing.propertyType} in ${listing.location}`,
         url,
         ...(listing.createdAt ? { datePublished: listing.createdAt } : {}),
@@ -66,7 +67,7 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
         // Accommodation is the semantically correct schema.org type for a rental
         // listing (Product/Offer is built for things you buy, not rent).
         "@type": "Accommodation",
-        name: listing.title,
+        name: listingName(listing),
         description: listing.description || `${listing.propertyType} in ${listing.location}`,
         url,
         image: photos.length ? photos : undefined,
@@ -196,7 +197,7 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
             {/* With photos, the contact card sits beside the gallery; otherwise beside the details. */}
             {withGallery && (
               <div className="grid gap-5 p-3 sm:p-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-stretch lg:gap-6 lg:p-5">
-                <PhotoCarousel photos={photos} title={listing.title} />
+                <PhotoCarousel photos={photos} title={listingName(listing)} />
                 {ownerCard}
               </div>
             )}
@@ -204,7 +205,7 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
               <div className="min-w-0 flex-1 space-y-6">
                 <div>
                   {listing.verified && <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700"><ShieldCheck className="h-4 w-4" /> Verified listing</div>}
-                  <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{listing.title}</h1>
+                  <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{listingName(listing)}</h1>
                   <p className="mt-3 flex items-start gap-2 text-slate-600"><MapPin className="mt-1 h-4 w-4 shrink-0" /> {listing.location}</p>
                   {!isRequirement && listing.nearbyMetro && <p className="mt-2 flex items-start gap-2 text-sm text-slate-600"><TrainFront className="mt-0.5 h-4 w-4 shrink-0" /> Nearest metro: {listing.nearbyMetro} <span className="text-slate-500">(as given by the poster)</span></p>}
                   {posted && <p className="mt-2 flex items-center gap-2 text-sm text-slate-500"><Clock className="h-4 w-4" /> Posted {posted}</p>}
