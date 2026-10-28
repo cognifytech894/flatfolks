@@ -45,8 +45,6 @@ export type City = {
   name: string;
   state: string;
   aliases: string[];
-  /** The name used in "How to Find…" titles when it differs from `name`, e.g. Gurugram. */
-  titleName?: string;
   places: Place[];
 };
 
@@ -184,7 +182,6 @@ export const cities: City[] = [
   {
     slug: "gurgaon",
     name: "Gurgaon",
-    titleName: "Gurugram",
     state: "Haryana",
     aliases: ["gurgaon", "gurugram"],
     places: [

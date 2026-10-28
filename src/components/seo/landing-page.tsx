@@ -96,11 +96,11 @@ const shortPlaceTitles: Record<string, string> = {
 
 // Hand-picked titles for the main city pages.
 const cityTitles: Record<string, string> = {
-  noida: "Sharing Rooms in Noida",
-  "greater-noida": "Sharing Rooms in Greater Noida",
-  delhi: "Sharing Rooms in Delhi",
-  gurgaon: "Sharing Rooms in Gurugram",
-  ghaziabad: "Sharing Rooms in Ghaziabad",
+  noida: "Flats, Rooms & Flatmates in Noida",
+  "greater-noida": "Flats, Rooms & Flatmates in Greater Noida",
+  delhi: "Flats, Rooms & Flatmates in Delhi",
+  gurgaon: "Flats, Rooms & Flatmates in Gurgaon",
+  ghaziabad: "Flats, Rooms & Flatmates in Ghaziabad",
 };
 
 function placeTitle(scope: Scope, place: string): string {
@@ -120,7 +120,7 @@ function title(scope: Scope): string {
     case "flats-for-rent": return `${scope.intent.label} in ${place}`;
     // City pages answer the "how to find…" searches; deeper places keep the plain form.
     case "flatmates":
-    case "room-partner": return scope.trail?.length ? `${scope.intent.label} in ${place}` : `How to Find ${scope.intent.label} in ${scope.city!.titleName || place}`;
+    case "room-partner": return scope.trail?.length ? `${scope.intent.label} in ${place}` : `How to Find ${scope.intent.label} in ${place}`;
     default:
       if (!scope.trail?.length && cityTitles[scope.city!.slug]) return cityTitles[scope.city!.slug];
       return deepest(scope)?.seo?.title || (isSmallPlace(scope) ? `Flats & Flatmates in ${place}` : heading(scope));
