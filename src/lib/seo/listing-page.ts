@@ -11,7 +11,7 @@ export function isListingIndexable(listing: Listing) {
 }
 
 /** Short place name for titles, e.g. "Gaur City 2, Greater Noida West" rather than the full street address. */
-function listingPlaceName(listing: Listing) {
+export function listingPlaceName(listing: Listing) {
   const place = placeOf(listing);
   if (!place) return listing.location;
   if (!place.trail.length) return place.city.name;

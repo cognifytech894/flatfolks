@@ -24,7 +24,7 @@ export function sortByCity<T extends { location: string }>(items: T[], city: str
 }
 
 // Kept in a cookie (not localStorage) so the server-rendered home page can read
-// it too and show that city's properties under "Featured Rooms".
+// it too and show that city's properties under "Featured Flats & Rooms".
 export const featuredCityCookie = "flatfolks_city";
 
 // "Noida - 201301" (search suggestion value) and "Noida" both become "Noida".
