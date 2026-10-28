@@ -94,6 +94,14 @@ const shortPlaceTitles: Record<string, string> = {
   "/ghaziabad/raj-nagar-extension": "Rooms & Flatmates in Raj Nagar Extension, Ghaziabad",
 };
 
+// Hand-picked titles for the main city pages.
+const cityTitles: Record<string, string> = {
+  noida: "Sharing Rooms in Noida",
+  "greater-noida": "Sharing Rooms in Greater Noida",
+  delhi: "Sharing Rooms in Delhi",
+  gurgaon: "Sharing Rooms in Gurugram",
+};
+
 function placeTitle(scope: Scope, place: string): string {
   const path = landingPath(scope);
   if (shortPlaceTitles[path]) return shortPlaceTitles[path];
@@ -112,7 +120,9 @@ function title(scope: Scope): string {
     // City pages answer the "how to find…" searches; deeper places keep the plain form.
     case "flatmates":
     case "room-partner": return scope.trail?.length ? `${scope.intent.label} in ${place}` : `How to Find ${scope.intent.label} in ${scope.city!.titleName || place}`;
-    default: return deepest(scope)?.seo?.title || (isSmallPlace(scope) ? `Flats & Flatmates in ${place}` : heading(scope));
+    default:
+      if (!scope.trail?.length && cityTitles[scope.city!.slug]) return cityTitles[scope.city!.slug];
+      return deepest(scope)?.seo?.title || (isSmallPlace(scope) ? `Flats & Flatmates in ${place}` : heading(scope));
   }
 }
 
