@@ -162,6 +162,17 @@ function parseJsonField<T>(value: unknown, fallback: T): T {
   return value as T;
 }
 
+/** Drops repeated parts of a location ("Noida sector 73, Noida sector 73" → "Noida sector 73"), as when a poster types the same text as address and area. */
+function tidyLocation(location: string) {
+  const seen = new Set<string>();
+  return location.split(",").map((part) => part.trim()).filter((part) => {
+    const key = part.toLowerCase().replace(/s+/g, " ");
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).join(", ");
+}
+
 type ListingRow = {
   id: string; title: string; location: string; rent: number; deposit: number; bedrooms: number; bathrooms: number;
   property_type: Listing["propertyType"]; description: string | null; image: string; verified: boolean; tags: unknown;
@@ -179,7 +190,7 @@ const legacyStockImage = "https://images.unsplash.com/photo-1600210492486-724fe5
 
 function rowToListing(row: ListingRow): Listing {
   return {
-    id: row.id, title: row.title, location: row.location, rent: row.rent, deposit: row.deposit,
+    id: row.id, title: row.title, location: tidyLocation(row.location), rent: row.rent, deposit: row.deposit,
     bedrooms: row.bedrooms, bathrooms: row.bathrooms, propertyType: row.property_type,
     description: row.description || undefined, image: row.owner_id && row.image === legacyStockImage ? "" : row.image, verified: !!row.verified,
     tags: parseJsonField<string[]>(row.tags, []), matchScore: row.match_score, minBudget: row.min_budget, maxBudget: row.max_budget,
@@ -282,7 +293,7 @@ export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit"
 
 export async function createListing(input: NewListing): Promise<Listing> {
   const listing: Listing = {
-    id: randomUUID(), title: input.title.trim(), location: input.location.trim(), rent: input.rent, deposit: input.deposit,
+    id: randomUUID(), title: input.title.trim(), location: tidyLocation(input.location), rent: input.rent, deposit: input.deposit,
     bedrooms: input.bedrooms || 1, bathrooms: input.bathrooms || 1, propertyType: input.propertyType,
     description: input.description?.trim() || undefined,
     // No stock fallback — a listing posted without photos stays photo-less.
@@ -319,7 +330,7 @@ export async function updateListing(id: string, input: Partial<NewListing>): Pro
   const set = (column: string, value: unknown) => { values.push(value); sets.push(`${column} = $${values.length}`); };
 
   if (input.title !== undefined) set("title", input.title.trim());
-  if (input.location !== undefined) set("location", input.location.trim());
+  if (input.location !== undefined) set("location", tidyLocation(input.location));
   if (input.rent !== undefined) set("rent", input.rent);
   if (input.deposit !== undefined) set("deposit", input.deposit);
   if (input.propertyType !== undefined) set("property_type", input.propertyType);
