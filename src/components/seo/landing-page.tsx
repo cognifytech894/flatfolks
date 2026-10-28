@@ -100,6 +100,7 @@ const cityTitles: Record<string, string> = {
   "greater-noida": "Sharing Rooms in Greater Noida",
   delhi: "Sharing Rooms in Delhi",
   gurgaon: "Sharing Rooms in Gurugram",
+  ghaziabad: "Sharing Rooms in Ghaziabad",
 };
 
 function placeTitle(scope: Scope, place: string): string {
