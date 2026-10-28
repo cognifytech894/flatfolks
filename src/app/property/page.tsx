@@ -139,7 +139,7 @@ function PostListing() {
     setImages((current) => current.filter((image) => image.id !== id));
   }
 
-  const heading = isFlatRequirement ? "Looking for a flat" : "Looking for a flatmate";
+  const heading = isFlatRequirement ? "Looking for a Flat" : "Looking for a Tenant";
   const fieldClass = "mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-blue-500";
   const labelClass = "block text-sm font-medium text-slate-700";
 

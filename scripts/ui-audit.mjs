@@ -526,7 +526,7 @@ async function interactions(browser, listingPath, blocked) {
     }
     await page.goto(BASE_URL + "/about", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Post a listing" }).click();
-    for (const [label, intent] of [["Looking for a flat", "flat"], ["Looking for a flatmate", "flatmate"]]) {
+    for (const [label, intent] of [["Looking for a Flat", "flat"], ["Looking for a Tenant", "flatmate"]]) {
       const link = page.locator('nav[aria-label="Main"]').getByRole("link", { name: new RegExp(`^${label}(?!mate)`) });
       if (!(await link.isVisible())) throw fail(`Post menu item "${label}" not visible after tapping Post.`, "src/components/layout/navbar.tsx");
       if (!(await link.getAttribute("href"))?.includes(`intent=${intent}`)) throw fail(`Post menu item "${label}" has the wrong href.`, "src/components/layout/navbar.tsx");
@@ -539,7 +539,7 @@ async function interactions(browser, listingPath, blocked) {
       await page.waitForURL((u) => new URL(u).pathname === dest, { timeout: 30000 }).catch(() => { throw fail(`Header "${label}" went to ${new URL(page.url()).pathname}, expected ${dest}.`, "src/components/layout/navbar.tsx"); });
     }
     await page.locator("header").getByRole("button", { name: /Post Property/ }).hover();
-    if (!(await page.locator("header").getByRole("link", { name: /Looking for a flat\b/ }).isVisible())) throw fail("Post Property dropdown doesn't open on hover.", "src/components/layout/navbar.tsx");
+    if (!(await page.locator("header").getByRole("link", { name: /Looking for a Flat/ }).isVisible())) throw fail("Post Property dropdown doesn't open on hover.", "src/components/layout/navbar.tsx");
   });
 }
 
