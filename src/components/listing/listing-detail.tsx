@@ -119,7 +119,7 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
     : [
       { icon: Wallet, label: "Monthly rent", value: perMonth(listing.rent), money: true },
       { icon: Lock, label: "Security deposit", value: `₹${listing.deposit.toLocaleString("en-IN")}`, money: true },
-      { icon: HomeIcon, label: "Room type", value: listing.propertyType },
+      { icon: HomeIcon, label: "Property type", value: listing.propertyType },
       { icon: Bed, label: "BHK", value: `${listing.bedrooms} BHK` },
       { icon: Bath, label: "Bathrooms", value: String(listing.bathrooms) },
       { icon: UsersRound, label: "Flatmate preference", value: listing.genderPreference || "Any" },
