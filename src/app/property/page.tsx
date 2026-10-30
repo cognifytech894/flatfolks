@@ -18,7 +18,7 @@ function isValidPhone(phone: string) {
   return /^[\d\s+-]{7,20}$/.test(phone) && phone.replace(/\D/g, "").length >= 10;
 }
 
-type Form = { title: string; description: string; location: string; address: string; budget: string; deposit: string; availableFrom: string; genderPreference: "Male" | "Female" | "Family" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string; furnishing: "" | Furnishing; nearbyMetro: string; flatConfiguration: "" | FlatConfiguration; roomType: "" | RoomType; tenantPreference: "" | TenantPreference };
+type Form = { title: string; description: string; location: string; society: string; budget: string; deposit: string; availableFrom: string; genderPreference: "Male" | "Female" | "Family" | "Any"; propertyType: "Room" | "Apartment" | "Flat" | "PG"; contactPhone: string; bedrooms: string; bathrooms: string; furnishing: "" | Furnishing; nearbyMetro: string; flatConfiguration: "" | FlatConfiguration; roomType: "" | RoomType; tenantPreference: "" | TenantPreference };
 
 function PostListing() {
   const params = useSearchParams();
@@ -26,7 +26,7 @@ function PostListing() {
   // Nothing is prefilled except what the visitor typed into a room search and
   // carried here with its "Post requirement" link (?location=&budget=).
   const carried = isFlatRequirement ? { location: (params.get("location") || "").trim(), budget: String(parseBudget({ budget: params.get("budget") || undefined }) || "") } : { location: "", budget: "" };
-  const [form, setForm] = useState<Form>({ title: "", description: "", location: carried.location, address: "", budget: carried.budget, deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "", bedrooms: "1", bathrooms: "1", furnishing: "", nearbyMetro: "", flatConfiguration: "", roomType: "", tenantPreference: "" });
+  const [form, setForm] = useState<Form>({ title: "", description: "", location: carried.location, society: "", budget: carried.budget, deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: "", bedrooms: "1", bathrooms: "1", furnishing: "", nearbyMetro: "", flatConfiguration: "", roomType: "", tenantPreference: "" });
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
   const [images, setImages] = useState<{ id: string; preview: string; url?: string; uploading: boolean }[]>([]);
@@ -82,7 +82,7 @@ function PostListing() {
         body: JSON.stringify({
           title: form.title || (isFlatRequirement ? "Looking for a flat" : "Flat available for a flatmate"),
           description: form.description,
-          location: form.address.trim() ? `${form.address.trim()}, ${form.location}` : form.location,
+          location: form.society.trim() ? `${form.society.trim()}, ${form.location}` : form.location,
           rent: Number(form.budget),
           deposit: isFlatRequirement ? 0 : Number(form.deposit) || 0,
           propertyType: form.propertyType,
@@ -108,7 +108,7 @@ function PostListing() {
       if (!response.ok) throw new Error(result.error || "Could not publish your post.");
       setStatus("success");
       setMessage(isFlatRequirement ? "Requirement posted! Flat owners can now find it under Find Flatmates." : "Flat posted! People looking for a flat can now find it under Find Flats.");
-      setForm((current) => ({ title: "", description: "", location: "", address: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: current.contactPhone, bedrooms: "1", bathrooms: "1", furnishing: "", nearbyMetro: "", flatConfiguration: "", roomType: "", tenantPreference: "" })); setSelectedAmenities([]); setSelectedPreferences([]); setImages([]);
+      setForm((current) => ({ title: "", description: "", location: "", society: "", budget: "", deposit: "", availableFrom: "", genderPreference: "Any", propertyType: "Flat", contactPhone: current.contactPhone, bedrooms: "1", bathrooms: "1", furnishing: "", nearbyMetro: "", flatConfiguration: "", roomType: "", tenantPreference: "" })); setSelectedAmenities([]); setSelectedPreferences([]); setImages([]);
     } catch (error) { setStatus("error"); setMessage(error instanceof Error ? error.message : "Could not publish your post."); }
   }
 
@@ -237,14 +237,14 @@ function PostListing() {
     </label>
   );
 
-  const addressField = (
+  const societyField = (
     <label className={labelClass}>
-      Exact address / landmark <span className="font-normal text-slate-500">(optional)</span>
+      Society name <span className="font-normal text-slate-500">(optional)</span>
       <input
-        value={form.address}
-        onChange={(event) => update("address", event.target.value)}
+        value={form.society}
+        onChange={(event) => update("society", event.target.value)}
         className={fieldClass}
-        placeholder="House/flat no., street, building name, nearby landmark"
+        placeholder="e.g. Jaypee Klassic, ATS Pristine"
       />
     </label>
   );
@@ -424,7 +424,7 @@ function PostListing() {
               </label>
               <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
                 {titleField}
-                {addressField}
+                {societyField}
                 {locationField}
                 {propertyTypeField}
                 {flatConfigurationField}
