@@ -20,16 +20,23 @@ const removedGuides: Record<string, string> = {
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   allowedDevOrigins: ["192.168.3.13"],
+  // The image resizer (/_next/image) only takes our own photos: uploads in this
+  // project's bucket, and the Unsplash stock photos of the sample listings.
+  // Anything else gets 400, so other sites can't use up the resizing quota.
   images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: "images.unsplash.com",
+        port: "",
+        pathname: "/photo-*",
       },
       {
         protocol: "https",
-        // Matches any Supabase project's Storage subdomain (uploaded listing photos).
-        hostname: "*.supabase.co",
+        hostname: new URL(process.env.SUPABASE_URL || "https://crrsgarixvwzytirurgb.supabase.co").hostname,
+        port: "",
+        pathname: `/storage/v1/object/public/${process.env.SUPABASE_STORAGE_BUCKET || "listing-photos"}/**`,
+        search: "",
       },
     ],
   },
