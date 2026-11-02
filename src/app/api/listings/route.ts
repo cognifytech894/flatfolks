@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/current-user";
-import { cookies } from "next/headers";
 import { createListing, deleteListing, getListingById, getListingOwnerId, getListings, getOwnerListings, touchLastSeen, updateListing, type NewListing } from "@/lib/database";
 import { deleteImages, isOwnUpload } from "@/lib/image-storage";
 import { lifestylePreferences } from "@/data/preferences";
 import { cleanNearbyMetro, isFurnishing } from "@/data/furnishing";
 import { cleanAmenityTags, isFlatConfiguration, isRoomType, isTenantPreference } from "@/data/listing-attributes";
-import { ADMIN_SESSION_COOKIE, isValidAdminSessionToken } from "@/lib/admin-auth";
+import { isAdminSession } from "@/lib/current-admin";
 import { isRateLimited } from "@/lib/rate-limit";
 import { withoutOwnerDetails } from "@/lib/visitor";
 import { publicErrorMessage } from "@/lib/public-error";
@@ -139,8 +138,7 @@ export async function PATCH(request: Request) {
   const body = await request.json() as Partial<NewListing> & { id?: string };
   if (!body.id) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });
 
-  const cookieStore = await cookies();
-  const isAdmin = isValidAdminSessionToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+  const isAdmin = await isAdminSession();
   const actualOwnerId = await getListingOwnerId(body.id);
   if (!isAdmin) {
     const sessionUserId = await getSessionUserId();
@@ -176,8 +174,7 @@ export async function DELETE(request: Request) {
   const id = url.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });
 
-  const cookieStore = await cookies();
-  const isAdmin = isValidAdminSessionToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+  const isAdmin = await isAdminSession();
   if (!isAdmin) {
     // Authorization comes from the signed session cookie, not the `ownerId` query
     // param — a caller could otherwise read another user's real ownerId off any

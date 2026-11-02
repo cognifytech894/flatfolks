@@ -3,6 +3,8 @@ import pool from "@/lib/db";
 import { ADMIN_SESSION_COOKIE, createAdminSessionToken, verifyAdminCredentials } from "@/lib/admin-auth";
 import { clientIp, failAdminLoginAttempt, passAdminLoginAttempt, startAdminLoginAttempt } from "@/lib/admin-login-guard";
 import { isRateLimited } from "@/lib/rate-limit";
+import { isAdminSession } from "@/lib/current-admin";
+import { revokeAdminSessions } from "@/lib/admin-session-store";
 import { adminTotpSecret, claimTotpStep, matchTotp } from "@/lib/totp";
 import { isSecureContext, SESSION_COOKIE } from "@/lib/session";
 
@@ -53,7 +55,10 @@ export async function GET() {
   return NextResponse.json({ totp: Boolean(adminTotpSecret()) });
 }
 
+/** Admin logout: ends every admin session on the server (copied cookies too), then clears this browser's cookie. */
 export async function DELETE() {
+  // Only a live admin session can log admins out; anyone else just loses their own cookie.
+  if (await isAdminSession()) await revokeAdminSessions();
   const response = NextResponse.json({ ok: true });
   response.cookies.delete(ADMIN_SESSION_COOKIE);
   return response;

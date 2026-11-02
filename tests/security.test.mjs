@@ -238,6 +238,22 @@ describe("OTP and feedback (database)", () => {
     assert.deepEqual((await database.getListingById("e0000000-0000-4000-8000-000000000003")).tags, ["WiFi"]);
   });
 
+  test("admin logout ends every admin session, copied cookies too; later logins work", async () => {
+    process.env.ADMIN_PASSWORD = "test-admin-password";
+    const { createAdminSessionToken } = await import("../src/lib/admin-auth.ts");
+    const { isLiveAdminToken, revokeAdminSessions } = await import("../src/lib/admin-session-store.ts");
+    const now = Date.now();
+    const copied = createAdminSessionToken(now - 60_000);
+    assert.equal(await isLiveAdminToken(copied), true);
+    assert.equal(await isLiveAdminToken("junk"), false);
+    await revokeAdminSessions(now);
+    assert.equal(await isLiveAdminToken(copied), false);
+    assert.equal(await isLiveAdminToken(createAdminSessionToken(now + 1)), true);
+    // An older logout time never moves the cut-off back.
+    await revokeAdminSessions(now - 120_000);
+    assert.equal(await isLiveAdminToken(copied), false);
+  });
+
   test("codes are stored hashed, never as the code itself", async () => {
     const code = await database.requestEmailAuthOtp("hashed@example.test");
     const { rows } = await db.pool.query("SELECT otp FROM otps WHERE id = 'hashed@example.test'");
