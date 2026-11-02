@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { ADMIN_SESSION_COOKIE, createAdminSessionToken, verifyAdminCredentials } from "@/lib/admin-auth";
 import { clientIp, failAdminLoginAttempt, passAdminLoginAttempt, startAdminLoginAttempt } from "@/lib/admin-login-guard";
+import { jsonBody } from "@/lib/json-body";
 import { isRateLimited } from "@/lib/rate-limit";
 import { isAdminSession } from "@/lib/current-admin";
 import { revokeAdminSessions } from "@/lib/admin-session-store";
@@ -21,11 +22,11 @@ export async function POST(request: Request) {
   const attempt = await startAdminLoginAttempt(pool, ip);
   if (!attempt.allowed) return blocked();
 
-  const body = await request.json().catch(() => ({})) as { username?: string; password?: string; code?: string };
+  const body = await jsonBody(request);
   // With ADMIN_TOTP_SECRET set, the authenticator code is required too, and a
   // wrong code counts as a failed attempt just like a wrong password.
   const totpSecret = adminTotpSecret();
-  const passwordOk = Boolean(body.username?.trim() && body.password && verifyAdminCredentials(body.username.trim(), body.password));
+  const passwordOk = typeof body.username === "string" && typeof body.password === "string" && Boolean(body.username.trim() && body.password) && verifyAdminCredentials(body.username.trim(), body.password);
   const step = totpSecret && typeof body.code === "string" ? matchTotp(totpSecret, body.code) : null;
   // Checked only after the password, so a wrong password can't burn a code.
   const codeOk = !totpSecret || (step !== null && passwordOk && await claimTotpStep(pool, step));

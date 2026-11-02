@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/current-user";
 import pool from "@/lib/db";
 import { restoreOwnPost, restoreWithToken } from "@/lib/inactive-posts";
+import { isUuid, jsonBody } from "@/lib/json-body";
 import { isRateLimited } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -18,8 +19,8 @@ export async function POST(request: Request) {
   if ((request.headers.get("content-type") || "").includes("application/json")) {
     const userId = await getSessionUserId();
     if (!userId) return NextResponse.json({ error: "Please log in to restore a post." }, { status: 401 });
-    const { id } = await request.json() as { id?: string };
-    if (!id || !/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });
+    const { id } = await jsonBody(request);
+    if (!isUuid(id)) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });
     const result = await restoreOwnPost(pool, id, userId, now);
     if (result === "gone") return NextResponse.json({ error: "This post has been permanently deleted." }, { status: 410 });
     if (result === "stale") return NextResponse.json({ error: "You can only restore your own posts." }, { status: 403 });

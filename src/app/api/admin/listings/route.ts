@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdminSession } from "@/lib/current-admin";
+import { isUuid, jsonBody } from "@/lib/json-body";
 import { setManagedByAdmin } from "@/lib/database";
 import { publicErrorMessage } from "@/lib/public-error";
 
@@ -8,8 +9,8 @@ export const runtime = "nodejs";
 /** Admin toggle: posts managed by the admin are never removed for owner inactivity. */
 export async function PATCH(request: Request) {
   if (!await isAdminSession()) return NextResponse.json({ error: "Admin login required." }, { status: 401 });
-  const body = await request.json() as { id?: string; managedByAdmin?: unknown };
-  if (!body.id || typeof body.managedByAdmin !== "boolean") return NextResponse.json({ error: "id and managedByAdmin are required." }, { status: 400 });
+  const body = await jsonBody(request);
+  if (!isUuid(body.id) || typeof body.managedByAdmin !== "boolean") return NextResponse.json({ error: "id and managedByAdmin are required." }, { status: 400 });
   try {
     await setManagedByAdmin(body.id, body.managedByAdmin);
     return NextResponse.json({ id: body.id, managedByAdmin: body.managedByAdmin });

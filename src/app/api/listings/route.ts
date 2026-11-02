@@ -9,6 +9,7 @@ import { isAdminSession } from "@/lib/current-admin";
 import { isRateLimited } from "@/lib/rate-limit";
 import { withoutOwnerDetails } from "@/lib/visitor";
 import { publicErrorMessage } from "@/lib/public-error";
+import { isUuid, jsonBody } from "@/lib/json-body";
 
 export const runtime = "nodejs";
 
@@ -58,7 +59,8 @@ function invalidField(body: Partial<NewListing>): string | undefined {
   if (body.listingKind && body.listingKind !== "flat-offer" && body.listingKind !== "flat-requirement") return "Invalid listing type.";
   if (body.availableFrom && (typeof body.availableFrom !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(body.availableFrom) || Number.isNaN(Date.parse(body.availableFrom)))) return "Availability date must be valid.";
   if (body.genderPreference && !["Male", "Female", "Family", "Any"].includes(body.genderPreference)) return "Invalid gender preference.";
-  if (body.description && (typeof body.description !== "string" || body.description.length > 2000)) return "Description must be 2000 characters or fewer.";
+  if (body.description !== undefined && (typeof body.description !== "string" || body.description.length > 2000)) return "Description must be 2000 characters or fewer.";
+  if (body.images !== undefined && (!Array.isArray(body.images) || !body.images.every((image) => typeof image === "string"))) return "Invalid photos.";
   if (body.contactPhone !== undefined && (typeof body.contactPhone !== "string" || (body.contactPhone.trim() && !isValidPhone(body.contactPhone.trim())))) return "A valid contact number is required.";
   if (cleanAmenityTags(body.tags) === null) return "Invalid amenities.";
   return undefined;
@@ -92,15 +94,16 @@ export async function POST(request: Request) {
   if (await rateLimited(request)) return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });
   const sessionUserId = await getSessionUserId();
   if (!sessionUserId) return NextResponse.json({ error: "Please log in again before publishing a post." }, { status: 401 });
-  const body = await request.json() as Partial<NewListing>;
+  const body = await jsonBody(request) as Partial<NewListing>;
+  // Types first, so the checks below only ever see strings where they expect them.
+  const invalid = invalidField(body);
+  if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
   if (!body.title?.trim() || !body.location?.trim() || !body.rent || !body.propertyType) {
     return NextResponse.json({ error: "Title, location, budget, and property type are required." }, { status: 400 });
   }
   if (!body.contactPhone?.trim() || !isValidPhone(body.contactPhone.trim())) {
     return NextResponse.json({ error: "A valid contact number is required." }, { status: 400 });
   }
-  const invalid = invalidField(body);
-  if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
   const attributes = parseAttributes(body);
   if ("error" in attributes) return NextResponse.json({ error: attributes.error }, { status: 400 });
   // Only the poster's own uploads, never outside links (tracking pixels, other
@@ -135,8 +138,8 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   if (await rateLimited(request)) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
-  const body = await request.json() as Partial<NewListing> & { id?: string };
-  if (!body.id) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });
+  const body = await jsonBody(request) as Partial<NewListing> & { id?: string };
+  if (!isUuid(body.id)) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });
 
   const isAdmin = await isAdminSession();
   const actualOwnerId = await getListingOwnerId(body.id);
@@ -172,7 +175,7 @@ export async function DELETE(request: Request) {
   if (await rateLimited(request)) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });
+  if (!isUuid(id)) return NextResponse.json({ error: "Listing id is required." }, { status: 400 });
 
   const isAdmin = await isAdminSession();
   if (!isAdmin) {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/current-user";
 import { uploadImage } from "@/lib/image-storage";
 import { touchLastSeen } from "@/lib/database";
+import { jsonBody } from "@/lib/json-body";
 import { isRateLimited } from "@/lib/rate-limit";
 import { publicErrorMessage } from "@/lib/public-error";
 
@@ -14,8 +15,8 @@ export async function POST(request: Request) {
   const sessionUserId = await getSessionUserId();
   if (!sessionUserId) return NextResponse.json({ error: "Please log in to upload photos." }, { status: 401 });
   await touchLastSeen(sessionUserId);
-  const body = await request.json() as { image?: string };
-  if (!body.image) return NextResponse.json({ error: "An image is required." }, { status: 400 });
+  const body = await jsonBody(request);
+  if (typeof body.image !== "string" || !body.image) return NextResponse.json({ error: "An image is required." }, { status: 400 });
   try {
     return NextResponse.json({ url: await uploadImage(body.image, sessionUserId) });
   } catch (error) {

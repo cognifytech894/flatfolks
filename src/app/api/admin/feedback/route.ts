@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { isAdminSession } from "@/lib/current-admin";
+import { isUuid, jsonBody } from "@/lib/json-body";
 import { approveFeedback, deleteFeedback } from "@/lib/database";
 
 export const runtime = "nodejs";
 
 async function feedbackId(request: Request) {
-  const body = await request.json().catch(() => ({})) as { id?: unknown };
-  return typeof body.id === "string" && /^[0-9a-f-]{36}$/.test(body.id) ? body.id : undefined;
+  const { id } = await jsonBody(request);
+  return isUuid(id) ? id : undefined;
 }
 
 /** Approve a testimonial so it shows on the home page. */

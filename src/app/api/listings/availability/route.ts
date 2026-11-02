@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getListingAvailability } from "@/lib/database";
+import { jsonBody } from "@/lib/json-body";
 import { isRateLimited } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -10,7 +11,7 @@ export const runtime = "nodejs";
  */
 export async function POST(request: Request) {
   if (await isRateLimited(request, "availability", 30)) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
-  const body = await request.json().catch(() => ({})) as { ids?: unknown };
+  const body = await jsonBody(request);
   const ids = Array.isArray(body.ids) ? body.ids.filter((id): id is string => typeof id === "string").slice(0, 100) : [];
   return NextResponse.json(await getListingAvailability(ids));
 }

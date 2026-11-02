@@ -11,12 +11,15 @@ import { isDisposableEmail } from "@/data/disposable-email-domains";
 import { createSessionToken, isSecureContext, SESSION_COOKIE, SESSION_DAYS } from "@/lib/session";
 import { getSessionVersion, revokeSessions, userIdFromToken } from "@/lib/current-user";
 import { cookies } from "next/headers";
+import { jsonBody } from "@/lib/json-body";
 import { publicErrorMessage } from "@/lib/public-error";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const body = await request.json() as { action?: "email-auth-request" | "email-auth-verify"; email?: string; otp?: string };
+  const raw = await jsonBody(request);
+  // Fields of the wrong type count as missing.
+  const body = { action: raw.action, email: typeof raw.email === "string" ? raw.email : undefined, otp: typeof raw.otp === "string" ? raw.otp : undefined };
   try {
     if (body.action === "email-auth-request") {
       if (await isRateLimited(request, "otp-request", 5)) return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });

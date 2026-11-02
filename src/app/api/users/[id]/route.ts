@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/current-user";
 import { getUserPhoto, touchLastSeen, updateUser } from "@/lib/database";
 import { isAllowedProfilePhoto } from "@/lib/image-storage";
+import { jsonBody } from "@/lib/json-body";
 import { publicErrorMessage } from "@/lib/public-error";
 
 export const runtime = "nodejs";
@@ -13,7 +14,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (sessionUserId !== id) return NextResponse.json({ error: "You can only update your own profile." }, { status: 403 });
   await touchLastSeen(sessionUserId);
 
-  const body = await request.json() as { name?: string; email?: string; phone?: string; location?: string; gender?: "Male" | "Female"; photo?: string };
+  const body = await jsonBody(request) as { name?: string; email?: string; phone?: string; location?: string; gender?: "Male" | "Female"; photo?: string };
+  if ((["name", "phone", "location", "photo"] as const).some((field) => body[field] !== undefined && typeof body[field] !== "string")) return NextResponse.json({ error: "Invalid profile details." }, { status: 400 });
   // The email is the sign-in identity, proven by OTP. Changing it here, unverified,
   // would let someone claim another person's address before they sign up.
   if (body.email !== undefined) return NextResponse.json({ error: "Your sign-in email can't be changed here. Please contact support." }, { status: 400 });

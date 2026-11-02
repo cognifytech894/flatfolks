@@ -107,6 +107,23 @@ describe("internal errors", async () => {
     const original = console.error; console.error = () => {};
     try { assert.equal(publicErrorMessage(dbError, "Could not update listing."), "Could not update listing."); } finally { console.error = original; }
   });
+  test("code errors like a TypeError are not shown either", () => {
+    const original = console.error; console.error = () => {};
+    try { assert.equal(publicErrorMessage(new TypeError("input.location.trim is not a function"), "Could not update profile."), "Could not update profile."); } finally { console.error = original; }
+  });
+});
+
+describe("request bodies", async () => {
+  const { isUuid, jsonBody } = await import("../src/lib/json-body.ts");
+  const body = (text) => jsonBody(new Request("http://localhost/", { method: "POST", body: text }));
+  test("anything but a JSON object reads as empty", async () => {
+    for (const text of ["not json", "null", "[1,2]", "42", '"abc"', ""]) assert.deepEqual(await body(text), {}, text);
+    assert.deepEqual(await body('{"name":"Riya"}'), { name: "Riya" });
+  });
+  test("ids must be UUIDs", () => {
+    assert.equal(isUuid("7f0c4f8e-1b2a-4c3d-9e8f-0a1b2c3d4e5f"), true);
+    for (const value of ["abc", "7f0c4f8e1b2a4c3d9e8f0a1b2c3d4e5f", "------------------------------------", 42, null]) assert.equal(isUuid(value), false, String(value));
+  });
 });
 
 describe("admin authenticator codes", async () => {

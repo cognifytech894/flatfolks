@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { addFeedback, getFeedback } from "@/lib/database";
+import { jsonBody } from "@/lib/json-body";
 import { isRateLimited } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -10,8 +11,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   if (await isRateLimited(request, "feedback", 5, 10 * 60_000)) return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });
-  const body = await request.json() as { name?: string; city?: string; rating?: number; message?: string };
-  if (!body.name?.trim() || !body.city?.trim() || !body.message?.trim()) {
+  const body = await jsonBody(request);
+  if (typeof body.name !== "string" || typeof body.city !== "string" || typeof body.message !== "string" || !body.name.trim() || !body.city.trim() || !body.message.trim()) {
     return NextResponse.json({ error: "Name, city, and feedback message are required." }, { status: 400 });
   }
   if (body.message.trim().length > 500) return NextResponse.json({ error: "Feedback must be 500 characters or fewer." }, { status: 400 });
