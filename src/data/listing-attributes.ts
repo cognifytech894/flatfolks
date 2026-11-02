@@ -49,5 +49,17 @@ export const listingAmenities = [
   { value: "Lift", label: "Lift" },
 ] as const;
 
+/**
+ * A post's tags as sent by the browser: the known amenities, plus any tag the
+ * post already has (older and sample posts use a few others), at most 12.
+ * Undefined when absent; null when it isn't a list of strings.
+ */
+export function cleanAmenityTags(tags: unknown, current: readonly string[] = []): string[] | null | undefined {
+  if (tags === undefined) return undefined;
+  if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === "string")) return null;
+  const allowed = new Set<string>([...listingAmenities.map((amenity) => amenity.value), ...current]);
+  return [...new Set(tags as string[])].filter((tag) => allowed.has(tag)).slice(0, 12);
+}
+
 /** The amenity tags offered as search filters ("Furnished" is filtered via listings.furnishing). */
 export const searchableAmenities = listingAmenities.filter((amenity) => !["Kitchen", "Lift"].includes(amenity.value));

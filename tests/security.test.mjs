@@ -60,6 +60,18 @@ describe("photo URLs", () => {
   });
 });
 
+describe("post tags", async () => {
+  const { cleanAmenityTags } = await import("../src/data/listing-attributes.ts");
+  test("only a list of strings is accepted", () => {
+    for (const tags of ["abc", { a: 1 }, 42, null, [{}], ["WiFi", 1]]) assert.equal(cleanAmenityTags(tags), null, JSON.stringify(tags));
+    assert.equal(cleanAmenityTags(undefined), undefined);
+  });
+  test("known amenities and the post's own tags are kept, at most 12", () => {
+    assert.deepEqual(cleanAmenityTags(["WiFi", "AC", "WiFi", "Free money", "Meals"], ["Meals"]), ["WiFi", "AC", "Meals"]);
+    assert.equal(cleanAmenityTags(Array.from({ length: 20 }, (_, i) => `t${i}`), Array.from({ length: 20 }, (_, i) => `t${i}`)).length, 12);
+  });
+});
+
 describe("redirect after login", async () => {
   const { safeNext } = await import("../src/lib/safe-next.ts");
   const ORIGIN = "https://flatfolks.in";
@@ -214,6 +226,16 @@ describe("OTP and feedback (database)", () => {
     await insert("d0000000-0000-4000-8000-000000000002", [photo("victim-a"), photo("victim-face"), photo("mine")]);
     const deleted = await database.deleteListing("d0000000-0000-4000-8000-000000000002", "owner");
     assert.deepEqual(deleted, [photo("mine")]);
+  });
+
+  test("tags stored as something other than a list read as empty, so pages still load", async () => {
+    const insert = (id, tags) => db.pool.query("INSERT INTO listings (id, title, location, rent, property_type, image, tags) VALUES ($1, 'Room', 'Noida', 9000, 'Room', '', $2)", [id, tags]);
+    await insert("e0000000-0000-4000-8000-000000000001", JSON.stringify("abc"));
+    await insert("e0000000-0000-4000-8000-000000000002", JSON.stringify({ a: 1 }));
+    await insert("e0000000-0000-4000-8000-000000000003", JSON.stringify(["WiFi", 5, { a: 1 }]));
+    assert.deepEqual((await database.getListingById("e0000000-0000-4000-8000-000000000001")).tags, []);
+    assert.deepEqual((await database.getListingById("e0000000-0000-4000-8000-000000000002")).tags, []);
+    assert.deepEqual((await database.getListingById("e0000000-0000-4000-8000-000000000003")).tags, ["WiFi"]);
   });
 
   test("codes are stored hashed, never as the code itself", async () => {

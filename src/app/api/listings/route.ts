@@ -5,7 +5,7 @@ import { createListing, deleteListing, getListingById, getListingOwnerId, getLis
 import { deleteImages, isOwnUpload } from "@/lib/image-storage";
 import { lifestylePreferences } from "@/data/preferences";
 import { cleanNearbyMetro, isFurnishing } from "@/data/furnishing";
-import { isFlatConfiguration, isRoomType, isTenantPreference } from "@/data/listing-attributes";
+import { cleanAmenityTags, isFlatConfiguration, isRoomType, isTenantPreference } from "@/data/listing-attributes";
 import { ADMIN_SESSION_COOKIE, isValidAdminSessionToken } from "@/lib/admin-auth";
 import { isRateLimited } from "@/lib/rate-limit";
 import { withoutOwnerDetails } from "@/lib/visitor";
@@ -61,6 +61,7 @@ function invalidField(body: Partial<NewListing>): string | undefined {
   if (body.genderPreference && !["Male", "Female", "Family", "Any"].includes(body.genderPreference)) return "Invalid gender preference.";
   if (body.description && (typeof body.description !== "string" || body.description.length > 2000)) return "Description must be 2000 characters or fewer.";
   if (body.contactPhone !== undefined && (typeof body.contactPhone !== "string" || (body.contactPhone.trim() && !isValidPhone(body.contactPhone.trim())))) return "A valid contact number is required.";
+  if (cleanAmenityTags(body.tags) === null) return "Invalid amenities.";
   return undefined;
 }
 
@@ -119,7 +120,7 @@ export async function POST(request: Request) {
     description: body.description,
     image: images?.[0],
     images,
-    tags: body.tags?.filter((tag) => typeof tag === "string").slice(0, 12),
+    tags: cleanAmenityTags(body.tags) ?? undefined,
     ownerId: sessionUserId,
     contactPhone: body.contactPhone.trim(),
     preferences: sanitizePreferences(body.preferences),
@@ -155,14 +156,17 @@ export async function PATCH(request: Request) {
 
   const invalid = invalidField(body);
   if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
-  // New photos must be the owner's own uploads; photos the post already has are kept as they are.
-  const current = body.images ? new Set((await getListingById(body.id))?.images || []) : undefined;
-  const images = body.images ? body.images.filter((image) => current!.has(image) || (Boolean(actualOwnerId) && isOwnUpload(image, actualOwnerId!))).slice(0, 3) : undefined;
+  // New photos must be the owner's own uploads, and new tags known amenities;
+  // photos and tags the post already has are kept as they are.
+  const existing = body.images || body.tags ? await getListingById(body.id) : undefined;
+  const current = new Set(existing?.images || []);
+  const images = body.images ? body.images.filter((image) => current.has(image) || (Boolean(actualOwnerId) && isOwnUpload(image, actualOwnerId!))).slice(0, 3) : undefined;
+  const tags = cleanAmenityTags(body.tags, existing?.tags) ?? undefined;
   const preferences = sanitizePreferences(body.preferences);
   const attributes = parseAttributes(body);
   if ("error" in attributes) return NextResponse.json({ error: attributes.error }, { status: 400 });
   const nearbyMetro = body.nearbyMetro === undefined ? undefined : cleanNearbyMetro(body.nearbyMetro) ?? null;
-  try { return NextResponse.json(await updateListing(body.id, { ...body, images, preferences, ...attributes.values, nearbyMetro })); }
+  try { return NextResponse.json(await updateListing(body.id, { ...body, images, tags, preferences, ...attributes.values, nearbyMetro })); }
   catch (error) { return NextResponse.json({ error: publicErrorMessage(error, "Could not update listing.") }, { status: 404 }); }
 }
 

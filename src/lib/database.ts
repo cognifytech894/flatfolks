@@ -162,6 +162,11 @@ function parseJsonField<T>(value: unknown, fallback: T): T {
   return value as T;
 }
 
+/** Pages call .map() on tags, so anything stored that isn't a list of strings reads as empty. */
+function stringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
 /** Drops repeated parts of a location ("Noida sector 73, Noida sector 73" → "Noida sector 73"), as when a poster types the same text as address and area. */
 function tidyLocation(location: string) {
   const seen = new Set<string>();
@@ -193,7 +198,7 @@ function rowToListing(row: ListingRow): Listing {
     id: row.id, title: row.title, location: tidyLocation(row.location), rent: row.rent, deposit: row.deposit,
     bedrooms: row.bedrooms, bathrooms: row.bathrooms, propertyType: row.property_type,
     description: row.description || undefined, image: row.owner_id && row.image === legacyStockImage ? "" : row.image, verified: !!row.verified,
-    tags: parseJsonField<string[]>(row.tags, []), matchScore: row.match_score, minBudget: row.min_budget, maxBudget: row.max_budget,
+    tags: stringList(parseJsonField<unknown>(row.tags, [])), matchScore: row.match_score, minBudget: row.min_budget, maxBudget: row.max_budget,
     images: parseJsonField<string[] | undefined>(row.images, undefined), status: row.status || undefined,
     removedAt: row.removed_at ? new Date(row.removed_at).toISOString() : undefined, managedByAdmin: Boolean(row.managed_by_admin),
     views: row.views, saves: row.saves, ownerId: row.owner_id || undefined, ownerName: row.owner_name || undefined,
