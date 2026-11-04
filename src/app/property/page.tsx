@@ -325,7 +325,7 @@ function PostListing() {
   const amenitiesField = (
     <fieldset>
       <legend className="text-sm font-medium text-slate-700">Amenities</legend>
-      <div className="mt-2 grid grid-cols-2 gap-2">
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
         {listingAmenities.map((amenity) => (
           <label key={amenity.value} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm">
             <input type="checkbox" checked={selectedAmenities.includes(amenity.value)} onChange={() => toggleAmenity(amenity.value)} />
@@ -371,7 +371,6 @@ function PostListing() {
         <section className="mt-5 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-9">
           <p className="text-sm font-semibold uppercase tracking-[.22em] text-blue-600">Create a post</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{heading}</h1>
-          <p className="mt-2 text-sm text-slate-600">{isFlatRequirement ? "Your requirement will be visible to people looking for a flatmate." : "Your flat will be visible to people looking for a flat."}</p>
 
           {isFlatRequirement ? (
             <form onSubmit={submit} noValidate className="mt-7 space-y-6">
@@ -387,9 +386,9 @@ function PostListing() {
                   {propertyTypeField}
                   {furnishingField}
                   {budgetField}
-                  {amenitiesField}
                 </div>
               </div>
+              {amenitiesField}
               <PreferencesField selected={selectedPreferences} onToggle={togglePreference} />
               {descriptionField}
               {statusMessage}
