@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { MapPin } from "lucide-react";
 import { getSavedCity, rememberCity, sortByCity } from "@/lib/saved-city";
 import { perMonth, rupees } from "@/lib/budget";
 import { editBudgetEvent } from "@/components/search/search-filters";
@@ -44,10 +45,11 @@ export function SearchResults({ listings, searchedLocation, budget, keepOrder }:
             {/* Every line is one line high (long text truncates, badges stay on one row), so all cards are the same size. */}
             <div className="flex flex-1 flex-col p-4">
               <div className="flex items-center justify-between gap-3">
-                <h2 title={listing.title} className="min-w-0 truncate text-lg font-semibold text-slate-900">{listing.title}</h2>
+                {/* Titles read "3 BHK Sharing Flat in <place>"; the place already shows on the line below. */}
+                <h2 title={listing.title} className="min-w-0 truncate text-lg font-semibold text-slate-900">{listing.title.split(" in ")[0]}</h2>
                 <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">{listing.propertyType}</span>
               </div>
-              <p title={listing.location} className="mt-1 truncate text-sm text-slate-600">{listing.location}</p>
+              <p title={listing.location} className="mt-1 flex items-center gap-1 text-sm text-slate-600"><MapPin className="h-4 w-4 shrink-0 text-slate-400" aria-hidden /><span className="min-w-0 truncate">{listing.location}</span></p>
               <dl className="mt-3 grid grid-cols-2 gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
                 <div className="min-w-0"><dt className="text-xs text-slate-500">Looking for</dt><dd className="truncate text-sm font-semibold text-slate-900">{lookingFor(listing.genderPreference)}</dd></div>
                 <div className="min-w-0"><dt className="text-xs text-slate-500">Rent</dt><dd className="truncate text-sm font-semibold text-emerald-700">{perMonth(listing.rent)}</dd></div>
