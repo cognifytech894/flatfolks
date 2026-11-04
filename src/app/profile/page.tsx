@@ -171,7 +171,8 @@ export default function ProfilePage() {
               )}
 
               {notice && <p role="status" className={`mt-5 rounded-xl p-3 text-sm ${notice.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{notice.text}</p>}
-              <MyPosts title="Your Listings" className="mt-6 border-t border-slate-100 pt-6" />
+              {/* The Edit button above also unlocks editing and deleting the posts. */}
+              <MyPosts title="Your Listings" className="mt-6 border-t border-slate-100 pt-6" editable={editing} />
             </section>
 
             {/* Logout lives in the header's account menu, which is hidden below sm, so phones keep it here. */}
