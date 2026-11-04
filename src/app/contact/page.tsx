@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <LegalPage eyebrow="Contact" title="Contact Us">
+    <LegalPage title="Contact Us">
       <p>
         Have a question, need help with your account or a listing, or want to report a suspicious listing or user? Email us and we&apos;ll get back
         to you as soon as we can.

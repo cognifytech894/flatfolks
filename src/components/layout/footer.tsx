@@ -95,9 +95,6 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-x-6 gap-y-10 border-t border-slate-200 pt-10 md:grid-cols-3 lg:grid-cols-[1.4fr_repeat(4,minmax(0,1fr))]">
           <div className="col-span-2 md:col-span-3 lg:col-span-1">
             <FlatFolksLogo />
-            <p className="mt-4 max-w-xs text-sm leading-6 text-slate-600">
-              Rooms, flats and flatmates for students and professionals in Delhi NCR.
-            </p>
             <p className="mt-4 flex max-w-xs gap-2 text-sm leading-6 text-slate-600"><MapPin className="mt-1 h-4 w-4 shrink-0" />{contactAddress}</p>
             <a href={`mailto:${contactEmail}`} className="mt-3 inline-flex items-center gap-2 text-sm text-slate-600 underline-offset-4 hover:text-blue-600 hover:underline">
               <Mail className="h-4 w-4" />{contactEmail}
