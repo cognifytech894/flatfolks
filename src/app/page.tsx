@@ -78,8 +78,9 @@ export default async function Home() {
           <div className="relative mx-auto max-w-7xl px-4 pb-8 pt-8 sm:px-6 lg:px-8 lg:pb-10 lg:pt-9">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_30%,rgba(37,99,235,0.08),transparent_33%)]" />
             <div className="relative z-10">
-              <div>
-                <h1 className="text-3xl font-bold leading-[1.1] tracking-tight text-[#11172d] sm:text-[54px] xl:text-[61px]">
+              {/* From sm up the heading scales with the content width so its one line runs edge to edge (it measures ~16em wide). */}
+              <div className="@container">
+                <h1 className="text-3xl font-bold leading-[1.1] tracking-tight text-[#11172d] sm:whitespace-nowrap sm:text-[6.1cqw]">
                   Find Your Perfect <span className="text-[#2563eb]">Room &amp; Flatmate</span>
                 </h1>
               </div>
