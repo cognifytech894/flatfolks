@@ -49,7 +49,7 @@ export function SearchResults({ listings, searchedLocation, budget, keepOrder }:
                 <h2 title={listing.title} className="min-w-0 truncate text-lg font-semibold text-slate-900">{listing.title.split(" in ")[0]}</h2>
                 <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">{listing.propertyType}</span>
               </div>
-              <p title={listing.location} className="mt-1 flex items-center gap-1 text-sm text-slate-600"><MapPin className="h-4 w-4 shrink-0 text-slate-400" aria-hidden /><span className="min-w-0 truncate">{listing.location}</span></p>
+              <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listing.location)}`} target="_blank" rel="noopener noreferrer" title={`${listing.location} — open in Google Maps`} className="mt-1 flex min-w-0 items-center gap-1 self-start text-sm text-slate-600 hover:text-blue-600"><MapPin className="h-4 w-4 shrink-0 text-slate-400" aria-hidden /><span className="min-w-0 truncate">{listing.location}</span></a>
               <dl className="mt-3 grid grid-cols-2 gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
                 <div className="min-w-0"><dt className="text-xs text-slate-500">Looking for</dt><dd className="truncate text-sm font-semibold text-slate-900">{lookingFor(listing.genderPreference)}</dd></div>
                 <div className="min-w-0"><dt className="text-xs text-slate-500">Rent</dt><dd className="truncate text-sm font-semibold text-emerald-700">{perMonth(listing.rent)}</dd></div>
