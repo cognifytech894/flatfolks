@@ -78,10 +78,9 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   // phone number the login gate on /property/[id] is supposed to hide.
   const publicListings = filteredListings.map((listing) => ({
     id: listing.id, href: listingPath(listing), title: listingName(listing), location: listing.location, rent: listing.rent,
-    image: listing.image, propertyType: listing.propertyType, genderPreference: listing.genderPreference,
+    image: listing.image, propertyType: listing.propertyType, genderPreference: listing.genderPreference, offering: roomTypeLabel(listing.roomType),
     badges: [
       flatConfigurationLabel(listing.flatConfiguration),
-      roomTypeLabel(listing.roomType),
       furnishingLabel(listing.furnishing),
       listing.tenantPreference ? `For ${tenantPreferenceLabel(listing.tenantPreference)?.toLowerCase()}` : undefined,
     ].filter((badge): badge is string => Boolean(badge)),

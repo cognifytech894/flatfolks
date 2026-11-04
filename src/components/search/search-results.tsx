@@ -10,7 +10,7 @@ import { editBudgetEvent } from "@/components/search/search-filters";
 
 type ResultListing = {
   id: string; href: string; title: string; location: string; rent: number; image: string;
-  propertyType: string; genderPreference?: string; badges: string[];
+  propertyType: string; genderPreference?: string; offering?: string; badges: string[];
 };
 
 /** keepOrder: the visitor picked a sort, so don't move their saved city's listings to the top. */
@@ -50,9 +50,10 @@ export function SearchResults({ listings, searchedLocation, budget, keepOrder }:
                 <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">{listing.propertyType}</span>
               </div>
               <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listing.location)}`} target="_blank" rel="noopener noreferrer" title={`${listing.location} — open in Google Maps`} className="mt-1 flex min-w-0 items-center gap-1 self-start text-sm text-slate-600 hover:text-blue-600"><MapPin className="h-4 w-4 shrink-0 text-slate-400" aria-hidden /><span className="min-w-0 truncate">{listing.location}</span></a>
-              <dl className="mt-3 grid grid-cols-2 gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
+              <dl className="mt-3 grid grid-cols-3 gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
                 <div className="min-w-0"><dt className="text-xs text-slate-500">Looking for</dt><dd className="truncate text-sm font-semibold text-slate-900">{lookingFor(listing.genderPreference)}</dd></div>
                 <div className="min-w-0"><dt className="text-xs text-slate-500">Rent</dt><dd className="truncate text-sm font-semibold text-emerald-700">{perMonth(listing.rent)}</dd></div>
+                <div className="min-w-0"><dt className="text-xs text-slate-500">Offering</dt><dd className="truncate text-sm font-semibold text-slate-900">{listing.offering || "Not specified"}</dd></div>
               </dl>
               <div className="mt-3 flex items-center gap-3">
                 {/* Badges wrap onto a hidden second row, so one that doesn't fit is left out rather than cut in half. */}
