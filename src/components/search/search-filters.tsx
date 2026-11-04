@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Filter, X } from "lucide-react";
 import { searchLocations } from "@/data/indian-cities";
-import { roomTypeOptions, searchableAmenities, tenantPreferenceOptions } from "@/data/listing-attributes";
+import { roomTypeOptions, tenantPreferenceOptions } from "@/data/listing-attributes";
 import type { SearchParams } from "@/lib/search-filters";
 
 /** Fired by the empty-results "Change budget" button: open the filters and focus the budget, without changing it. */
@@ -12,9 +12,6 @@ export const editBudgetEvent = "flatfolks-edit-budget";
 
 type Filters = Omit<SearchParams, "moveIn" | "maxBudget">;
 type Option = { readonly value: string; readonly label: string };
-
-// "Furnished" sits with the amenities but filters on listings.furnishing, not a tag.
-const furnishedAmenity = { value: "furnished", label: "Furnished" };
 
 /** `oneRow` keeps a short set (1 RK – 3 BHK, Students / Working professionals) on one line, each chip growing to fill it. */
 function Chips({ options, isSelected, onToggle, label, oneRow }: { options: readonly Option[]; isSelected: (value: string) => boolean; onToggle: (value: string) => void; label: string; oneRow?: boolean }) {
@@ -121,11 +118,6 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
             <p className={sectionTitle}>Preferences</p>
             <Chips label="Preferred tenants" oneRow options={tenantPreferenceOptions} isSelected={(value) => filters.tenant === value} onToggle={(value) => toggleOne("tenant", value)} />
           </div>
-          <div>
-            <p className={sectionTitle}>Amenities</p>
-            <Chips label="Amenities" options={[furnishedAmenity, ...searchableAmenities]} isSelected={(value) => value === furnishedAmenity.value ? filters.furnishing === value : listOf("amenity").includes(value)} onToggle={(value) => value === furnishedAmenity.value ? toggleOne("furnishing", value) : toggleInList("amenity", value)} />
-          </div>
-          <label className={`block ${sectionTitle}`}>Listing type<select value={filters.propertyType || ""} onChange={(event) => update("propertyType", event.target.value)} className={`mt-2 ${inputClass}`}><option value="">All types</option><option>Room</option><option>Flat</option><option>Apartment</option><option>PG</option></select></label>
           <label className={`block ${sectionTitle}`}>Near metro station<input value={filters.metro || ""} onChange={(event) => update("metro", event.target.value, "typing")} placeholder="Station name" className={`mt-2 ${inputClass}`} /></label>
         </div>
       </div>

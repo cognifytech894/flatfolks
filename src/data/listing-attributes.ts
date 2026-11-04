@@ -61,6 +61,3 @@ export function cleanAmenityTags(tags: unknown, current: readonly string[] = [])
   const allowed = new Set<string>([...listingAmenities.map((amenity) => amenity.value), ...current]);
   return [...new Set(tags as string[])].filter((tag) => allowed.has(tag)).slice(0, 12);
 }
-
-/** The amenity tags offered as search filters ("Furnished" is filtered via listings.furnishing). */
-export const searchableAmenities = listingAmenities.filter((amenity) => !["Kitchen", "Lift"].includes(amenity.value));

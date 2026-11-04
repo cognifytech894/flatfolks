@@ -44,11 +44,8 @@ export function SearchResults({ listings, searchedLocation, budget, keepOrder }:
             </div>
             {/* Every line is one line high (long text truncates, badges stay on one row), so all cards are the same size. */}
             <div className="flex flex-1 flex-col p-4">
-              <div className="flex items-center justify-between gap-3">
-                {/* Titles read "3 BHK Sharing Flat in <place>"; the place already shows on the line below. */}
-                <h2 title={listing.title} className="min-w-0 truncate text-lg font-semibold text-slate-900">{listing.title.split(" in ")[0]}</h2>
-                <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">{listing.propertyType}</span>
-              </div>
+              {/* Titles read "3 BHK Sharing Flat in <place>"; the place already shows on the line below. */}
+              <h2 title={listing.title} className="min-w-0 truncate text-lg font-semibold text-slate-900">{listing.title.split(" in ")[0]}</h2>
               <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listing.location)}`} target="_blank" rel="noopener noreferrer" title={`${listing.location} — open in Google Maps`} className="mt-1 flex min-w-0 items-center gap-1 self-start text-sm text-slate-600 hover:text-blue-600"><MapPin className="h-4 w-4 shrink-0 text-slate-400" aria-hidden /><span className="min-w-0 truncate">{listing.location}</span></a>
               <dl className="mt-3 grid grid-cols-3 gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
                 <div className="min-w-0"><dt className="text-xs text-slate-500">Looking for</dt><dd className="truncate text-sm font-semibold text-slate-900">{lookingFor(listing.genderPreference)}</dd></div>
@@ -58,6 +55,7 @@ export function SearchResults({ listings, searchedLocation, budget, keepOrder }:
               <div className="mt-3 flex items-center gap-3">
                 {/* Badges wrap onto a hidden second row, so one that doesn't fit is left out rather than cut in half. */}
                 <div className="flex h-6 min-w-0 flex-1 flex-wrap gap-1.5 overflow-hidden">
+                  <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">{listing.propertyType}</span>
                   {listing.badges.map((badge) => <span key={badge} className="shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">{badge}</span>)}
                 </div>
                 <Link href={listing.href} target="_blank" rel="noopener" className="shrink-0 py-1 text-sm font-semibold text-blue-600 hover:underline">View details</Link>
