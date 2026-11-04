@@ -3,7 +3,6 @@
 import { ChangeEvent, ReactNode, useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { Camera, Check, Loader2, LogOut, Mail, MapPin, Pencil, Phone, Trash2, UserRound, UsersRound, X } from "lucide-react";
-import { BackLink } from "@/components/ui/back-link";
 import { loadImageFile, releaseImage } from "@/lib/load-image";
 import { logout } from "@/lib/logout";
 import { MyPosts } from "@/components/dashboard/my-posts";
@@ -113,8 +112,7 @@ export default function ProfilePage() {
         </div>
       )}
       <div className="mx-auto max-w-5xl">
-        <BackLink />
-        <div className="mt-5 grid gap-6 lg:grid-cols-[320px_1fr]">
+        <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
           <aside className="flex flex-col gap-6">
             <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
               <div className="flex flex-col items-center px-6 py-8 text-center">
@@ -172,9 +170,8 @@ export default function ProfilePage() {
               )}
 
               {notice && <p role="status" className={`mt-5 rounded-xl p-3 text-sm ${notice.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{notice.text}</p>}
+              <MyPosts title="Your Listings" className="mt-6 border-t border-slate-100 pt-6" />
             </section>
-
-            <MyPosts title="Your Listings" className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8" />
 
             {/* Logout lives in the header's account menu, which is hidden below sm, so phones keep it here. */}
             <button type="button" onClick={logout} className="flex w-full items-center gap-3 rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:bg-red-50 sm:hidden">
