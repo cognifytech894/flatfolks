@@ -2,9 +2,11 @@
 
 import { ChangeEvent, ReactNode, useEffect, useId, useState } from "react";
 import Link from "next/link";
-import { Camera, Check, ChevronRight, LayoutDashboard, Loader2, LogOut, Mail, MapPin, Pencil, Phone, Trash2, UserRound, UsersRound, X } from "lucide-react";
+import { Camera, Check, Loader2, LogOut, Mail, MapPin, Pencil, Phone, Trash2, UserRound, UsersRound, X } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
 import { loadImageFile, releaseImage } from "@/lib/load-image";
+import { logout } from "@/lib/logout";
+import { MyPosts } from "@/components/dashboard/my-posts";
 import { PhotoAdjuster } from "@/components/profile/photo-adjuster";
 import { presetAvatars } from "@/data/avatars";
 import { searchLocations } from "@/data/indian-cities";
@@ -65,15 +67,6 @@ export default function ProfilePage() {
   }
   function update(field: keyof Profile, value: string) { setDraft((current) => current ? ({ ...current, [field]: value } as Profile) : current); }
   function toggleEditing() { setEditing((value) => !value); setDraft(profile); setNotice(null); }
-  async function logout() {
-    // Clear the server's session cookie too, not just this browser's saved
-    // profile; otherwise the server still treats the visitor as signed in
-    // (and shows contact numbers) after "Log out".
-    await fetch("/api/auth/otp", { method: "DELETE" }).catch(() => {});
-    localStorage.removeItem("flatfolks_user");
-    localStorage.removeItem("flatfolks_profile_photo");
-    window.location.assign("/auth");
-  }
   async function save() { if (!draft) return; setSaving(true); setNotice(null); try { const response = await fetch(`/api/users/${draft.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: draft.name, phone: draft.phone, location: draft.location, gender: draft.gender }) }); const result = await response.json() as { user?: Profile; error?: string }; if (!response.ok || !result.user) throw new Error(result.error || "Could not update profile."); setProfile(result.user); setDraft(result.user); localStorage.setItem("flatfolks_user", JSON.stringify(result.user)); setEditing(false); setNotice({ text: "Profile updated successfully.", ok: true }); } catch (error) { fail(error, "Could not update profile."); } finally { setSaving(false); } }
   if (!profile || !draft) return <div className="min-h-screen bg-slate-50 px-4 py-16"><div className="mx-auto max-w-xl rounded-3xl bg-white p-8 text-center shadow-sm"><h1 className="text-2xl font-bold">Please log in first</h1><Link href="/auth" className="mt-5 inline-block rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white">Create account or log in</Link></div></div>;
 
@@ -181,17 +174,13 @@ export default function ProfilePage() {
               {notice && <p role="status" className={`mt-5 rounded-xl p-3 text-sm ${notice.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{notice.text}</p>}
             </section>
 
-            <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-              <Link href="/dashboard" className="flex items-center gap-3 p-5 transition hover:bg-slate-50">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-600"><LayoutDashboard className="h-5 w-5" /></span>
-                <span className="min-w-0 flex-1"><b className="block text-sm text-slate-900">Dashboard</b><span className="text-xs text-slate-500">Manage your posts and saved listings</span></span>
-                <ChevronRight className="h-5 w-5 text-slate-400" />
-              </Link>
-              <button type="button" onClick={logout} className="flex w-full items-center gap-3 border-t border-slate-100 p-5 text-left transition hover:bg-red-50">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-red-50 text-red-600"><LogOut className="h-5 w-5" /></span>
-                <span className="flex-1 text-sm font-semibold text-red-600">Log out</span>
-              </button>
-            </section>
+            <MyPosts title="Your Listings" className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8" />
+
+            {/* Logout lives in the header's account menu, which is hidden below sm, so phones keep it here. */}
+            <button type="button" onClick={logout} className="flex w-full items-center gap-3 rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:bg-red-50 sm:hidden">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-red-50 text-red-600"><LogOut className="h-5 w-5" /></span>
+              <span className="flex-1 text-sm font-semibold text-red-600">Log out</span>
+            </button>
           </div>
         </div>
       </div>
