@@ -56,6 +56,12 @@ const aboutLinks = [
 ] as const;
 
 // Outline glyphs drawn inline (the icon set has no brand logos).
+// Each network's own colours, with the icon in white on top.
+const socialColors: Record<(typeof socialLinks)[number]["name"], string> = {
+  Instagram: "bg-[linear-gradient(45deg,#f9ce34,#ee2a7b_50%,#6228d7)]",
+  LinkedIn: "bg-[#0a66c2]",
+};
+
 const socialIcons: Record<(typeof socialLinks)[number]["name"], React.ReactNode> = {
   Instagram: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" /></svg>,
   LinkedIn: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></svg>,
@@ -103,7 +109,7 @@ export function Footer() {
             </div>
             <div className="mt-5 flex gap-3">
               {socialLinks.map((social) => (
-                <a key={social.name} href={social.href} target="_blank" rel="noopener noreferrer" aria-label={`FlatFolks on ${social.name}`} title={social.name} className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-blue-300 hover:text-blue-600">
+                <a key={social.name} href={social.href} target="_blank" rel="noopener noreferrer" aria-label={`FlatFolks on ${social.name}`} title={social.name} className={`grid h-10 w-10 place-items-center rounded-lg text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${socialColors[social.name]}`}>
                   {socialIcons[social.name]}
                 </a>
               ))}
