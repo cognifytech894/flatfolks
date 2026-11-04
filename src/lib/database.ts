@@ -106,6 +106,15 @@ function dropEmailKeyColumn() {
   return emailKeyColumn;
 }
 
+let twoRkConfiguration: Promise<unknown> | undefined;
+// Same CHECK as data/schema.sql, widened on first use so "2rk" saves before that file is re-run.
+function allowTwoRk() {
+  twoRkConfiguration ??= pool.query("ALTER TABLE listings DROP CONSTRAINT IF EXISTS listings_flat_configuration_check")
+    .then(() => pool.query("ALTER TABLE listings ADD CONSTRAINT listings_flat_configuration_check CHECK (flat_configuration IS NULL OR flat_configuration IN ('1rk', '2rk', '1bhk', '2bhk', '3bhk'))"))
+    .catch((error) => { twoRkConfiguration = undefined; throw error; });
+  return twoRkConfiguration;
+}
+
 async function setOtp(id: string, purpose: string, otp: string, ip: string, payload?: unknown) {
   await ensureOtpAttemptsColumn();
   const { rows } = await pool.query<{ expires_at: string }>("SELECT expires_at FROM otps WHERE id = $1 AND purpose = $2", [id, purpose]);
@@ -297,6 +306,7 @@ export async function getFeaturedListings(limit = 4, city = ""): Promise<Listing
 export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { bedrooms?: number; bathrooms?: number; description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; contactPhone?: string; preferences?: string[]; availableFrom?: string; genderPreference?: "Male" | "Female" | "Family" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement"; furnishing?: Furnishing | null; nearbyMetro?: string | null; flatConfiguration?: FlatConfiguration | null; roomType?: RoomType | null; tenantPreference?: TenantPreference | null };
 
 export async function createListing(input: NewListing): Promise<Listing> {
+  if (input.flatConfiguration === "2rk") await allowTwoRk();
   const listing: Listing = {
     id: randomUUID(), title: input.title.trim(), location: tidyLocation(input.location), rent: input.rent, deposit: input.deposit,
     bedrooms: input.bedrooms || 1, bathrooms: input.bathrooms || 1, propertyType: input.propertyType,
@@ -333,6 +343,7 @@ export async function updateListing(id: string, input: Partial<NewListing>): Pro
   const sets: string[] = [];
   const values: unknown[] = [];
   const set = (column: string, value: unknown) => { values.push(value); sets.push(`${column} = $${values.length}`); };
+  if (input.flatConfiguration === "2rk") await allowTwoRk();
 
   if (input.title !== undefined) set("title", input.title.trim());
   if (input.location !== undefined) set("location", tidyLocation(input.location));

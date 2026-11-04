@@ -100,7 +100,7 @@ function PostListing() {
           nearbyMetro: isFlatRequirement ? undefined : form.nearbyMetro.trim() || undefined,
           flatConfiguration: isFlatRequirement ? undefined : form.flatConfiguration || undefined,
           roomType: isFlatRequirement ? undefined : form.roomType || undefined,
-          tenantPreference: isFlatRequirement ? undefined : form.tenantPreference || undefined,
+          tenantPreference: isFlatRequirement || form.genderPreference === "Family" ? undefined : form.tenantPreference || undefined,
           status: "published",
         }),
       });
@@ -271,8 +271,6 @@ function PostListing() {
       <select value={form.propertyType} onChange={(event) => update("propertyType", event.target.value)} className={fieldClass}>
         <option>Flat</option>
         <option>Room</option>
-        <option>Apartment</option>
-        <option>PG</option>
       </select>
     </label>
   );
@@ -430,7 +428,8 @@ function PostListing() {
                 {flatConfigurationField}
                 {roomTypeField}
                 {genderField}
-                {tenantPreferenceField}
+                {/* A family is the whole household, so students vs working professionals doesn't apply. */}
+                {form.genderPreference !== "Family" && tenantPreferenceField}
                 {contactField}
                 {roomCountsField}
                 {budgetField}

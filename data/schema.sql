@@ -89,7 +89,7 @@ ALTER TABLE listings ADD COLUMN IF NOT EXISTS nearby_metro_station_id VARCHAR(64
 -- tenant_preference means the poster is open to anyone.
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS flat_configuration VARCHAR(10);
 ALTER TABLE listings DROP CONSTRAINT IF EXISTS listings_flat_configuration_check;
-ALTER TABLE listings ADD CONSTRAINT listings_flat_configuration_check CHECK (flat_configuration IS NULL OR flat_configuration IN ('1rk', '1bhk', '2bhk', '3bhk'));
+ALTER TABLE listings ADD CONSTRAINT listings_flat_configuration_check CHECK (flat_configuration IS NULL OR flat_configuration IN ('1rk', '2rk', '1bhk', '2bhk', '3bhk'));
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS room_type VARCHAR(10);
 ALTER TABLE listings DROP CONSTRAINT IF EXISTS listings_room_type_check;
 ALTER TABLE listings ADD CONSTRAINT listings_room_type_check CHECK (room_type IS NULL OR room_type IN ('private', 'shared'));

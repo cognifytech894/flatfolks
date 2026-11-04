@@ -4,6 +4,7 @@
 
 export const flatConfigurationOptions = [
   { value: "1rk", label: "1 RK" },
+  { value: "2rk", label: "2 RK" },
   { value: "1bhk", label: "1 BHK" },
   { value: "2bhk", label: "2 BHK" },
   { value: "3bhk", label: "3 BHK" },
