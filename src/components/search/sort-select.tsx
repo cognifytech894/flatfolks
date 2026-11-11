@@ -15,8 +15,8 @@ export function SortSelect({ filters }: { filters: Record<string, string | undef
   }
 
   return (
-    <label className="flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700">
-      <ArrowUpDown className="h-4 w-4 text-slate-500" />
+    <label className="flex min-h-11 items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-700">
+      <ArrowUpDown className="h-4 w-4 text-stone-500" />
       <select value={filters.sort || ""} onChange={handleChange} aria-label="Sort results" className="bg-transparent outline-none">
         {sortOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>

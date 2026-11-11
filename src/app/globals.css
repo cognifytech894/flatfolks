@@ -1,20 +1,61 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  /* Warm off-white: the page colour behind everything, footer wave included. */
+  --background: #fbf7f2;
+  --foreground: #17201f;
   /* Light-only site — stops browsers from auto-dark-inverting dark-styled
      sections (dark bg + white text) into unreadable black-on-black. */
   color-scheme: light;
 }
 
+/* The FlatFolks design system. Every colour on the site comes from these
+   tokens (plus Tailwind's stone for neutrals and red/amber for states):
+   - cream:  warm page and hero backgrounds
+   - brand:  greens — 800 is the forest green of primary buttons, 600 the
+             emerald used for links and secondary buttons, 50/100 the sage tints
+   - ink:    body text */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* System fonts only: the site renders in Arial (see body), so no web font is
-     downloaded or preloaded. */
-  --font-sans: Arial, Helvetica, sans-serif;
+  --color-ink: #17201f;
+
+  --color-cream-50: #fbf7f2;
+  --color-cream-100: #f6ede3;
+  --color-cream-200: #ecdfd0;
+  --color-cream-300: #dfcdb8;
+
+  --color-brand-50: #f1f6f2;
+  --color-brand-100: #e8efe9;
+  --color-brand-200: #cddfd3;
+  --color-brand-300: #9cc5ae;
+  --color-brand-400: #58a682;
+  --color-brand-500: #21865c;
+  --color-brand-600: #1a6b4b;
+  --color-brand-700: #17543f;
+  --color-brand-800: #153d32;
+  --color-brand-900: #0e2a22;
+
+  /* Inter for text, Manrope for headings; both are self-hosted by next/font
+     (see layout.tsx), so no request goes to Google at runtime. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, Arial, sans-serif;
+  --font-display: var(--font-manrope), var(--font-inter), ui-sans-serif, system-ui, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --shadow-soft: 0 10px 30px -12px rgb(21 61 50 / 0.18);
+  --shadow-lift: 0 22px 45px -18px rgb(21 61 50 / 0.28);
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-rise: rise 0.6s ease-out both;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 }
 
 * {
@@ -29,7 +70,7 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
 
 /* @layer base puts these in the same cascade layer as Tailwind's own base
@@ -46,5 +87,31 @@ body {
   input,
   textarea {
     font: inherit;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

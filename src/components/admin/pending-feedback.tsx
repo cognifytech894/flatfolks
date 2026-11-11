@@ -24,21 +24,21 @@ export function PendingFeedback({ initialPending }: { initialPending: Feedback[]
   }
 
   return (
-    <div className="mt-8 rounded-[1.5rem] border border-slate-200 p-5">
-      <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900"><MessageSquareQuote className="h-5 w-5 text-blue-600" />Feedback to review</h2>
-      <p className="mt-1 text-sm text-slate-500">New testimonials show on the home page only after you approve them.</p>
+    <div className="mt-8 rounded-[1.5rem] border border-stone-200 p-5">
+      <h2 className="flex items-center gap-2 text-lg font-semibold text-stone-900"><MessageSquareQuote className="h-5 w-5 text-brand-600" />Feedback to review</h2>
+      <p className="mt-1 text-sm text-stone-500">New testimonials show on the home page only after you approve them.</p>
       {pending.length === 0
-        ? <p className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">Nothing waiting for review.</p>
-        : <ul className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200">
+        ? <p className="mt-4 rounded-xl bg-cream-50 px-4 py-3 text-sm text-stone-600">Nothing waiting for review.</p>
+        : <ul className="mt-4 divide-y divide-stone-100 rounded-xl border border-stone-200">
           {pending.map((item) => (
             <li key={item.id} className="flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
-                <p className="font-semibold text-slate-900">{item.name} <span className="font-normal text-slate-500">· {item.city}</span> <span className="ml-1 inline-flex items-center gap-0.5 text-amber-500">{item.rating}<Star className="h-3.5 w-3.5 fill-current" /></span></p>
-                <p className="mt-1 whitespace-pre-line break-words text-slate-600">{item.message}</p>
+                <p className="font-semibold text-stone-900">{item.name} <span className="font-normal text-stone-500">· {item.city}</span> <span className="ml-1 inline-flex items-center gap-0.5 text-amber-500">{item.rating}<Star className="h-3.5 w-3.5 fill-current" /></span></p>
+                <p className="mt-1 whitespace-pre-line break-words text-stone-600">{item.message}</p>
               </div>
               <div className="flex shrink-0 gap-2">
-                <button type="button" disabled={busy === item.id} onClick={() => act(item.id, "PATCH")} className="rounded-lg bg-emerald-700 px-3 py-1.5 font-semibold text-white hover:bg-emerald-800 disabled:opacity-60">Approve</button>
-                <button type="button" disabled={busy === item.id} onClick={() => act(item.id, "DELETE")} className="rounded-lg border border-slate-200 px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">Delete</button>
+                <button type="button" disabled={busy === item.id} onClick={() => act(item.id, "PATCH")} className="rounded-lg bg-brand-600 px-3 py-1.5 font-semibold text-white hover:bg-brand-700 disabled:opacity-60">Approve</button>
+                <button type="button" disabled={busy === item.id} onClick={() => act(item.id, "DELETE")} className="rounded-lg border border-stone-200 px-3 py-1.5 font-semibold text-stone-700 hover:bg-cream-50 disabled:opacity-60">Delete</button>
               </div>
             </li>
           ))}

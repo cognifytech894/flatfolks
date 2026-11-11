@@ -14,13 +14,13 @@ export function breadcrumbJsonLd(crumbs: Crumb[]) {
 
 export function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
   return (
-    <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-x-1.5 gap-y-2 text-sm text-slate-500">
+    <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-x-1.5 gap-y-2 text-sm text-stone-500">
       {crumbs.map((crumb, index) => (
         <span key={crumb.href} className="flex min-w-0 items-center gap-1.5">
           {index > 0 && <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
           {index === crumbs.length - 1
-            ? <span aria-current="page" className="truncate text-slate-700">{crumb.name}</span>
-            : <Link href={crumb.href} className="inline-block py-1 hover:text-blue-600 hover:underline">{crumb.name}</Link>}
+            ? <span aria-current="page" className="truncate text-stone-700">{crumb.name}</span>
+            : <Link href={crumb.href} className="inline-block py-1 hover:text-brand-600 hover:underline">{crumb.name}</Link>}
         </span>
       ))}
     </nav>

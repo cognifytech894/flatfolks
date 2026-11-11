@@ -1,9 +1,15 @@
 import type { Metadata, Viewport } from "next";
+import { Inter, Manrope } from "next/font/google";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ActivityPing } from "@/components/layout/activity-ping";
 import { siteUrl as baseUrl } from "@/lib/site-url";
 import "./globals.css";
+
+// Self-hosted at build time; exposed as CSS variables that globals.css maps to
+// font-sans (Inter, body) and font-display (Manrope, headings).
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" });
 
 const GA_MEASUREMENT_ID = "G-VN0CYSJ8R4";
 
@@ -41,7 +47,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className="h-full antialiased"
+      className={`${inter.variable} ${manrope.variable} h-full antialiased`}
     >
       <head>
         {/* Google Analytics 4 (gtag.js), server-rendered in <head> as Google's snippet expects; async, so it never blocks rendering. */}
@@ -55,8 +61,8 @@ gtag('config', '${GA_MEASUREMENT_ID}');`,
           }}
         />
       </head>
-      {/* Bottom padding below lg keeps the footer clear of the mobile bottom nav. */}
-      <body className="min-h-full flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
+      {/* The footer pads itself below lg to stay clear of the mobile bottom nav. */}
+      <body className="min-h-full flex flex-col">
         <Navbar />
         <div className="flex-1">{children}</div>
         <Footer />

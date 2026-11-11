@@ -20,7 +20,7 @@ function Chips({ options, isSelected, onToggle, label, oneRow }: { options: read
       {options.map((option) => {
         const selected = isSelected(option.value);
         return (
-          <button type="button" key={option.value || "any"} aria-pressed={selected} onClick={() => onToggle(option.value)} className={`rounded-full border ${oneRow ? "flex-auto px-2" : "px-3"} py-1.5 text-xs font-semibold whitespace-nowrap transition ${selected ? "border-blue-600 bg-blue-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"}`}>
+          <button type="button" key={option.value || "any"} aria-pressed={selected} onClick={() => onToggle(option.value)} className={`rounded-full border ${oneRow ? "flex-auto px-2" : "px-3"} py-1.5 text-xs font-semibold whitespace-nowrap transition ${selected ? "border-brand-600 bg-brand-800 text-white" : "border-stone-200 bg-white text-stone-700 hover:border-brand-300"}`}>
             {option.label}
           </button>
         );
@@ -88,22 +88,22 @@ export function SearchFilters({ initialFilters, activeCount }: { initialFilters:
   // Enter in a typed field applies it without waiting.
   function submit(event: React.FormEvent) { event.preventDefault(); navigate(filters); }
 
-  const sectionTitle = "text-base font-bold text-slate-900";
-  const inputClass = "w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none focus:border-blue-500";
+  const sectionTitle = "text-base font-bold text-stone-900";
+  const inputClass = "w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm font-normal text-stone-900 outline-none focus:border-brand-500";
 
   return (
-    <form id="advanced-filters" onSubmit={submit} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-      <button type="button" onClick={() => setOpenOnMobile((open) => !open)} aria-expanded={openOnMobile} aria-controls="filter-fields" className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-700 lg:hidden">
+    <form id="advanced-filters" onSubmit={submit} className="rounded-3xl border border-stone-200 bg-cream-50 p-5">
+      <button type="button" onClick={() => setOpenOnMobile((open) => !open)} aria-expanded={openOnMobile} aria-controls="filter-fields" className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white py-2.5 text-sm font-semibold text-stone-700 lg:hidden">
         <Filter className="h-4 w-4" />{openOnMobile ? "Hide filters" : `Filters${activeCount ? ` (${activeCount})` : ""}`}
       </button>
       <div id="filter-fields" className={`${openOnMobile ? "block" : "hidden"} lg:block`}>
         <div className="mt-5 space-y-5 text-sm lg:mt-0">
           <div className="relative">
             <label className={`block ${sectionTitle}`} htmlFor="city-search">Locations</label>
-            <p className="mt-1 text-xs text-slate-500">Add one or more cities or PIN codes.</p>
-            {selectedLocations.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{selectedLocations.map((location) => <span key={location} className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800">{location}<button type="button" onClick={() => removeLocation(location)} aria-label={`Remove ${location}`}><X className="h-3.5 w-3.5" /></button></span>)}</div>}
+            <p className="mt-1 text-xs text-stone-500">Add one or more cities or PIN codes.</p>
+            {selectedLocations.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{selectedLocations.map((location) => <span key={location} className="inline-flex items-center gap-1 rounded-full bg-brand-100 px-2.5 py-1 text-xs font-medium text-brand-800">{location}<button type="button" onClick={() => removeLocation(location)} aria-label={`Remove ${location}`}><X className="h-3.5 w-3.5" /></button></span>)}</div>}
             <input id="city-search" value={cityQuery} onFocus={() => setShowCitySuggestions(true)} onBlur={() => window.setTimeout(() => setShowCitySuggestions(false), 150)} onKeyDown={(event) => { if (event.key === "Enter" && cityQuery.trim()) { event.preventDefault(); addLocation(citySuggestions[0]?.label || cityQuery); } }} onChange={(event) => { setCityQuery(event.target.value); setShowCitySuggestions(true); }} placeholder="Type an area, city or PIN code" autoComplete="off" className={`mt-2 ${inputClass}`} />
-            {showCitySuggestions && citySuggestions.length > 0 && <div className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg">{citySuggestions.map(({ label, hint }) => <button type="button" key={`${label}-${hint}`} onMouseDown={(event) => event.preventDefault()} onClick={() => addLocation(label)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm hover:bg-blue-50"><span className="font-medium text-slate-800">{label}</span><span className="text-xs text-slate-500">{hint}</span></button>)}</div>}
+            {showCitySuggestions && citySuggestions.length > 0 && <div className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-stone-200 bg-white p-1 shadow-lg">{citySuggestions.map(({ label, hint }) => <button type="button" key={`${label}-${hint}`} onMouseDown={(event) => event.preventDefault()} onClick={() => addLocation(label)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm hover:bg-brand-50"><span className="font-medium text-stone-800">{label}</span><span className="text-xs text-stone-500">{hint}</span></button>)}</div>}
           </div>
           <div>
             <label htmlFor="search-budget" className={`block ${sectionTitle}`}>Max budget (₹/month)</label>

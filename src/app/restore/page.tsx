@@ -25,7 +25,7 @@ export default async function RestorePage({ searchParams }: { searchParams: Prom
   if (outcome) {
     return (
       <LegalPage eyebrow="Your post" title={outcome.title}>
-        <p className="flex items-start gap-2">{result === "restored" && <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-emerald-700" />}{outcome.body}</p>
+        <p className="flex items-start gap-2">{result === "restored" && <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-brand-600" />}{outcome.body}</p>
         <p><Link href="/dashboard">Go to My Posts</Link> · <Link href="/property">Post again</Link></p>
       </LegalPage>
     );
@@ -43,7 +43,7 @@ export default async function RestorePage({ searchParams }: { searchParams: Prom
       <p>Your post <b>&ldquo;{listing.title}&rdquo;</b> was removed because there was no activity on your account for 30 days. Restore it to make it visible again.</p>
       <form action="/api/listings/restore" method="post">
         <input type="hidden" name="token" value={token} />
-        <button type="submit" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white hover:bg-blue-700">
+        <button type="submit" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-800 px-5 text-sm font-semibold text-white hover:bg-brand-900">
           <RotateCcw className="h-4 w-4" />Restore my post
         </button>
       </form>

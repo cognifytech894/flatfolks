@@ -70,10 +70,10 @@ export function PhotoAdjuster({ image, onCancel, onSave }: { image: HTMLImageEle
   }
 
   return (
-    <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4" role="dialog" aria-modal="true" aria-label="Adjust profile photo">
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-stone-950/60 p-4" role="dialog" aria-modal="true" aria-label="Adjust profile photo">
       <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl">
-        <h2 className="text-base font-semibold text-slate-900">Adjust your photo</h2>
-        <p className="mt-1 text-xs text-slate-500">Drag to move, use the slider to zoom.</p>
+        <h2 className="text-base font-semibold text-stone-900">Adjust your photo</h2>
+        <p className="mt-1 text-xs text-stone-500">Drag to move, use the slider to zoom.</p>
         <div
           className="relative mx-auto mt-4 cursor-grab touch-none select-none overflow-hidden rounded-xl bg-white active:cursor-grabbing"
           style={{ width: frame, height: frame }}
@@ -94,14 +94,14 @@ export function PhotoAdjuster({ image, onCancel, onSave }: { image: HTMLImageEle
           <div className="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_0_9999px_rgba(15,23,42,0.55)] ring-2 ring-white/80" />
         </div>
         <div className="mt-4 flex items-center gap-3">
-          <button type="button" onClick={() => changeZoom(zoom - 0.2)} aria-label="Zoom out" className="text-slate-500 hover:text-blue-600"><ZoomOut className="h-4 w-4" /></button>
-          <input type="range" min={1} max={4} step={0.01} value={zoom} onChange={(event) => changeZoom(Number(event.target.value))} aria-label="Zoom" className="w-full accent-blue-600" />
-          <button type="button" onClick={() => changeZoom(zoom + 0.2)} aria-label="Zoom in" className="text-slate-500 hover:text-blue-600"><ZoomIn className="h-4 w-4" /></button>
-          <button type="button" onClick={rotate} aria-label="Rotate" className="ml-1 rounded-lg border border-slate-200 p-2 text-slate-600 hover:border-blue-200 hover:text-blue-600"><RotateCw className="h-4 w-4" /></button>
+          <button type="button" onClick={() => changeZoom(zoom - 0.2)} aria-label="Zoom out" className="text-stone-500 hover:text-brand-600"><ZoomOut className="h-4 w-4" /></button>
+          <input type="range" min={1} max={4} step={0.01} value={zoom} onChange={(event) => changeZoom(Number(event.target.value))} aria-label="Zoom" className="w-full accent-brand-600" />
+          <button type="button" onClick={() => changeZoom(zoom + 0.2)} aria-label="Zoom in" className="text-stone-500 hover:text-brand-600"><ZoomIn className="h-4 w-4" /></button>
+          <button type="button" onClick={rotate} aria-label="Rotate" className="ml-1 rounded-lg border border-stone-200 p-2 text-stone-600 hover:border-brand-200 hover:text-brand-600"><RotateCw className="h-4 w-4" /></button>
         </div>
         <div className="mt-5 flex justify-end gap-2">
-          <button type="button" onClick={onCancel} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700">Cancel</button>
-          <button type="button" onClick={save} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white">Save photo</button>
+          <button type="button" onClick={onCancel} className="rounded-xl border border-stone-200 px-4 py-2.5 text-sm font-semibold text-stone-700">Cancel</button>
+          <button type="button" onClick={save} className="rounded-xl bg-brand-800 px-4 py-2.5 text-sm font-semibold text-white">Save photo</button>
         </div>
       </div>
     </div>

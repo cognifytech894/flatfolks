@@ -89,11 +89,11 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
   };
 
   const contactGate = (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-center">
-      <Lock className="mx-auto h-5 w-5 text-slate-500" />
-      <p className="mt-2 text-sm font-semibold text-slate-800">Login to view contact details</p>
-      <p className="mt-1 text-xs text-slate-500">Sign in to see the phone number and message {isRequirement ? "them" : "the owner"} directly.</p>
-      <Link href="/auth" className="mt-3 flex items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white">Login to continue</Link>
+    <div className="rounded-2xl border border-dashed border-stone-300 bg-white p-4 text-center">
+      <Lock className="mx-auto h-5 w-5 text-stone-500" />
+      <p className="mt-2 text-sm font-semibold text-stone-800">Login to view contact details</p>
+      <p className="mt-1 text-xs text-stone-500">Sign in to see the phone number and message {isRequirement ? "them" : "the owner"} directly.</p>
+      <Link href="/auth" className="mt-3 flex items-center justify-center rounded-2xl bg-brand-800 px-4 py-3 text-sm font-semibold text-white">Login to continue</Link>
     </div>
   );
 
@@ -102,7 +102,7 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
   const contactActions = (centered: boolean) => !isLoggedIn ? contactGate : listing.contactPhone ? (
     <ContactReveal listingId={listing.id} centered={centered} chatLabel={isRequirement ? "Chat" : "WhatsApp"} />
   ) : (
-    <p className="text-sm text-slate-500">No contact number was provided for this listing.</p>
+    <p className="text-sm text-stone-500">No contact number was provided for this listing.</p>
   );
 
   const preferences = (listing.preferences || []).map((id) => lifestylePreferences.find((item) => item.id === id)).filter(Boolean);
@@ -133,11 +133,11 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
       {facts.map(({ icon: Icon, label, value, ...fact }) => {
         const money = "money" in fact && fact.money;
         return (
-          <div key={label} className={`flex flex-col items-start gap-2 rounded-2xl border p-3 sm:flex-row sm:items-center sm:gap-3 sm:p-3.5 ${money ? "border-emerald-100 bg-emerald-50/60" : "border-slate-200 bg-white"}`}>
-            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl sm:h-10 sm:w-10 ${money ? "bg-emerald-100 text-emerald-700" : "bg-blue-50 text-blue-600"}`}><Icon className="h-5 w-5" /></span>
+          <div key={label} className={`flex flex-col items-start gap-2 rounded-2xl border p-3 sm:flex-row sm:items-center sm:gap-3 sm:p-3.5 ${money ? "border-brand-100 bg-brand-50/60" : "border-stone-200 bg-white"}`}>
+            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl sm:h-10 sm:w-10 ${money ? "bg-brand-100 text-brand-600" : "bg-brand-50 text-brand-600"}`}><Icon className="h-5 w-5" /></span>
             <div className="min-w-0">
-              <dt className="text-xs leading-4 text-slate-500">{label}</dt>
-              <dd className={`mt-0.5 font-semibold text-slate-900 ${money ? "text-[15px] sm:text-base" : "text-sm"}`}>{value}</dd>
+              <dt className="text-xs leading-4 text-stone-500">{label}</dt>
+              <dd className={`mt-0.5 font-semibold text-stone-900 ${money ? "text-[15px] sm:text-base" : "text-sm"}`}>{value}</dd>
             </div>
           </div>
         );
@@ -149,19 +149,19 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
     <>
       {listing.tags.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Amenities</h2>
-          <div className="mt-3 flex flex-wrap gap-2">{listing.tags.map((item) => <span key={item} className="rounded-full bg-slate-100 px-3 py-2 text-sm text-slate-700">{item}</span>)}</div>
+          <h2 className="text-lg font-semibold text-stone-900">Amenities</h2>
+          <div className="mt-3 flex flex-wrap gap-2">{listing.tags.map((item) => <span key={item} className="rounded-full bg-stone-100 px-3 py-2 text-sm text-stone-700">{item}</span>)}</div>
         </div>
       )}
       {preferences.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Lifestyle preferences</h2>
-          <div className="mt-3 flex flex-wrap gap-2">{preferences.map((preference) => <span key={preference!.id} className="rounded-full bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{preference!.icon} {preference!.label}</span>)}</div>
+          <h2 className="text-lg font-semibold text-stone-900">Lifestyle preferences</h2>
+          <div className="mt-3 flex flex-wrap gap-2">{preferences.map((preference) => <span key={preference!.id} className="rounded-full bg-brand-50 px-3 py-2 text-sm text-brand-600">{preference!.icon} {preference!.label}</span>)}</div>
         </div>
       )}
       <div>
-        <h2 className="text-lg font-semibold text-slate-900">Description</h2>
-        <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-600">{listing.description || "No description provided yet."}</p>
+        <h2 className="text-lg font-semibold text-stone-900">Description</h2>
+        <p className="mt-3 whitespace-pre-line text-sm leading-7 text-stone-600">{listing.description || "No description provided yet."}</p>
       </div>
       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-amber-900"><ShieldAlert className="h-4 w-4" /> Stay safe</h2>
@@ -172,28 +172,28 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
 
   const withGallery = !isRequirement && photos.length > 0;
   const ownerCard = (
-    <aside className={`w-full shrink-0 space-y-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 ${withGallery ? "lg:flex lg:h-full lg:flex-col lg:justify-center" : "self-start lg:w-80"}`}>
+    <aside className={`w-full shrink-0 space-y-4 rounded-[1.5rem] border border-stone-200 bg-cream-50 p-5 ${withGallery ? "lg:flex lg:h-full lg:flex-col lg:justify-center" : "self-start lg:w-80"}`}>
       <div className="flex items-center gap-3">
-        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-blue-600 text-white">
+        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-brand-800 text-white">
           {listing.ownerPhoto ? <img src={listing.ownerPhoto} alt={ownerName} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center">{ownerName.trim().charAt(0).toUpperCase() || "F"}</div>}
         </div>
         <div>
-          <p className="font-semibold text-slate-900">{ownerName}</p>
-          <p className="text-sm text-slate-600">{isRequirement ? "Looking for a flat" : "Posted by"}</p>
+          <p className="font-semibold text-stone-900">{ownerName}</p>
+          <p className="text-sm text-stone-600">{isRequirement ? "Looking for a flat" : "Posted by"}</p>
         </div>
       </div>
       {contactActions(isRequirement)}
-      <SaveListingButton listingId={listing.id} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700" />
+      <SaveListingButton listingId={listing.id} className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-700" />
     </aside>
   );
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-cream-50">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <Breadcrumbs crumbs={crumbs} />
-          <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm">
             {/* With photos, the contact card sits beside the gallery; otherwise beside the details. */}
             {withGallery && (
               <div className="grid gap-5 p-3 sm:p-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-stretch lg:gap-6 lg:p-5">
@@ -204,11 +204,11 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
             <div className={`flex flex-col gap-8 p-5 sm:p-6 lg:flex-row lg:p-8 ${withGallery ? "pt-2 sm:pt-2 lg:pt-3" : ""}`}>
               <div className="min-w-0 flex-1 space-y-6">
                 <div>
-                  {listing.verified && <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700"><ShieldCheck className="h-4 w-4" /> Verified listing</div>}
-                  <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{listingName(listing)}</h1>
-                  <p className="mt-3 flex items-start gap-2 text-slate-600"><MapPin className="mt-1 h-4 w-4 shrink-0" /> {listing.location}</p>
-                  {!isRequirement && listing.nearbyMetro && <p className="mt-2 flex items-start gap-2 text-sm text-slate-600"><TrainFront className="mt-0.5 h-4 w-4 shrink-0" /> Nearest metro: {listing.nearbyMetro} <span className="text-slate-500">(as given by the poster)</span></p>}
-                  {posted && <p className="mt-2 flex items-center gap-2 text-sm text-slate-500"><Clock className="h-4 w-4" /> Posted {posted}</p>}
+                  {listing.verified && <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-sm font-semibold text-brand-700"><ShieldCheck className="h-4 w-4" /> Verified listing</div>}
+                  <h1 className="text-2xl font-semibold tracking-tight text-stone-950 sm:text-3xl">{listingName(listing)}</h1>
+                  <p className="mt-3 flex items-start gap-2 text-stone-600"><MapPin className="mt-1 h-4 w-4 shrink-0" /> {listing.location}</p>
+                  {!isRequirement && listing.nearbyMetro && <p className="mt-2 flex items-start gap-2 text-sm text-stone-600"><TrainFront className="mt-0.5 h-4 w-4 shrink-0" /> Nearest metro: {listing.nearbyMetro} <span className="text-stone-500">(as given by the poster)</span></p>}
+                  {posted && <p className="mt-2 flex items-center gap-2 text-sm text-stone-500"><Clock className="h-4 w-4" /> Posted {posted}</p>}
                 </div>
                 {factGrid}
                 {extras}
@@ -220,7 +220,7 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
 
           {related.length > 0 && (
             <section className="mt-10">
-              <h2 className="text-xl font-semibold text-slate-900">Similar listings</h2>
+              <h2 className="text-xl font-semibold text-stone-900">Similar listings</h2>
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{related.map((item) => <ListingCard key={item.id} listing={item} />)}</div>
             </section>
           )}

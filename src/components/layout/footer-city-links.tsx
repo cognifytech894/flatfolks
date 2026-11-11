@@ -8,7 +8,7 @@ export type FooterColumn = { title: string; links: FooterLink[] };
 /** `path` is the URL prefix the variant applies to, e.g. "/noida" or "/greater-noida/noida-extension". */
 export type FooterVariant = { path: string; columns: FooterColumn[]; others: FooterLink[] };
 
-const link = "inline-block py-1 text-sm text-slate-600 hover:text-blue-600 hover:underline";
+const link = "inline-block py-1 text-sm text-brand-100/80 transition hover:text-white hover:underline";
 
 /** The most specific variant for this page, or the every-city default. */
 function useVariant(variants: FooterVariant[]) {
@@ -28,7 +28,7 @@ export function FooterCityColumns({ fallback, variants }: { fallback: FooterColu
   const columns = useVariant(variants)?.columns || fallback;
   return columns.map((column) => (
     <nav key={column.title} aria-label={column.title}>
-      <p className="mb-4 text-lg font-semibold text-slate-800">{column.title}</p>
+      <p className="mb-4 font-display text-base font-bold text-white">{column.title}</p>
       <ul className="space-y-1.5">
         {column.links.map(([label, href]) => <li key={href}><Link href={href} className={link}>{label}</Link></li>)}
       </ul>
@@ -41,9 +41,9 @@ export function FooterOtherCities({ variants }: { variants: FooterVariant[] }) {
   const others = useVariant(variants)?.others;
   if (!others?.length) return null;
   return (
-    <nav aria-label="Other cities" className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-slate-200 pt-6 text-sm">
-      <span className="font-semibold text-slate-700">Other cities:</span>
-      {others.map(([label, href]) => <Link key={href} href={href} className="py-1 text-slate-600 hover:text-blue-600 hover:underline">{label}</Link>)}
+    <nav aria-label="Other cities" className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-white/10 pt-6 text-sm">
+      <span className="font-semibold text-white">Other cities:</span>
+      {others.map(([label, href]) => <Link key={href} href={href} className="py-1 text-brand-100/80 transition hover:text-white hover:underline">{label}</Link>)}
     </nav>
   );
 }

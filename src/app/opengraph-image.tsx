@@ -18,7 +18,7 @@ export default function Image() {
           flexDirection: "column",
           justifyContent: "center",
           padding: "80px",
-          background: "linear-gradient(135deg,#0b1220 0%,#132657 55%,#1d3fae 100%)",
+          background: "linear-gradient(135deg,#0e2a22 0%,#153d32 55%,#1a6b4b 100%)",
           fontFamily: "sans-serif",
         }}
       >
@@ -28,7 +28,7 @@ export default function Image() {
               width: 68,
               height: 68,
               borderRadius: 20,
-              background: "linear-gradient(135deg,#2563eb,#7c3aed)",
+              background: "#21865c",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -45,7 +45,7 @@ export default function Image() {
         <div style={{ display: "flex", marginTop: 44, fontSize: 62, fontWeight: 800, lineHeight: 1.15, color: "white", maxWidth: 980 }}>
           Find Rooms &amp; Flatmates Across India
         </div>
-        <div style={{ display: "flex", marginTop: 26, fontSize: 27, color: "#c7d2fe" }}>
+        <div style={{ display: "flex", marginTop: 26, fontSize: 27, color: "#cddfd3" }}>
           Free to list · No fees · Direct contact with owners
         </div>
       </div>

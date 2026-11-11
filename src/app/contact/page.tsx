@@ -22,14 +22,14 @@ export default function ContactPage() {
 
       <a
         href={`mailto:${contactEmail}`}
-        className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 !no-underline transition hover:border-blue-200 hover:bg-blue-50"
+        className="flex items-center gap-4 rounded-2xl border border-stone-200 bg-cream-50 p-5 !no-underline transition hover:border-brand-200 hover:bg-brand-50"
       >
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-blue-100 text-blue-600">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-600">
           <Mail className="h-5 w-5" />
         </span>
         <span className="min-w-0">
-          <small className="block text-xs font-medium text-slate-500">Email</small>
-          <b className="block break-all text-base text-slate-900">{contactEmail}</b>
+          <small className="block text-xs font-medium text-stone-500">Email</small>
+          <b className="block break-all text-base text-stone-900">{contactEmail}</b>
         </span>
       </a>
 

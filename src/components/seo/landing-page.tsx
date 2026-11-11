@@ -231,16 +231,16 @@ function FilterBar({ path, filters, field }: { path: string; filters: LandingFil
   return (
     <div className="mt-6 flex flex-wrap items-center gap-2">
       {/* A plain GET form so the amount works without JavaScript; the other active filters ride along as hidden fields. Empty unless the visitor typed one. */}
-      <form action={path} method="get" className="flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white pl-3 focus-within:border-blue-400">
-        <SlidersHorizontal className="h-4 w-4 shrink-0 text-blue-600" />
-        <label htmlFor="amount-filter" className="text-sm font-medium text-slate-700">{copy.label}</label>
-        <input id="amount-filter" name={field} type="number" min="1" inputMode="numeric" defaultValue={filters[field]} placeholder="₹" className="-my-3 w-24 bg-transparent py-3 text-sm font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-500" />
+      <form action={path} method="get" className="flex min-h-11 items-center gap-2 rounded-full border border-stone-200 bg-white pl-3 focus-within:border-brand-400">
+        <SlidersHorizontal className="h-4 w-4 shrink-0 text-brand-600" />
+        <label htmlFor="amount-filter" className="text-sm font-medium text-stone-700">{copy.label}</label>
+        <input id="amount-filter" name={field} type="number" min="1" inputMode="numeric" defaultValue={filters[field]} placeholder="₹" className="-my-3 w-24 bg-transparent py-3 text-sm font-semibold text-stone-900 outline-none placeholder:font-normal placeholder:text-stone-500" />
         {filters.gender && <input type="hidden" name="gender" value={filters.gender} />}
         {filters.furnishing && <input type="hidden" name="furnishing" value={filters.furnishing} />}
-        {filters[field] && <Link rel="nofollow" href={href({ [field]: undefined })} aria-label={copy.clear} className="grid h-11 w-11 place-items-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-600"><X className="h-3.5 w-3.5" /></Link>}
-        <button type="submit" aria-label={copy.submit} className="grid h-11 w-11 place-items-center rounded-full bg-blue-600 text-white hover:bg-blue-700"><Search className="h-3.5 w-3.5" /></button>
+        {filters[field] && <Link rel="nofollow" href={href({ [field]: undefined })} aria-label={copy.clear} className="grid h-11 w-11 place-items-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-600"><X className="h-3.5 w-3.5" /></Link>}
+        <button type="submit" aria-label={copy.submit} className="grid h-11 w-11 place-items-center rounded-full bg-brand-800 text-white hover:bg-brand-900"><Search className="h-3.5 w-3.5" /></button>
       </form>
-      <span className="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />
+      <span className="mx-1 hidden h-5 w-px bg-stone-200 sm:block" />
       <GenderSelect filters={filters} path={path} />
     </div>
   );
@@ -268,9 +268,9 @@ function AtAGlance({ matches }: { matches: Listing[] }) {
   return (
     <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       {facts.map(([name, value]) => (
-        <div key={name} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-          <dt className="text-xs text-slate-500">{name}</dt>
-          <dd className="mt-1 text-sm font-semibold text-slate-900">{value}</dd>
+        <div key={name} className="rounded-2xl border border-stone-200 bg-cream-50 p-3">
+          <dt className="text-xs text-stone-500">{name}</dt>
+          <dd className="mt-1 text-sm font-semibold text-stone-900">{value}</dd>
         </div>
       ))}
     </dl>
@@ -339,16 +339,16 @@ export async function LandingPage({ scope, listings: allListings, filters }: { s
   };
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-cream-50">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Breadcrumbs crumbs={crumbs} />
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-9">
+        <div className="rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm sm:p-9">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl">
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{heading(scope)}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight text-stone-950 sm:text-3xl">{heading(scope)}</h1>
             </div>
-            <Link href={postHref} className="inline-flex shrink-0 items-center gap-2 self-start rounded-2xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-800">
+            <Link href={postHref} className="inline-flex shrink-0 items-center gap-2 self-start rounded-2xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 transition hover:bg-brand-700">
               <Plus className="h-4 w-4" />{isSeekerIntent(intent) ? "Add my requirement" : "Post your flat"}
             </Link>
           </div>
@@ -358,28 +358,28 @@ export async function LandingPage({ scope, listings: allListings, filters }: { s
 
           {intent ? (
             <section className="mt-6">
-              <p className="text-sm text-slate-500">{shown.length} listing{shown.length === 1 ? "" : "s"}{hasFilters(filters) ? " match these filters" : ""}</p>
+              <p className="text-sm text-stone-500">{shown.length} listing{shown.length === 1 ? "" : "s"}{hasFilters(filters) ? " match these filters" : ""}</p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{shown.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>
               {shown.length === 0 && isSeekerIntent(intent) && filters.rent ? (
                 // Only the owner's own number: no suggested amounts, no requirements below it.
-                <div className="mt-2 rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-600">
-                  <p className="text-base font-semibold text-slate-900">No one is looking at {rupees(Number(filters.rent))} right now.</p>
-                  <Link href="/property?intent=flatmate" className="mt-4 inline-flex min-h-11 items-center rounded-full bg-emerald-700 px-5 py-2 font-semibold text-white hover:bg-emerald-800">Post your flat</Link>
+                <div className="mt-2 rounded-2xl border border-dashed border-stone-300 p-8 text-center text-sm text-stone-600">
+                  <p className="text-base font-semibold text-stone-900">No one is looking at {rupees(Number(filters.rent))} right now.</p>
+                  <Link href="/property?intent=flatmate" className="mt-4 inline-flex min-h-11 items-center rounded-full bg-brand-600 px-5 py-2 font-semibold text-white hover:bg-brand-700">Post your flat</Link>
                 </div>
               ) : shown.length === 0 && !isSeekerIntent(intent) && filters.budget ? (
                 // Only the visitor's own budget: no suggested amounts, nothing above it.
-                <div className="mt-2 rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-600">
-                  <p className="text-base font-semibold text-slate-900">No rooms up to {rupees(Number(filters.budget))} right now.</p>
+                <div className="mt-2 rounded-2xl border border-dashed border-stone-300 p-8 text-center text-sm text-stone-600">
+                  <p className="text-base font-semibold text-stone-900">No rooms up to {rupees(Number(filters.budget))} right now.</p>
                   {/* A label for the budget field focuses it without JavaScript and leaves its value alone. */}
-                  <label htmlFor="amount-filter" className="mt-4 inline-flex min-h-11 cursor-pointer items-center rounded-full border border-slate-300 bg-white px-5 py-2 font-semibold text-slate-800 hover:border-blue-300 hover:text-blue-700">Change budget</label>
+                  <label htmlFor="amount-filter" className="mt-4 inline-flex min-h-11 cursor-pointer items-center rounded-full border border-stone-300 bg-white px-5 py-2 font-semibold text-stone-800 hover:border-brand-300 hover:text-brand-700">Change budget</label>
                   <p className="mt-6">Or post your requirement and owners can contact you.</p>
-                  <Link href={`/property?intent=flat&budget=${filters.budget}`} className="mt-3 inline-flex min-h-11 items-center rounded-full bg-emerald-700 px-5 py-2 font-semibold text-white hover:bg-emerald-800">Post requirement</Link>
+                  <Link href={`/property?intent=flat&budget=${filters.budget}`} className="mt-3 inline-flex min-h-11 items-center rounded-full bg-brand-600 px-5 py-2 font-semibold text-white hover:bg-brand-700">Post requirement</Link>
                 </div>
               ) : shown.length === 0 && (
-                <div className="mt-2 rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-600">
+                <div className="mt-2 rounded-2xl border border-dashed border-stone-300 p-8 text-center text-sm text-stone-600">
                   <p>{inPage.length ? "No listings match these filters." : `No ${intent.label.toLowerCase()} listings${place ? ` in ${place}` : ""} yet.`}</p>
-                  <Link href={postHref} className="mt-3 inline-block font-semibold text-blue-600">Be the first to post one</Link>
-                  {city && trail.length > 0 && <p className="mt-2"><Link href={placePath(city, trail.slice(0, -1), intent.slug)} className="font-semibold text-blue-600">See {intent.label.toLowerCase()} in {placeLabel(city, trail.slice(0, -1))}</Link></p>}
+                  <Link href={postHref} className="mt-3 inline-block font-semibold text-brand-600">Be the first to post one</Link>
+                  {city && trail.length > 0 && <p className="mt-2"><Link href={placePath(city, trail.slice(0, -1), intent.slug)} className="font-semibold text-brand-600">See {intent.label.toLowerCase()} in {placeLabel(city, trail.slice(0, -1))}</Link></p>}
                 </div>
               )}
             </section>
@@ -389,12 +389,12 @@ export async function LandingPage({ scope, listings: allListings, filters }: { s
               return (
                 <section key={section.slug} className="mt-10">
                   <div className="flex items-baseline justify-between gap-4">
-                    <h2 className="text-xl font-semibold text-slate-900">{section.label} in {place}</h2>
-                    <Link href={landingPath({ ...scope, intent: section })} className="inline-flex shrink-0 items-center gap-1 py-1 text-sm font-semibold text-blue-600 hover:underline">View all <ArrowRight className="h-4 w-4" /></Link>
+                    <h2 className="text-xl font-semibold text-stone-900">{section.label} in {place}</h2>
+                    <Link href={landingPath({ ...scope, intent: section })} className="inline-flex shrink-0 items-center gap-1 py-1 text-sm font-semibold text-brand-600 hover:underline">View all <ArrowRight className="h-4 w-4" /></Link>
                   </div>
                   {sectionListings.length
                     ? <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{sectionListings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>
-                    : <p className="mt-3 text-sm text-slate-500">No listings here yet. <Link href={postHref} className="font-semibold text-blue-600">Post yours</Link>.</p>}
+                    : <p className="mt-3 text-sm text-stone-500">No listings here yet. <Link href={postHref} className="font-semibold text-brand-600">Post yours</Link>.</p>}
                 </section>
               );
             })
@@ -402,12 +402,12 @@ export async function LandingPage({ scope, listings: allListings, filters }: { s
 
           {faqs.length > 0 && (
             <section className="mt-10">
-              <h2 className="text-lg font-semibold text-slate-900">Questions people ask about {place}</h2>
-              <div className="mt-3 divide-y divide-slate-100 rounded-2xl border border-slate-200">
+              <h2 className="text-lg font-semibold text-stone-900">Questions people ask about {place}</h2>
+              <div className="mt-3 divide-y divide-stone-100 rounded-2xl border border-stone-200">
                 {faqs.map((faq) => (
                   <details key={faq.question} className="group p-4">
-                    <summary className="cursor-pointer list-none py-2 font-medium text-slate-800 [&::-webkit-details-marker]:hidden">{faq.question}</summary>
-                    <p className="mt-2 text-sm leading-6 text-slate-600"><RichText text={faq.answer} /></p>
+                    <summary className="cursor-pointer list-none py-2 font-medium text-stone-800 [&::-webkit-details-marker]:hidden">{faq.question}</summary>
+                    <p className="mt-2 text-sm leading-6 text-stone-600"><RichText text={faq.answer} /></p>
                   </details>
                 ))}
               </div>

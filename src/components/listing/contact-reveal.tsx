@@ -33,7 +33,7 @@ export function ContactReveal({ listingId, centered, chatLabel = "WhatsApp" }: {
   if (!phone) {
     return (
       <div className="space-y-2">
-        <button type="button" onClick={reveal} disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-70">
+        <button type="button" onClick={reveal} disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-800 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-900 disabled:opacity-70">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Phone className="h-4 w-4" />}Show number
         </button>
         {error && <p role="alert" className={`text-xs font-medium text-red-700 ${centered ? "text-center" : ""}`}>{error}</p>}
@@ -42,10 +42,10 @@ export function ContactReveal({ listingId, centered, chatLabel = "WhatsApp" }: {
   }
   return (
     <>
-      <p className={`flex items-center gap-2 text-sm font-medium text-slate-700 ${centered ? "justify-center" : ""}`}><Phone className="h-4 w-4 text-slate-500" /> {phone}</p>
+      <p className={`flex items-center gap-2 text-sm font-medium text-stone-700 ${centered ? "justify-center" : ""}`}><Phone className="h-4 w-4 text-stone-500" /> {phone}</p>
       <div className="flex gap-3">
-        <a href={`https://wa.me/${toWhatsAppNumber(phone)}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-4 py-3 text-sm font-semibold text-white"><MessageCircle className="h-4 w-4" /> {chatLabel}</a>
-        <a href={`tel:${phone}`} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><Phone className="h-4 w-4" /> Call</a>
+        <a href={`https://wa.me/${toWhatsAppNumber(phone)}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white"><MessageCircle className="h-4 w-4" /> {chatLabel}</a>
+        <a href={`tel:${phone}`} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white"><Phone className="h-4 w-4" /> Call</a>
       </div>
     </>
   );

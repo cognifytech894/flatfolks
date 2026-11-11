@@ -28,10 +28,10 @@ export function PhotoCarousel({ photos, title }: { photos: string[]; title: stri
 
   const arrows = (size: string) => photos.length > 1 && (
     <>
-      <button type="button" onClick={(event) => { event.stopPropagation(); go(-1); }} aria-label="Previous photo" className={`absolute left-3 top-1/2 grid -translate-y-1/2 place-items-center rounded-full bg-white/90 text-slate-700 shadow-md hover:bg-white ${size}`}>
+      <button type="button" onClick={(event) => { event.stopPropagation(); go(-1); }} aria-label="Previous photo" className={`absolute left-3 top-1/2 grid -translate-y-1/2 place-items-center rounded-full bg-white/90 text-stone-700 shadow-md hover:bg-white ${size}`}>
         <ChevronLeft className="h-5 w-5" />
       </button>
-      <button type="button" onClick={(event) => { event.stopPropagation(); go(1); }} aria-label="Next photo" className={`absolute right-3 top-1/2 grid -translate-y-1/2 place-items-center rounded-full bg-white/90 text-slate-700 shadow-md hover:bg-white ${size}`}>
+      <button type="button" onClick={(event) => { event.stopPropagation(); go(1); }} aria-label="Next photo" className={`absolute right-3 top-1/2 grid -translate-y-1/2 place-items-center rounded-full bg-white/90 text-stone-700 shadow-md hover:bg-white ${size}`}>
         <ChevronRight className="h-5 w-5" />
       </button>
     </>
@@ -41,7 +41,7 @@ export function PhotoCarousel({ photos, title }: { photos: string[]; title: stri
     // Fixed frame, whole photo: portrait (9:16) and landscape (16:9) photos are
     // both shown uncropped, over a blurred copy of themselves instead of bars.
     // Both layers use the same src and sizes, so the photo is downloaded once.
-    <div className="relative h-80 overflow-hidden rounded-[1.5rem] bg-slate-900 sm:h-[26rem]">
+    <div className="relative h-80 overflow-hidden rounded-[1.5rem] bg-stone-900 sm:h-[26rem]">
       <Image src={photos[index]} alt="" aria-hidden fill className="scale-110 object-cover opacity-60 blur-2xl" sizes="(max-width: 1024px) 100vw, 800px" />
       <button type="button" onClick={() => setViewing(true)} aria-label="View photo full screen" className="absolute inset-0 cursor-zoom-in">
         <Image src={photos[index]} alt={`${title} photo ${index + 1}`} fill preload className="object-contain" sizes="(max-width: 1024px) 100vw, 800px" />

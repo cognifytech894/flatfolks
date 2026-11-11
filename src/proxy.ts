@@ -9,9 +9,9 @@ const listingSlug = /^\/[a-z0-9-]+\/(?:[a-z0-9-]+\/)*[a-z0-9-]+-([0-9a-f]{8})$/;
 const propertyId = /^\/property\/([0-9a-f-]{36})$/;
 
 const goneHtml = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>This post has been removed | FlatFolks</title></head>
-<body style="font-family:system-ui,sans-serif;background:#f8fafc;color:#0f172a;margin:0;padding:48px 16px"><main style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:24px;padding:32px">
+<body style="font-family:system-ui,sans-serif;background:#f6ede3;color:#17201f;margin:0;padding:48px 16px"><main style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #ecdfd0;border-radius:24px;padding:32px">
 <h1 style="margin:0 0 12px;font-size:26px">This post has been removed</h1><p style="color:#475569;line-height:1.6">It's no longer on FlatFolks. Find similar rooms and flatmates instead.</p>
-<p><a href="/search" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 20px;border-radius:12px;text-decoration:none;font-weight:600">Search rooms and flatmates</a> &nbsp; <a href="/" style="color:#2563eb">Home</a></p></main></body></html>`;
+<p><a href="/search" style="display:inline-block;background:#153d32;color:#fff;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:600">Search rooms and flatmates</a> &nbsp; <a href="/" style="color:#1a6b4b">Home</a></p></main></body></html>`;
 
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;

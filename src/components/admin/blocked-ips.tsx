@@ -24,16 +24,16 @@ export function BlockedIps({ initialBlocked }: { initialBlocked: AdminLoginBlock
   }
 
   return (
-    <div className="mt-8 rounded-[1.5rem] border border-slate-200 p-5">
-      <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900"><ShieldBan className="h-5 w-5 text-red-600" />Blocked admin login IPs</h2>
-      <p className="mt-1 text-sm text-slate-500">An IP is blocked from admin login after 3 wrong passwords in a row, until you unblock it here. The rest of the site still works for it.</p>
+    <div className="mt-8 rounded-[1.5rem] border border-stone-200 p-5">
+      <h2 className="flex items-center gap-2 text-lg font-semibold text-stone-900"><ShieldBan className="h-5 w-5 text-red-600" />Blocked admin login IPs</h2>
+      <p className="mt-1 text-sm text-stone-500">An IP is blocked from admin login after 3 wrong passwords in a row, until you unblock it here. The rest of the site still works for it.</p>
       {blocked.length === 0
-        ? <p className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">No IPs are blocked.</p>
-        : <ul className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200">
+        ? <p className="mt-4 rounded-xl bg-cream-50 px-4 py-3 text-sm text-stone-600">No IPs are blocked.</p>
+        : <ul className="mt-4 divide-y divide-stone-100 rounded-xl border border-stone-200">
           {blocked.map((item) => (
             <li key={item.ip} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
-              <span><b className="font-mono text-slate-900">{item.ip}</b><span className="ml-2 text-slate-500">blocked {new Date(item.blockedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span></span>
-              <button type="button" onClick={() => unblock(item.ip)} disabled={busy === item.ip} className="rounded-lg border border-slate-200 px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">{busy === item.ip ? "Unblocking…" : "Unblock"}</button>
+              <span><b className="font-mono text-stone-900">{item.ip}</b><span className="ml-2 text-stone-500">blocked {new Date(item.blockedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span></span>
+              <button type="button" onClick={() => unblock(item.ip)} disabled={busy === item.ip} className="rounded-lg border border-stone-200 px-3 py-1.5 font-semibold text-stone-700 hover:bg-cream-50 disabled:opacity-60">{busy === item.ip ? "Unblocking…" : "Unblock"}</button>
             </li>
           ))}
         </ul>}

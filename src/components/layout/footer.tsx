@@ -67,46 +67,51 @@ const socialIcons: Record<(typeof socialLinks)[number]["name"], React.ReactNode>
   LinkedIn: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></svg>,
 };
 
-const heading = "mb-4 text-lg font-semibold text-slate-800";
-const link = "inline-block py-1 text-sm text-slate-600 hover:text-blue-600 hover:underline";
+const heading = "mb-4 font-display text-base font-bold text-white";
+const link = "inline-block py-1 text-sm text-brand-100/80 transition hover:text-white hover:underline";
 
 export function Footer() {
   return (
-    <footer className="border-t border-slate-200 bg-slate-50/80">
-      <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-16 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+    <footer className="text-brand-100">
+      {/* Wavy top edge, drawn over the page background (cream) above the green. */}
+      <svg viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" className="-mb-px block h-8 w-full text-brand-800 sm:h-12">
+        <path fill="currentColor" d="M0 60V34c120-22 260-30 420-18s300 34 470 30 300-34 550-26v40Z" />
+      </svg>
+      {/* Bottom padding below lg keeps the last line clear of the mobile bottom nav. */}
+      <div className="bg-brand-800 pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0"><div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 pb-12 pt-12 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-6 rounded-[2rem] bg-white/5 p-6 ring-1 ring-white/10 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-xl">
-            <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
+            <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-brand-100">
               <ShieldCheck className="h-4 w-4" />
               Free to list your room or flat
             </p>
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
+            <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
               Your next room, roommate, or perfect place to live starts here.
             </h2>
           </div>
           <Link
             href="/property"
-            className="inline-flex items-center gap-2 rounded-full bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-800"
+            className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-cream-100 px-6 py-3 text-sm font-bold text-brand-800 transition hover:-translate-y-0.5 hover:bg-white"
           >
             List a property <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10 border-t border-slate-200 pt-10 md:grid-cols-3 lg:grid-cols-[1.4fr_repeat(4,minmax(0,1fr))]">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3 lg:grid-cols-[1.4fr_repeat(4,minmax(0,1fr))]">
           <div className="col-span-2 md:col-span-3 lg:col-span-1">
-            <FlatFolksLogo />
-            <p className="mt-4 flex max-w-xs gap-2 text-sm leading-6 text-slate-600"><MapPin className="mt-1 h-4 w-4 shrink-0" />{contactAddress}</p>
-            <a href={`mailto:${contactEmail}`} className="mt-3 inline-flex items-center gap-2 text-sm text-slate-600 underline-offset-4 hover:text-blue-600 hover:underline">
+            <FlatFolksLogo onDark />
+            <p className="mt-4 flex max-w-xs gap-2 text-sm leading-6 text-brand-100/80"><MapPin className="mt-1 h-4 w-4 shrink-0" />{contactAddress}</p>
+            <a href={`mailto:${contactEmail}`} className="mt-3 inline-flex items-center gap-2 text-sm text-brand-100/80 underline-offset-4 transition hover:text-white hover:underline">
               <Mail className="h-4 w-4" />{contactEmail}
             </a>
             <div>
-              <Link href="/contact" className="mt-4 inline-flex min-h-11 items-center rounded-full bg-emerald-700 px-5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800">
+              <Link href="/contact" className="mt-4 inline-flex min-h-11 items-center rounded-full border border-white/30 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white hover:text-brand-800">
                 Contact us
               </Link>
             </div>
             <div className="mt-5 flex gap-3">
               {socialLinks.map((social) => (
-                <a key={social.name} href={social.href} target="_blank" rel="noopener noreferrer" aria-label={`FlatFolks on ${social.name}`} title={social.name} className={`grid h-10 w-10 place-items-center rounded-lg text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${socialColors[social.name]}`}>
+                <a key={social.name} href={social.href} target="_blank" rel="noopener noreferrer" aria-label={`FlatFolks on ${social.name}`} title={social.name} className={`grid h-10 w-10 place-items-center rounded-full text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${socialColors[social.name]}`}>
                   {socialIcons[social.name]}
                 </a>
               ))}
@@ -123,11 +128,11 @@ export function Footer() {
 
         <FooterOtherCities variants={cityVariants} />
 
-        <div className="flex flex-col gap-3 border-t border-slate-200 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-brand-100/70 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} FlatFolks (Flat Folks). All rights reserved.</p>
           <p>Made with care in India.</p>
         </div>
-      </div>
+      </div></div>
     </footer>
   );
 }
