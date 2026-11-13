@@ -5,6 +5,7 @@ import { touchLastSeen } from "@/lib/database";
 import { jsonBody } from "@/lib/json-body";
 import { isRateLimited } from "@/lib/rate-limit";
 import { publicErrorMessage } from "@/lib/public-error";
+import { overUploadCap, UPLOADS_PER_DAY } from "@/lib/daily-caps";
 
 export const runtime = "nodejs";
 
@@ -17,6 +18,8 @@ export async function POST(request: Request) {
   await touchLastSeen(sessionUserId);
   const body = await jsonBody(request);
   if (typeof body.image !== "string" || !body.image) return NextResponse.json({ error: "An image is required." }, { status: 400 });
+  // Per account, so one member can't fill the photo storage for everyone.
+  if (await overUploadCap(sessionUserId)) return NextResponse.json({ error: `You've uploaded ${UPLOADS_PER_DAY} photos today, the daily limit. Please try again tomorrow.` }, { status: 429 });
   try {
     return NextResponse.json({ url: await uploadImage(body.image, sessionUserId) });
   } catch (error) {
