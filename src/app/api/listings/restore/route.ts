@@ -29,7 +29,9 @@ export async function POST(request: Request) {
 
   const secret = process.env.RESTORE_TOKEN_SECRET;
   if (!secret) return NextResponse.json({ error: "Restoring isn't configured." }, { status: 500 });
-  const form = await request.formData();
+  // Anything that isn't the /restore form (or JSON, above) is a bad request, not a server error.
+  const form = await request.formData().catch(() => undefined);
+  if (!form) return NextResponse.json({ error: "A restore token is required." }, { status: 400 });
   const token = String(form.get("token") || "");
   const { result } = await restoreWithToken(pool, token, secret, now);
   // 303 so the browser follows with a GET and a refresh doesn't resubmit.
