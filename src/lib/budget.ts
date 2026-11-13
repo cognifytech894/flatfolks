@@ -33,6 +33,16 @@ export function affordsRent(requirement: { rent: number }, rent?: number): boole
   return !rent || requirement.rent >= rent;
 }
 
+/** The most a rent or deposit can be: far above any real one, and well inside what the database column holds. */
+export const MAX_AMOUNT = 100_000_000;
+
+/** A rent or deposit as posted: whole rupees from `min` to MAX_AMOUNT, as a number or a string of digits. */
+export function isValidAmount(value: unknown, min: number): boolean {
+  if (typeof value !== "number" && !(typeof value === "string" && value.trim())) return false;
+  const amount = Number(value);
+  return Number.isInteger(amount) && amount >= min && amount <= MAX_AMOUNT;
+}
+
 export function rupees(value: number): string {
   return `₹${value.toLocaleString("en-IN")}`;
 }

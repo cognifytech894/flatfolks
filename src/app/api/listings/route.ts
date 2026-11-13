@@ -10,6 +10,8 @@ import { isRateLimited } from "@/lib/rate-limit";
 import { withoutOwnerDetails } from "@/lib/visitor";
 import { publicErrorMessage } from "@/lib/public-error";
 import { isUuid, jsonBody } from "@/lib/json-body";
+import { isValidAmount } from "@/lib/budget";
+import { overPostCap, POSTS_PER_DAY } from "@/lib/daily-caps";
 
 export const runtime = "nodejs";
 
@@ -52,8 +54,9 @@ const propertyTypes = ["Room", "Apartment", "Flat", "PG"];
 function invalidField(body: Partial<NewListing>): string | undefined {
   if (body.title !== undefined && (typeof body.title !== "string" || !body.title.trim() || body.title.length > 200)) return "Title must be 1 to 200 characters.";
   if (body.location !== undefined && (typeof body.location !== "string" || !body.location.trim() || body.location.length > 200)) return "Location must be 1 to 200 characters.";
-  if (body.rent !== undefined && (!Number.isFinite(Number(body.rent)) || Number(body.rent) < 1)) return "Budget and deposit must be valid amounts.";
-  if (body.deposit !== undefined && (!Number.isFinite(Number(body.deposit)) || Number(body.deposit) < 0)) return "Budget and deposit must be valid amounts.";
+  // Whole rupees within range: anything else would fail in the database instead of here.
+  if (body.rent !== undefined && !isValidAmount(body.rent, 1)) return "Budget and deposit must be valid amounts.";
+  if (body.deposit !== undefined && !isValidAmount(body.deposit, 0)) return "Budget and deposit must be valid amounts.";
   if (body.propertyType !== undefined && !propertyTypes.includes(body.propertyType)) return "Invalid property type.";
   if (!isValidCount(body.bedrooms) || !isValidCount(body.bathrooms)) return "Bedrooms and bathrooms must be between 1 and 10.";
   if (body.listingKind && body.listingKind !== "flat-offer" && body.listingKind !== "flat-requirement") return "Invalid listing type.";
@@ -110,6 +113,8 @@ export async function POST(request: Request) {
   // sites' images) or another member's photos (deleting this post would delete them).
   const images = body.images?.filter((image) => isOwnUpload(image, sessionUserId)).slice(0, 3);
   if (body.listingKind === "flat-requirement" && images?.length) return NextResponse.json({ error: "Flat requirements cannot include images." }, { status: 400 });
+  // Counted only for posts that passed every check above.
+  if (await overPostCap(sessionUserId)) return NextResponse.json({ error: `You've posted ${POSTS_PER_DAY} times today, the daily limit. Please try again tomorrow.` }, { status: 429 });
   await touchLastSeen(sessionUserId);
   const listing = await createListing({
     title: body.title,

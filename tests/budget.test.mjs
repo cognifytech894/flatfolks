@@ -3,11 +3,30 @@
 
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { affordsRent, parseBudget, parseRent, perMonth, withinBudget } from "../src/lib/budget.ts";
+import { affordsRent, isValidAmount, MAX_AMOUNT, parseBudget, parseRent, perMonth, withinBudget } from "../src/lib/budget.ts";
 import { activeFilterCount, matchesSearch, parseSearchFilters } from "../src/lib/search-filters.ts";
 
 const room = (rent) => ({ id: `room-${rent}`, title: "Room", location: "Sector 62, Noida", rent, propertyType: "Room", tags: [], listingKind: "flat" });
 const requirement = (rent) => ({ id: `need-${rent}`, title: "Need a room", location: "Noida", rent, propertyType: "Room", tags: [], listingKind: "flat-requirement" });
+
+describe("isValidAmount (rent and deposit on a post)", () => {
+  test("whole rupees in range, as a number or digits", () => {
+    assert.ok(isValidAmount(9500, 1));
+    assert.ok(isValidAmount("9500", 1));
+    assert.ok(isValidAmount(0, 0));
+    assert.ok(isValidAmount(MAX_AMOUNT, 1));
+  });
+  test("decimals, huge amounts and amounts below the minimum are refused", () => {
+    assert.ok(!isValidAmount(100.5, 1));
+    assert.ok(!isValidAmount(MAX_AMOUNT + 1, 1));
+    assert.ok(!isValidAmount(1e30, 1));
+    assert.ok(!isValidAmount(0, 1));
+    assert.ok(!isValidAmount(-1, 0));
+  });
+  test("anything that isn't a number is refused", () => {
+    for (const value of [null, "", " ", "abc", true, [], [5], {}, NaN, Infinity]) assert.ok(!isValidAmount(value, 0), String(value));
+  });
+});
 
 describe("parseBudget", () => {
   test("no budget when nothing was typed", () => {
