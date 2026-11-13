@@ -6,7 +6,7 @@ import { contactEmail } from "@/data/contact";
 import { siteUrl as baseUrl } from "@/lib/site-url";
 
 export const metadata: Metadata = {
-  title: "Contact Us",
+  title: "Contact FlatFolks",
   description: "Get in touch with FlatFolks for help with your account, a listing, or to report a problem.",
   alternates: { canonical: `${baseUrl}/contact` },
   openGraph: { title: "Contact FlatFolks", type: "website", siteName: "FlatFolks", url: `${baseUrl}/contact` },

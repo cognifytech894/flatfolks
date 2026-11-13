@@ -5,10 +5,10 @@ import { contactEmail } from "@/data/contact";
 import { siteUrl as baseUrl } from "@/lib/site-url";
 
 export const metadata: Metadata = {
-  title: "Terms of Use",
+  title: "FlatFolks Terms of Use",
   description: "The terms that apply when you use FlatFolks to find or list rooms, flats and flatmates.",
   alternates: { canonical: `${baseUrl}/terms` },
-  openGraph: { title: "Terms of Use", type: "website", siteName: "FlatFolks", url: `${baseUrl}/terms` },
+  openGraph: { title: "FlatFolks Terms of Use", type: "website", siteName: "FlatFolks", url: `${baseUrl}/terms` },
 };
 
 export default function TermsPage() {
