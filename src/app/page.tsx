@@ -32,6 +32,7 @@ const cities = [
   ["Greater Noida", "photo-1449824913935-59a10b8d2000", "/greater-noida"],
   ["Delhi", "photo-1587474260584-136574528ed5", "/delhi"],
   ["Gurgaon", "photo-1511818966892-d7d671e672a2", "/gurgaon"],
+  ["Jaipur", "photo-1477587458883-47145ed94245", "/jaipur"],
 ];
 
 // The hero photo is the largest image above the fold (the LCP), so it alone
@@ -119,8 +120,9 @@ export default async function Home() {
           <StatsRow />
           <section className="pt-10 sm:pt-12">
             <div className="mb-5 flex items-end justify-between gap-4"><h2 className={sectionTitle}>Popular Cities</h2><Link href="/search" className={sectionLink}>View all cities <ArrowRight className="inline h-4 w-4" /></Link></div>
-            <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-              {cities.map(([name, image, href]) => <Link key={name} href={href} className="group relative h-36 overflow-hidden rounded-3xl bg-brand-100 shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift sm:h-52"><Unsplash id={image} alt={`Rooms and flatmates in ${name}`} sizes="(max-width: 1024px) 50vw, (max-width: 1600px) 25vw, 400px" className="object-cover transition duration-700 group-hover:scale-110" /><div className="absolute inset-0 bg-gradient-to-t from-brand-900/85 via-brand-900/10 to-transparent" /><span className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-2 font-display text-base font-bold text-white sm:text-lg">{name}<span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/20 backdrop-blur transition group-hover:bg-white group-hover:text-brand-800"><ArrowRight className="h-4 w-4" /></span></span></Link>)}
+            <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-5">
+              {/* Five tiles: the last one spans the row on the two-column phone grid. */}
+              {cities.map(([name, image, href]) => <Link key={name} href={href} className="group relative h-36 last:col-span-2 lg:last:col-span-1 overflow-hidden rounded-3xl bg-brand-100 shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift sm:h-52"><Unsplash id={image} alt={`Rooms and flatmates in ${name}`} sizes="(max-width: 1024px) 50vw, (max-width: 1600px) 20vw, 320px" className="object-cover transition duration-700 group-hover:scale-110" /><div className="absolute inset-0 bg-gradient-to-t from-brand-900/85 via-brand-900/10 to-transparent" /><span className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-2 font-display text-base font-bold text-white sm:text-lg">{name}<span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/20 backdrop-blur transition group-hover:bg-white group-hover:text-brand-800"><ArrowRight className="h-4 w-4" /></span></span></Link>)}
             </div>
           </section>
 

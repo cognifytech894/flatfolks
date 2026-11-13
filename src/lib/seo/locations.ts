@@ -212,6 +212,45 @@ export const cities: City[] = [
     ],
   },
   {
+    slug: "faridabad",
+    name: "Faridabad",
+    state: "Haryana",
+    aliases: ["faridabad"],
+    places: [
+      { slug: "greater-faridabad", name: "Greater Faridabad", aliases: ["neharpar", "nehar par"] },
+      { slug: "nit", name: "NIT", aliases: ["new industrial township"], needsCity: true, globalAliases: ["nit faridabad"] },
+      { slug: "ballabgarh", name: "Ballabgarh", aliases: ["ballabhgarh"] },
+      { slug: "surajkund", name: "Surajkund", aliases: ["suraj kund"] },
+      { slug: "green-field-colony", name: "Green Field Colony", aliases: ["greenfield colony", "green fields colony"] },
+      { slug: "sainik-colony", name: "Sainik Colony" },
+      sector(15),
+      sector(16),
+      sector(21),
+      sector(46),
+    ],
+  },
+  {
+    slug: "jaipur",
+    name: "Jaipur",
+    state: "Rajasthan",
+    aliases: ["jaipur"],
+    // Malviya Nagar, Mansarovar, Pratap Nagar and Raja Park also exist in
+    // Delhi and other cities, so they need "Jaipur" in the address to match.
+    // Vaishali Nagar stays distinctive so it outranks Vaishali in Ghaziabad.
+    places: [
+      { slug: "malviya-nagar", name: "Malviya Nagar", needsCity: true },
+      { slug: "vaishali-nagar", name: "Vaishali Nagar" },
+      { slug: "mansarovar", name: "Mansarovar", aliases: ["mansarover"], needsCity: true },
+      { slug: "jagatpura", name: "Jagatpura", aliases: ["jagatpura road"] },
+      { slug: "pratap-nagar", name: "Pratap Nagar", needsCity: true },
+      { slug: "c-scheme", name: "C-Scheme" },
+      { slug: "raja-park", name: "Raja Park", needsCity: true },
+      { slug: "sitapura", name: "Sitapura" },
+      { slug: "tonk-road", name: "Tonk Road" },
+      { slug: "bani-park", name: "Bani Park", aliases: ["banipark"] },
+    ],
+  },
+  {
     slug: "delhi",
     name: "Delhi",
     state: "Delhi",
@@ -283,7 +322,7 @@ function phrasesOf(place: Place) {
 
 // Checked in this order so "Greater Noida" isn't read as plain Noida, and
 // Delhi last so "Noida, Delhi NCR" stays in Noida.
-const cityMatchOrder = ["greater-noida", "gurgaon", "ghaziabad", "noida", "delhi"];
+const cityMatchOrder = ["greater-noida", "gurgaon", "ghaziabad", "faridabad", "jaipur", "noida", "delhi"];
 
 /**
  * Works out which target city and place trail a listing's free-text location

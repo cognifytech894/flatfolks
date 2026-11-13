@@ -12,7 +12,7 @@ export function buildWelcomeEmail(to: string, siteUrl: string): WelcomeEmail {
   const subject = "Welcome to FlatFolks 🏠";
   const intro = "Whether you're looking for a room, searching for a flatmate, or sharing a space with others, FlatFolks makes it easier to connect with people and find the right fit — without brokerage.";
   const steps = [
-    { icon: "🔍", title: "Looking for a room or flatmate?", body: "Explore available rooms, flats and flatmates across Delhi, Noida, Greater Noida, Gurgaon and Ghaziabad.", label: "Find a Room", href: `${site}/search`, color: "#2563eb" },
+    { icon: "🔍", title: "Looking for a room or flatmate?", body: "Explore available rooms, flats and flatmates across Delhi, Noida, Greater Noida, Gurgaon, Ghaziabad, Faridabad and Jaipur.", label: "Find a Room", href: `${site}/search`, color: "#2563eb" },
     { icon: "🏠", title: "Have a room to share?", body: "Post your listing for free and connect with people looking for a place to stay.", label: "List Your Room for Free", href: `${site}/property?intent=flatmate`, color: "#15803d" },
     { icon: "👤", title: "Make your profile yours", body: "Complete your profile to help others get to know you better.", label: "Complete My Profile", href: `${site}/profile`, color: "#2563eb" },
   ];

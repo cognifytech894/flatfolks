@@ -9,7 +9,7 @@ import { FooterCityColumns, FooterOtherCities, type FooterColumn, type FooterLin
 // The cities in the order people look for them; each column links every
 // city's page for one intent. Plain crawlable links with descriptive anchors,
 // the same on every page (including home), so every city page gets a link.
-const footerCities = ["delhi", "noida", "greater-noida", "gurgaon", "ghaziabad"].map((slug) => getCity(slug)!);
+const footerCities = ["delhi", "noida", "greater-noida", "gurgaon", "ghaziabad", "faridabad", "jaipur"].map((slug) => getCity(slug)!);
 const intentColumns: { title: string; slug: IntentSlug }[] = [
   { title: "Flatmates", slug: "flatmates" },
   { title: "Sharing Flats", slug: "sharing-flat" },

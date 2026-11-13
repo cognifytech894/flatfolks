@@ -102,6 +102,8 @@ const cityTitles: Record<string, string> = {
   delhi: "Flats, Rooms & Flatmates in Delhi",
   gurgaon: "Flats, Rooms & Flatmates in Gurgaon",
   ghaziabad: "Flats, Rooms & Flatmates in Ghaziabad",
+  faridabad: "Flats, Rooms & Flatmates in Faridabad",
+  jaipur: "Flats, Rooms & Flatmates in Jaipur",
 };
 
 function placeTitle(scope: Scope, place: string): string {
