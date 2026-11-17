@@ -11,6 +11,7 @@ import { withoutOwnerDetails } from "@/lib/visitor";
 import { publicErrorMessage } from "@/lib/public-error";
 import { isUuid, jsonBody } from "@/lib/json-body";
 import { isValidAmount } from "@/lib/budget";
+import { countPost, postCapReached, POSTS_PER_DAY } from "@/lib/daily-caps";
 import { deviceIdFrom, saveDeviceId } from "@/lib/device-id";
 import { POSTS_AT_A_TIME } from "@/lib/inactive-posts";
 
@@ -116,6 +117,9 @@ export async function POST(request: Request) {
   if (body.listingKind === "flat-requirement" && images?.length) return NextResponse.json({ error: "Flat requirements cannot include images." }, { status: 400 });
   await touchLastSeen(sessionUserId);
   const device = deviceIdFrom(request);
+  if (await postCapReached(sessionUserId, device.id)) {
+    return saveDeviceId(NextResponse.json({ error: `You've posted ${POSTS_PER_DAY} times today, the daily limit. Please try again tomorrow.` }, { status: 429 }), request, device);
+  }
   const listing = await createListingInFreeSlot({
     deviceId: device.id,
     title: body.title,
@@ -145,6 +149,7 @@ export async function POST(request: Request) {
       : `You already have ${POSTS_AT_A_TIME["flat-offer"]} flats posted, the most you can have at a time. Delete one in My Posts on your dashboard to post another.`;
     return saveDeviceId(NextResponse.json({ error }, { status: 409 }), request, device);
   }
+  await countPost(sessionUserId, device.id);
   return saveDeviceId(NextResponse.json(listing, { status: 201 }), request, device);
 }
 

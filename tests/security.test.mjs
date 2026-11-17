@@ -264,6 +264,21 @@ describe("OTP and feedback (database)", () => {
     assert.equal(results.filter(Boolean).length, 5);
   });
 
+  test("5 new posts a day per account and per device; only published posts count", async () => {
+    const { countPost, postCapReached } = await import("../src/lib/daily-caps.ts");
+    const [account, otherAccount] = [crypto.randomUUID(), crypto.randomUUID()];
+    const [phone, laptop] = [crypto.randomUUID(), crypto.randomUUID()];
+    // Checking doesn't use anything up.
+    for (let i = 0; i < 10; i++) assert.equal(await postCapReached(account, phone), false);
+    for (let i = 0; i < 4; i++) await countPost(account, phone);
+    assert.equal(await postCapReached(account, phone), false, "4 posted");
+    await countPost(account, phone);
+    assert.equal(await postCapReached(account, phone), true, "5 posted");
+    assert.equal(await postCapReached(account, laptop), true, "same account on another device");
+    assert.equal(await postCapReached(otherAccount, phone), true, "another account on the same device");
+    assert.equal(await postCapReached(otherAccount, laptop), false, "another account on another device");
+  });
+
   test("the cap also holds per device: accounts on one device share it, and one account shares it across devices", async () => {
     const { revealContact } = await import("../src/lib/contact-reveals.ts");
     const signUp = async (email) => (await database.verifyEmailAuthOtp(email, await database.requestEmailAuthOtp(email))).user;
