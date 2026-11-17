@@ -11,7 +11,6 @@ import { withoutOwnerDetails } from "@/lib/visitor";
 import { publicErrorMessage } from "@/lib/public-error";
 import { isUuid, jsonBody } from "@/lib/json-body";
 import { isValidAmount } from "@/lib/budget";
-import { overPostCap, POSTS_PER_DAY } from "@/lib/daily-caps";
 import { deviceIdFrom, saveDeviceId } from "@/lib/device-id";
 import { POSTS_AT_A_TIME } from "@/lib/inactive-posts";
 
@@ -115,8 +114,6 @@ export async function POST(request: Request) {
   // sites' images) or another member's photos (deleting this post would delete them).
   const images = body.images?.filter((image) => isOwnUpload(image, sessionUserId)).slice(0, 3);
   if (body.listingKind === "flat-requirement" && images?.length) return NextResponse.json({ error: "Flat requirements cannot include images." }, { status: 400 });
-  // Counted only for posts that passed every check above.
-  if (await overPostCap(sessionUserId)) return NextResponse.json({ error: `You've posted ${POSTS_PER_DAY} times today, the daily limit. Please try again tomorrow.` }, { status: 429 });
   await touchLastSeen(sessionUserId);
   const device = deviceIdFrom(request);
   const listing = await createListingInFreeSlot({
