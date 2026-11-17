@@ -179,17 +179,19 @@ describe("restore", () => {
     assert.equal(await restoreOwnPost(db.pool, post.id, owner.id, BASE), "restored");
   });
 
-  test("a removed post isn't restored while its owner has another live post of the same kind", async () => {
+  test("a removed post isn't restored while its owner already has 5 live flat posts", async () => {
     const owner = await createUser(db.pool, BASE, 31);
     const old = await createPost(db.pool, owner.id);
     await harness(BASE).run();
     const token = createRestoreToken(old.id, (await postRow(db.pool, old.id)).removed_at, SECRET);
-    // Back on the site, the owner posted a new flat before restoring the old one.
-    const current = await createPost(db.pool, owner.id);
+    // Back on the site, the owner posted 5 new flats before restoring the old one.
+    const posted = [];
+    for (let i = 0; i < 5; i++) posted.push(await createPost(db.pool, owner.id));
+    const current = posted[0];
     assert.equal(await restoreOwnPost(db.pool, old.id, owner.id, days(BASE, 1)), "slot-taken");
     assert.equal((await restoreWithToken(db.pool, token, SECRET, days(BASE, 1))).result, "slot-taken");
     assert.equal((await postRow(db.pool, old.id)).status, "removed_inactive");
-    // Once the new one is gone, the old one can come back.
+    // Once one of the new ones is gone, the old one can come back.
     await db.pool.query("DELETE FROM listings WHERE id = $1", [current.id]);
     assert.equal(await restoreOwnPost(db.pool, old.id, owner.id, days(BASE, 1)), "restored");
   });

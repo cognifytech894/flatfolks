@@ -3,6 +3,7 @@ import pool from "@/lib/db";
 import { countHit, currentCount } from "@/lib/rate-limit";
 import { normalizeEmail } from "@/lib/email-identity";
 import { serverHmac } from "@/lib/session";
+import { POSTS_AT_A_TIME } from "@/lib/inactive-posts";
 import type { Furnishing } from "@/data/furnishing";
 import type { FlatConfiguration, RoomType, TenantPreference } from "@/data/listing-attributes";
 
@@ -319,10 +320,10 @@ const POST_SLOT_STATUSES = ["published", "draft", "moderation"];
 export type ListingKind = NonNullable<Listing["listingKind"]>;
 
 /**
- * Each member may have one flat post and one flat requirement at a time,
- * counted per account and per device (device-id.ts): a second email on the
- * same phone doesn't get a second post. Returns false, creating nothing,
- * when that slot is already taken.
+ * Each member may have POSTS_AT_A_TIME posts of each kind live at a time,
+ * counted per account and per device (device-id.ts): another email on the
+ * same phone doesn't get extra posts. Returns false, creating nothing, when
+ * that kind is already full.
  */
 export async function createListingInFreeSlot(input: NewListing & { ownerId: string; deviceId: string }): Promise<Listing | false> {
   await ensureListingDeviceColumn();
@@ -335,11 +336,14 @@ export async function createListingInFreeSlot(input: NewListing & { ownerId: str
     for (const key of [`post-slot:${input.ownerId}:${kind}`, `post-slot-device:${input.deviceId}:${kind}`].sort()) {
       await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [key]);
     }
-    const { rows } = await client.query(
-      "SELECT 1 FROM listings WHERE listing_kind = $1 AND status = ANY($2) AND (owner_id = $3 OR device_id = $4) LIMIT 1",
+    // Like the phone-number cap: the account and the device each have the limit, and either one being full stops the post.
+    const { rows } = await client.query<{ account_posts: string; device_posts: string }>(
+      `SELECT COUNT(*) FILTER (WHERE owner_id = $3) AS account_posts, COUNT(*) FILTER (WHERE device_id = $4) AS device_posts
+       FROM listings WHERE listing_kind = $1 AND status = ANY($2) AND (owner_id = $3 OR device_id = $4)`,
       [kind, POST_SLOT_STATUSES, input.ownerId, input.deviceId],
     );
-    if (rows.length) { await client.query("ROLLBACK"); return false; }
+    const limit = POSTS_AT_A_TIME[kind];
+    if (Number(rows[0].account_posts) >= limit || Number(rows[0].device_posts) >= limit) { await client.query("ROLLBACK"); return false; }
     const listing = await createListing({ ...input, listingKind: kind }, client);
     await client.query("COMMIT");
     return listing;

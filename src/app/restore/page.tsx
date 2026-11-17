@@ -3,7 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, RotateCcw } from "lucide-react";
 import { LegalPage } from "@/components/layout/legal-page";
 import { getListingById } from "@/lib/database";
-import { verifyRestoreToken } from "@/lib/inactive-posts";
+import { POSTS_AT_A_TIME, verifyRestoreToken } from "@/lib/inactive-posts";
 import { listingPath } from "@/lib/seo/listings";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ const outcomes: Record<string, { title: string; body: string }> = {
   restored: { title: "Your post is back", body: "It's live on FlatFolks again. Your account is now marked active, so it won't be removed unless you're inactive for another 30 days." },
   "already-active": { title: "This post is already live", body: "Nothing to restore: it's visible on FlatFolks." },
   stale: { title: "This link has already been used", body: "The post was restored and later removed again. Use the link in the most recent email, or restore it from My Posts in your dashboard." },
-  "slot-taken": { title: "You already have a live post like this", body: "You can have one flat post and one flat requirement at a time. To bring this one back, delete the other from My Posts in your dashboard, then restore this one there." },
+  "slot-taken": { title: "You already have enough live posts like this", body: `You can have up to ${POSTS_AT_A_TIME["flat-offer"]} flat posts and ${POSTS_AT_A_TIME["flat-requirement"]} flat requirement at a time. To bring this one back, delete another from My Posts in your dashboard, then restore this one there.` },
   gone: { title: "This post has been permanently deleted", body: "It was removed more than 30 days ago. You can post it again any time." },
   invalid: { title: "This restore link isn't valid", body: "It may have expired (links last 30 days) or been copied incompletely. You can also restore posts from My Posts in your dashboard." },
 };

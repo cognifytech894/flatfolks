@@ -13,6 +13,7 @@ import { isUuid, jsonBody } from "@/lib/json-body";
 import { isValidAmount } from "@/lib/budget";
 import { overPostCap, POSTS_PER_DAY } from "@/lib/daily-caps";
 import { deviceIdFrom, saveDeviceId } from "@/lib/device-id";
+import { POSTS_AT_A_TIME } from "@/lib/inactive-posts";
 
 export const runtime = "nodejs";
 
@@ -142,8 +143,10 @@ export async function POST(request: Request) {
     nearbyMetro: cleanNearbyMetro(body.nearbyMetro),
   });
   if (!listing) {
-    const what = body.listingKind === "flat-requirement" ? "a flat requirement" : "a flat posted";
-    return saveDeviceId(NextResponse.json({ error: `You already have ${what}. You can have only one at a time: edit or delete it in My Posts on your dashboard.` }, { status: 409 }), request, device);
+    const error = body.listingKind === "flat-requirement"
+      ? `You already have a flat requirement, and you can have only ${POSTS_AT_A_TIME["flat-requirement"]} at a time. Edit or delete it in My Posts on your dashboard.`
+      : `You already have ${POSTS_AT_A_TIME["flat-offer"]} flats posted, the most you can have at a time. Delete one in My Posts on your dashboard to post another.`;
+    return saveDeviceId(NextResponse.json({ error }, { status: 409 }), request, device);
   }
   return saveDeviceId(NextResponse.json(listing, { status: 201 }), request, device);
 }

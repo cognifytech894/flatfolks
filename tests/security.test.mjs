@@ -236,29 +236,32 @@ describe("OTP and feedback (database)", () => {
     assert.deepEqual(await revealContact(viewer.id, "c2000000-0000-4000-8000-000000000000"), { error: "not-found" });
   });
 
-  test("one flat post and one flat requirement at a time, per account and per device", async () => {
+  test("5 flat posts and 1 flat requirement at a time, per account and per device", async () => {
     const signUp = async (email) => (await database.verifyEmailAuthOtp(email, await database.requestEmailAuthOtp(email))).user;
     const [owner, second] = [await signUp("one-post-a@example.test"), await signUp("one-post-b@example.test")];
     const phone = "e4000000-0000-4000-8000-000000000001", laptop = "e4000000-0000-4000-8000-000000000002", other = "e4000000-0000-4000-8000-000000000003";
     const post = (ownerId, deviceId, listingKind) => database.createListingInFreeSlot({ title: "Room", location: "Sector 62, Noida", rent: 9000, deposit: 0, propertyType: "Flat", contactPhone: "9876543210", ownerId, deviceId, listingKind });
 
-    const flat = await post(owner.id, phone, "flat-offer");
-    assert.ok(flat, "first flat post");
-    assert.equal(await post(owner.id, phone, "flat-offer"), false, "second flat post, same account");
-    assert.equal(await post(owner.id, laptop, "flat-offer"), false, "second flat post, same account on another device");
-    assert.equal(await post(second.id, phone, "flat-offer"), false, "second flat post, another account on the same device");
-    assert.ok(await post(owner.id, phone, "flat-requirement"), "a requirement is a separate slot");
+    // The account's 5, 3 of them from the phone: the account is full, the phone has room for 2.
+    const flats = [];
+    for (const device of [phone, phone, phone, laptop, laptop]) flats.push(await post(owner.id, device, "flat-offer"));
+    assert.ok(flats.every(Boolean), "five flat posts");
+    assert.equal(await post(owner.id, other, "flat-offer"), false, "sixth flat post, same account on a new device");
+    assert.ok(await post(second.id, phone, "flat-offer"), "another account on the phone: its 4th post there");
+    assert.ok(await post(second.id, phone, "flat-offer"), "and its 5th");
+    assert.equal(await post(second.id, phone, "flat-offer"), false, "the phone is full, whichever account posts");
+    assert.ok(await post(owner.id, phone, "flat-requirement"), "a requirement is counted separately");
     assert.equal(await post(owner.id, phone, "flat-requirement"), false, "second requirement");
     assert.ok(await post(second.id, other, "flat-offer"), "another account on another device is unaffected");
 
-    // Deleting the post frees the slot.
-    await database.deleteListing(flat.id, "owner");
+    // Deleting a post frees its place.
+    await database.deleteListing(flats[0].id, "owner");
     assert.ok(await post(owner.id, phone, "flat-offer"), "posting again after deleting");
 
-    // Parallel requests can't both take a free slot.
+    // Parallel requests can't overshoot.
     const fresh = await signUp("one-post-c@example.test");
-    const results = await Promise.all(Array.from({ length: 5 }, (_, i) => post(fresh.id, `e4000000-0000-4000-8000-00000000001${i}`, "flat-offer")));
-    assert.equal(results.filter(Boolean).length, 1);
+    const results = await Promise.all(Array.from({ length: 8 }, (_, i) => post(fresh.id, `e4000000-0000-4000-8000-00000000001${i}`, "flat-offer")));
+    assert.equal(results.filter(Boolean).length, 5);
   });
 
   test("the cap also holds per device: accounts on one device share it, and one account shares it across devices", async () => {
