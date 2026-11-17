@@ -448,9 +448,10 @@ export async function getListingByIdSuffix(suffix: string): Promise<Listing | un
   return rows[0] ? rowToListing(rows[0]) : undefined;
 }
 
-export async function recordListingView(id: string): Promise<Listing | undefined> {
+/** Adds one view when `count` is true (see shouldCountView), then returns the listing. */
+export async function recordListingView(id: string, count: boolean): Promise<Listing | undefined> {
   // Set by `npm run ui-audit` so automated page loads don't inflate real view counts.
-  if (process.env.DISABLE_VIEW_TRACKING !== "1") await pool.query("UPDATE listings SET views = views + 1 WHERE id = $1", [id]);
+  if (count && process.env.DISABLE_VIEW_TRACKING !== "1") await pool.query("UPDATE listings SET views = views + 1 WHERE id = $1", [id]);
   const { rows } = await pool.query<ListingRow>(`${listingSelect} WHERE listings.id = $1`, [id]);
   return rows[0] ? rowToListing(rows[0]) : undefined;
 }
