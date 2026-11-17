@@ -109,7 +109,7 @@ type PageLevel = "city" | "locality" | "society" | "avenue";
  * anything the society page doesn't.
  */
 const indexMinimum: Record<PageLevel, { hub: number; intent: number }> = {
-  city: { hub: 0, intent: 1 },
+  city: { hub: 1, intent: 1 },
   locality: { hub: 2, intent: 2 },
   society: { hub: 2, intent: 2 },
   avenue: { hub: 3, intent: 3 },
@@ -139,7 +139,7 @@ const sameSet = (a: string[], b: string[]) => a.length === b.length && a.every((
 export function isScopeIndexable(listings: Listing[], scope: Scope): boolean {
   const trail = scope.trail || [];
   const level = levelOf(trail);
-  if (!scope.intent && trail[trail.length - 1]?.alwaysIndex) return true;
+  if (!scope.intent && (trail.length ? trail[trail.length - 1].alwaysIndex : scope.city?.alwaysIndex)) return true;
   const ids = genuineIds(listings, scope);
   if (ids.length < indexMinimum[level][scope.intent ? "intent" : "hub"]) return false;
   if (scope.intent && level !== "city" && ids.length < standaloneIntentMinimum && sameSet(ids, genuineIds(listings, { ...scope, intent: undefined }))) return false;

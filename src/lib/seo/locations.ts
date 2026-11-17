@@ -45,6 +45,8 @@ export type City = {
   name: string;
   state: string;
   aliases: string[];
+  /** City page is indexed even before it has listings. Other city pages wait for their first one. */
+  alwaysIndex?: boolean;
   places: Place[];
 };
 
@@ -154,6 +156,8 @@ export const cities: City[] = [
     name: "Greater Noida",
     state: "Uttar Pradesh",
     aliases: ["greater noida", "greater noida west", "noida extension", "gr noida"],
+    // Parent of Greater Noida West, the main market, so it stays indexed.
+    alwaysIndex: true,
     places: [
       noidaExtension,
       { slug: "knowledge-park", name: "Knowledge Park", aliases: ["knowledge park 1", "knowledge park 2", "knowledge park 3", "knowledge park i", "knowledge park ii", "knowledge park iii"] },

@@ -15,6 +15,7 @@
     "test:admin-login": "node --test tests/admin-login-guard.test.mjs",
     "test:welcome": "node --test tests/welcome-email.test.mjs",
     "test:admin-auth": "node --test tests/admin-auth.test.mjs",
+    "test:seo": "node --import ./tests/helpers/alias.mjs --test tests/seo-index.test.mjs",
     "test:views": "node --import ./tests/helpers/alias.mjs --test tests/listing-views.test.mjs",
     "test:security": "node --import ./tests/helpers/alias.mjs --test tests/security.test.mjs"
   },
