@@ -46,6 +46,14 @@ const sectionLink = "inline-block shrink-0 py-1 text-sm font-semibold text-brand
 
 export const dynamic = "force-dynamic";
 
+// A card says "New" only for a post's first week. There's no "Verified" label:
+// nothing checks posts, so the site can't claim one is verified.
+const NEW_LISTING_DAYS = 7;
+function isNewListing(createdAt: string | undefined) {
+  const posted = createdAt ? new Date(createdAt).getTime() : NaN;
+  return Date.now() - posted < NEW_LISTING_DAYS * 24 * 60 * 60 * 1000;
+}
+
 // Kept under ~130 characters so search results show it whole.
 const description = "Find flats, rooms and flatmates in Noida with FlatFolks (Flat Folks), a roommate website with no brokerage. Contact owners and tenants directly.";
 
@@ -129,7 +137,7 @@ export default async function Home() {
           <section className="pt-12 sm:pt-16">
             <div className="mb-5 flex items-end justify-between gap-4"><h2 className={sectionTitle}>{featuredCity ? `Featured Flats & Rooms in ${featuredCity}` : "Featured Flats & Rooms"}</h2><Link href={featuredCity ? `/search?location=${encodeURIComponent(featuredCity)}` : "/search"} className={sectionLink}>View all rooms <ArrowRight className="inline h-4 w-4" /></Link></div>
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-              {rooms.map((room) => <article key={room.id} className="group relative overflow-hidden rounded-3xl border border-cream-200 bg-white shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift"><div className="relative h-44 overflow-hidden bg-brand-50">{room.image ? <Image src={room.image} alt={listingName(room)} fill className="object-cover transition duration-700 group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 400px" /> : <div className="grid h-full w-full place-items-center text-sm font-medium text-stone-600">No photos</div>}<span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-brand-800 shadow-sm">{room.verified ? "Verified" : "New"}</span><button aria-label="Save listing" className="absolute right-2 top-2 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/95 text-stone-700 shadow-sm transition hover:text-brand-600"><Heart className="h-4 w-4" /></button></div><div className="p-4"><h3 className="truncate text-base font-bold text-ink"><Link href={listingPath(room)} className="after:absolute after:inset-0">{room.title}</Link></h3><p className="mt-1 flex items-center gap-1 text-sm text-stone-600"><MapPin className="h-3.5 w-3.5 shrink-0 text-brand-500" /><span className="truncate">{room.location}</span></p><p className="mt-3 font-display text-xl font-extrabold text-brand-800">{rupees(room.rent)}<span className="font-sans text-sm font-medium text-stone-600">/month</span></p></div></article>)}
+              {rooms.map((room) => <article key={room.id} className="group relative overflow-hidden rounded-3xl border border-cream-200 bg-white shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift"><div className="relative h-44 overflow-hidden bg-brand-50">{room.image ? <Image src={room.image} alt={listingName(room)} fill className="object-cover transition duration-700 group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 400px" /> : <div className="grid h-full w-full place-items-center text-sm font-medium text-stone-600">No photos</div>}{isNewListing(room.createdAt) && <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-brand-800 shadow-sm">New</span>}<button aria-label="Save listing" className="absolute right-2 top-2 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/95 text-stone-700 shadow-sm transition hover:text-brand-600"><Heart className="h-4 w-4" /></button></div><div className="p-4"><h3 className="truncate text-base font-bold text-ink"><Link href={listingPath(room)} className="after:absolute after:inset-0">{room.title}</Link></h3><p className="mt-1 flex items-center gap-1 text-sm text-stone-600"><MapPin className="h-3.5 w-3.5 shrink-0 text-brand-500" /><span className="truncate">{room.location}</span></p><p className="mt-3 font-display text-xl font-extrabold text-brand-800">{rupees(room.rent)}<span className="font-sans text-sm font-medium text-stone-600">/month</span></p></div></article>)}
             </div>
           </section>
         </div>
