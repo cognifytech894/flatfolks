@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/current-user";
-import { createListing, deleteListing, getListingById, getListingOwnerId, getListings, getOwnerListings, touchLastSeen, updateListing, type NewListing } from "@/lib/database";
+import { createListingInFreeSlot, deleteListing, getListingById, getListingOwnerId, getListings, getOwnerListings, touchLastSeen, updateListing, type NewListing } from "@/lib/database";
 import { deleteImages, isOwnUpload } from "@/lib/image-storage";
 import { lifestylePreferences } from "@/data/preferences";
 import { cleanNearbyMetro, isFurnishing } from "@/data/furnishing";
@@ -12,6 +12,7 @@ import { publicErrorMessage } from "@/lib/public-error";
 import { isUuid, jsonBody } from "@/lib/json-body";
 import { isValidAmount } from "@/lib/budget";
 import { overPostCap, POSTS_PER_DAY } from "@/lib/daily-caps";
+import { deviceIdFrom, saveDeviceId } from "@/lib/device-id";
 
 export const runtime = "nodejs";
 
@@ -116,7 +117,9 @@ export async function POST(request: Request) {
   // Counted only for posts that passed every check above.
   if (await overPostCap(sessionUserId)) return NextResponse.json({ error: `You've posted ${POSTS_PER_DAY} times today, the daily limit. Please try again tomorrow.` }, { status: 429 });
   await touchLastSeen(sessionUserId);
-  const listing = await createListing({
+  const device = deviceIdFrom(request);
+  const listing = await createListingInFreeSlot({
+    deviceId: device.id,
     title: body.title,
     location: body.location,
     rent: Number(body.rent),
@@ -138,7 +141,11 @@ export async function POST(request: Request) {
     ...attributes.values,
     nearbyMetro: cleanNearbyMetro(body.nearbyMetro),
   });
-  return NextResponse.json(listing, { status: 201 });
+  if (!listing) {
+    const what = body.listingKind === "flat-requirement" ? "a flat requirement" : "a flat posted";
+    return saveDeviceId(NextResponse.json({ error: `You already have ${what}. You can have only one at a time: edit or delete it in My Posts on your dashboard.` }, { status: 409 }), request, device);
+  }
+  return saveDeviceId(NextResponse.json(listing, { status: 201 }), request, device);
 }
 
 export async function PATCH(request: Request) {
@@ -156,6 +163,8 @@ export async function PATCH(request: Request) {
     await touchLastSeen(sessionUserId);
     // Owners can't set status: a removed post comes back only through restore.
     delete body.status;
+    // Nor turn a post into the other kind, which would give them two of one kind.
+    delete body.listingKind;
   } else if (body.status && !["draft", "published", "moderation"].includes(body.status)) {
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   }

@@ -24,6 +24,7 @@ export async function POST(request: Request) {
     const result = await restoreOwnPost(pool, id, userId, now);
     if (result === "gone") return NextResponse.json({ error: "This post has been permanently deleted." }, { status: 410 });
     if (result === "stale") return NextResponse.json({ error: "You can only restore your own posts." }, { status: 403 });
+    if (result === "slot-taken") return NextResponse.json({ error: "You already have a live post of this kind, and you can have only one at a time. Delete it first to restore this one." }, { status: 409 });
     return NextResponse.json({ result });
   }
 

@@ -236,6 +236,31 @@ describe("OTP and feedback (database)", () => {
     assert.deepEqual(await revealContact(viewer.id, "c2000000-0000-4000-8000-000000000000"), { error: "not-found" });
   });
 
+  test("one flat post and one flat requirement at a time, per account and per device", async () => {
+    const signUp = async (email) => (await database.verifyEmailAuthOtp(email, await database.requestEmailAuthOtp(email))).user;
+    const [owner, second] = [await signUp("one-post-a@example.test"), await signUp("one-post-b@example.test")];
+    const phone = "e4000000-0000-4000-8000-000000000001", laptop = "e4000000-0000-4000-8000-000000000002", other = "e4000000-0000-4000-8000-000000000003";
+    const post = (ownerId, deviceId, listingKind) => database.createListingInFreeSlot({ title: "Room", location: "Sector 62, Noida", rent: 9000, deposit: 0, propertyType: "Flat", contactPhone: "9876543210", ownerId, deviceId, listingKind });
+
+    const flat = await post(owner.id, phone, "flat-offer");
+    assert.ok(flat, "first flat post");
+    assert.equal(await post(owner.id, phone, "flat-offer"), false, "second flat post, same account");
+    assert.equal(await post(owner.id, laptop, "flat-offer"), false, "second flat post, same account on another device");
+    assert.equal(await post(second.id, phone, "flat-offer"), false, "second flat post, another account on the same device");
+    assert.ok(await post(owner.id, phone, "flat-requirement"), "a requirement is a separate slot");
+    assert.equal(await post(owner.id, phone, "flat-requirement"), false, "second requirement");
+    assert.ok(await post(second.id, other, "flat-offer"), "another account on another device is unaffected");
+
+    // Deleting the post frees the slot.
+    await database.deleteListing(flat.id, "owner");
+    assert.ok(await post(owner.id, phone, "flat-offer"), "posting again after deleting");
+
+    // Parallel requests can't both take a free slot.
+    const fresh = await signUp("one-post-c@example.test");
+    const results = await Promise.all(Array.from({ length: 5 }, (_, i) => post(fresh.id, `e4000000-0000-4000-8000-00000000001${i}`, "flat-offer")));
+    assert.equal(results.filter(Boolean).length, 1);
+  });
+
   test("the cap also holds per device: accounts on one device share it, and one account shares it across devices", async () => {
     const { revealContact } = await import("../src/lib/contact-reveals.ts");
     const signUp = async (email) => (await database.verifyEmailAuthOtp(email, await database.requestEmailAuthOtp(email))).user;

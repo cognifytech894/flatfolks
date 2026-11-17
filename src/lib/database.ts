@@ -305,7 +305,53 @@ export async function getFeaturedListings(limit = 4, city = ""): Promise<Listing
 
 export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { bedrooms?: number; bathrooms?: number; description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; contactPhone?: string; preferences?: string[]; availableFrom?: string; genderPreference?: "Male" | "Female" | "Family" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement"; furnishing?: Furnishing | null; nearbyMetro?: string | null; flatConfiguration?: FlatConfiguration | null; roomType?: RoomType | null; tenantPreference?: TenantPreference | null };
 
-export async function createListing(input: NewListing): Promise<Listing> {
+let listingDeviceColumn: Promise<unknown> | undefined;
+// Same column and index as data/schema.sql, added on first use so it works before that file is re-run.
+function ensureListingDeviceColumn() {
+  listingDeviceColumn ??= pool.query("ALTER TABLE listings ADD COLUMN IF NOT EXISTS device_id UUID")
+    .then(() => pool.query("CREATE INDEX IF NOT EXISTS idx_listings_device_kind ON listings (device_id, listing_kind)"))
+    .catch((error) => { listingDeviceColumn = undefined; throw error; });
+  return listingDeviceColumn;
+}
+
+/** Statuses that hold a member's one post of a kind; removed posts don't. */
+const POST_SLOT_STATUSES = ["published", "draft", "moderation"];
+export type ListingKind = NonNullable<Listing["listingKind"]>;
+
+/**
+ * Each member may have one flat post and one flat requirement at a time,
+ * counted per account and per device (device-id.ts): a second email on the
+ * same phone doesn't get a second post. Returns false, creating nothing,
+ * when that slot is already taken.
+ */
+export async function createListingInFreeSlot(input: NewListing & { ownerId: string; deviceId: string }): Promise<Listing | false> {
+  await ensureListingDeviceColumn();
+  if (input.flatConfiguration === "2rk") await allowTwoRk();
+  const kind: ListingKind = input.listingKind || "flat-offer";
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    // Parallel requests for the same member or device wait their turn, so two can't both see a free slot.
+    for (const key of [`post-slot:${input.ownerId}:${kind}`, `post-slot-device:${input.deviceId}:${kind}`].sort()) {
+      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [key]);
+    }
+    const { rows } = await client.query(
+      "SELECT 1 FROM listings WHERE listing_kind = $1 AND status = ANY($2) AND (owner_id = $3 OR device_id = $4) LIMIT 1",
+      [kind, POST_SLOT_STATUSES, input.ownerId, input.deviceId],
+    );
+    if (rows.length) { await client.query("ROLLBACK"); return false; }
+    const listing = await createListing({ ...input, listingKind: kind }, client);
+    await client.query("COMMIT");
+    return listing;
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function createListing(input: NewListing & { deviceId?: string }, db: Pick<typeof pool, "query"> = pool): Promise<Listing> {
   if (input.flatConfiguration === "2rk") await allowTwoRk();
   const listing: Listing = {
     id: randomUUID(), title: input.title.trim(), location: tidyLocation(input.location), rent: input.rent, deposit: input.deposit,
@@ -327,14 +373,16 @@ export async function createListing(input: NewListing): Promise<Listing> {
     roomType: input.roomType || undefined,
     tenantPreference: input.tenantPreference || undefined,
   };
-  await pool.query(
-    `INSERT INTO listings (id, title, location, rent, deposit, bedrooms, bathrooms, property_type, description, image, verified, tags, match_score, min_budget, max_budget, images, status, views, saves, owner_id, available_from, gender_preference, listing_kind, contact_phone, preferences, furnishing, nearby_metro, flat_configuration, room_type, tenant_preference)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)`,
+  await ensureListingDeviceColumn();
+  await db.query(
+    `INSERT INTO listings (id, title, location, rent, deposit, bedrooms, bathrooms, property_type, description, image, verified, tags, match_score, min_budget, max_budget, images, status, views, saves, owner_id, available_from, gender_preference, listing_kind, contact_phone, preferences, furnishing, nearby_metro, flat_configuration, room_type, tenant_preference, device_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)`,
     [listing.id, listing.title, listing.location, listing.rent, listing.deposit, listing.bedrooms, listing.bathrooms, listing.propertyType,
       listing.description || null, listing.image, listing.verified, JSON.stringify(listing.tags), listing.matchScore, listing.minBudget, listing.maxBudget,
       listing.images ? JSON.stringify(listing.images) : null, listing.status, listing.views, listing.saves, listing.ownerId || null,
       listing.availableFrom || null, listing.genderPreference, listing.listingKind, listing.contactPhone || null, JSON.stringify(listing.preferences),
-      listing.furnishing || null, listing.nearbyMetro || null, listing.flatConfiguration || null, listing.roomType || null, listing.tenantPreference || null],
+      listing.furnishing || null, listing.nearbyMetro || null, listing.flatConfiguration || null, listing.roomType || null, listing.tenantPreference || null,
+      input.deviceId || null],
   );
   return listing;
 }

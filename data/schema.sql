@@ -55,6 +55,9 @@ CREATE TABLE IF NOT EXISTS listings (
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_listing_kind ON listings (listing_kind);
+-- The posting browser's device id (src/lib/device-id.ts): one flat post and one requirement per device too.
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS device_id UUID;
+CREATE INDEX IF NOT EXISTS idx_listings_device_kind ON listings (device_id, listing_kind);
 CREATE INDEX IF NOT EXISTS idx_owner ON listings (owner_id);
 -- Widens `image` on databases created before it was TEXT (was VARCHAR(2048),
 -- too short for an uploaded photo's base64 string); a no-op once already TEXT.
