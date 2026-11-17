@@ -216,22 +216,49 @@ describe("OTP and feedback (database)", () => {
     assert.equal((await database.verifyEmailAuthOtp("target@example.test", code)).user.email, "target@example.test");
   });
 
-  test("a member sees at most 30 posts' numbers a day; repeats and their own post are free", async () => {
-    const { revealContact } = await import("../src/lib/contact-reveals.ts");
+  test("a member sees at most 20 posts' numbers a day; repeats and their own post are free", async () => {
+    const { revealContact: reveal } = await import("../src/lib/contact-reveals.ts");
+    const device = "e0000000-0000-4000-8000-000000000001";
+    const revealContact = (userId, listingId) => reveal(userId, device, listingId);
     const viewer = (await database.verifyEmailAuthOtp("viewer@example.test", await database.requestEmailAuthOtp("viewer@example.test"))).user;
-    const ids = Array.from({ length: 31 }, (_, i) => `c0000000-0000-4000-8000-${String(i).padStart(12, "0")}`);
+    const ids = Array.from({ length: 21 }, (_, i) => `c0000000-0000-4000-8000-${String(i).padStart(12, "0")}`);
     for (const id of ids) {
       await db.pool.query("INSERT INTO listings (id, title, location, rent, property_type, image, contact_phone) VALUES ($1, 'Room', 'Noida', 9000, 'Room', '/x.jpg', '9876543210')", [id]);
     }
     const own = "c1000000-0000-4000-8000-000000000000";
     await db.pool.query("INSERT INTO listings (id, title, location, rent, property_type, image, contact_phone, owner_id) VALUES ($1, 'Mine', 'Noida', 9000, 'Room', '/x.jpg', '9999999999', $2)", [own, viewer.id]);
 
-    const results = await Promise.all(ids.slice(0, 30).map((id) => revealContact(viewer.id, id)));
+    const results = await Promise.all(ids.slice(0, 20).map((id) => revealContact(viewer.id, id)));
     assert.ok(results.every((result) => result.phone === "9876543210"));
-    assert.deepEqual(await revealContact(viewer.id, ids[30]), { error: "limit" });
+    assert.deepEqual(await revealContact(viewer.id, ids[20]), { error: "limit" });
     assert.equal((await revealContact(viewer.id, ids[0])).phone, "9876543210");
     assert.equal((await revealContact(viewer.id, own)).phone, "9999999999");
     assert.deepEqual(await revealContact(viewer.id, "c2000000-0000-4000-8000-000000000000"), { error: "not-found" });
+  });
+
+  test("the cap also holds per device: accounts on one device share it, and one account shares it across devices", async () => {
+    const { revealContact } = await import("../src/lib/contact-reveals.ts");
+    const signUp = async (email) => (await database.verifyEmailAuthOtp(email, await database.requestEmailAuthOtp(email))).user;
+    const [first, second, third] = [await signUp("device-a@example.test"), await signUp("device-b@example.test"), await signUp("device-c@example.test")];
+    const ids = Array.from({ length: 22 }, (_, i) => `c3000000-0000-4000-8000-${String(i).padStart(12, "0")}`);
+    for (const id of ids) {
+      await db.pool.query("INSERT INTO listings (id, title, location, rent, property_type, image, contact_phone) VALUES ($1, 'Room', 'Noida', 9000, 'Room', '/x.jpg', '9876543210')", [id]);
+    }
+    const phone = "e3000000-0000-4000-8000-000000000001", laptop = "e3000000-0000-4000-8000-000000000002", other = "e3000000-0000-4000-8000-000000000003";
+
+    // Two accounts on one phone: 12 + 8 = 20, then the phone is done for both.
+    for (const id of ids.slice(0, 12)) assert.equal((await revealContact(first.id, phone, id)).phone, "9876543210");
+    for (const id of ids.slice(12, 20)) assert.equal((await revealContact(second.id, phone, id)).phone, "9876543210");
+    assert.deepEqual(await revealContact(second.id, phone, ids[20]), { error: "device-limit" });
+    assert.deepEqual(await revealContact(first.id, phone, ids[20]), { error: "device-limit" });
+    // A number this phone already saw stays free, even from the other account.
+    assert.equal((await revealContact(second.id, phone, ids[0])).phone, "9876543210");
+    // A fresh account on another device isn't affected.
+    assert.equal((await revealContact(third.id, other, ids[20])).phone, "9876543210");
+
+    // One account on two devices: its 12 on the phone count on the laptop too.
+    for (const id of ids.slice(12, 20)) assert.equal((await revealContact(first.id, laptop, id)).phone, "9876543210");
+    assert.deepEqual(await revealContact(first.id, laptop, ids[21]), { error: "limit" });
   });
 
   test("deleting a post keeps photos another post or profile still shows", async () => {

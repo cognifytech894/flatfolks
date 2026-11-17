@@ -215,6 +215,9 @@ CREATE TABLE IF NOT EXISTS contact_reveals (
   revealed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_contact_reveals_user_time ON contact_reveals (user_id, revealed_at);
+-- The browser's device id (src/lib/device-id.ts), so the daily cap also holds per device.
+ALTER TABLE contact_reveals ADD COLUMN IF NOT EXISTS device_id UUID;
+CREATE INDEX IF NOT EXISTS idx_contact_reveals_device_time ON contact_reveals (device_id, revealed_at);
 
 -- Row Level Security with no policies: Supabase's public REST/GraphQL API
 -- (anon and authenticated roles) can read or change nothing. The app connects
