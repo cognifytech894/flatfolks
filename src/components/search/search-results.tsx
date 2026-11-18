@@ -45,7 +45,7 @@ export function SearchResults({ listings, searchedLocation, budget, keepOrder }:
             {/* Every line is one line high (long text truncates, badges stay on one row), so all cards are the same size. */}
             <div className="flex flex-1 flex-col p-4">
               {/* Titles read "3 BHK Sharing Flat in <place>"; the place already shows on the line below. */}
-              <h2 title={listing.title} className="min-w-0 truncate text-lg font-semibold text-stone-900">{listing.title.split(" in ")[0]}</h2>
+              <h2 title={listing.title} className="min-w-0 truncate text-lg font-semibold text-stone-900">{listing.title}</h2>
               <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listing.location)}`} target="_blank" rel="noopener noreferrer" title={`${listing.location} — open in Google Maps`} className="mt-1 flex min-w-0 items-center gap-1 self-start text-sm text-stone-600 hover:text-brand-600"><MapPin className="h-4 w-4 shrink-0 text-stone-400" aria-hidden /><span className="min-w-0 truncate">{listing.location}</span></a>
               <dl className="mt-3 grid grid-cols-3 gap-3 rounded-xl bg-cream-50 px-3 py-2.5">
                 <div className="min-w-0"><dt className="text-xs text-stone-500">Looking for</dt><dd className="truncate text-sm font-semibold text-stone-900">{lookingFor(listing.genderPreference)}</dd></div>

@@ -6,7 +6,7 @@ import { listingPath } from "@/lib/seo/listings";
 import { furnishingLabel } from "@/data/furnishing";
 import { propertyTypeLabel, requirementWantLabel } from "@/data/listing-attributes";
 import { perMonth, rupees } from "@/lib/budget";
-import { listingName } from "@/lib/seo/listing-page";
+import { listingHeading, listingName } from "@/lib/seo/listing-page";
 
 // Server-rendered so search engines see every card in the page HTML. Only
 // display fields are read here — never contactPhone.
@@ -21,7 +21,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
             {listing.ownerPhoto ? <img src={listing.ownerPhoto} alt={name} className="h-full w-full object-cover" /> : <UserRound className="h-7 w-7" />}
           </div>
           <div className="min-w-0 self-center">
-            <h3 className="truncate font-semibold text-stone-900"><Link href={href} className="after:absolute after:inset-0">{listingName(listing)}</Link></h3>
+            <h3 className="truncate font-semibold text-stone-900"><Link href={href} className="after:absolute after:inset-0">{listingHeading(listing)}</Link></h3>
             <p className="mt-1 flex items-center gap-1 truncate text-sm text-stone-500"><MapPin className="h-3.5 w-3.5 shrink-0" />{listing.location}</p>
           </div>
         </div>
@@ -42,7 +42,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
           : <div className="grid h-full w-full place-items-center text-sm font-medium text-stone-600">No photos</div>}
       </div>
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="font-semibold text-stone-900"><Link href={href} className="after:absolute after:inset-0">{listingName(listing)}</Link></h3>
+        <h3 className="font-semibold text-stone-900"><Link href={href} className="after:absolute after:inset-0">{listingHeading(listing)}</Link></h3>
         <p className="mt-1 flex items-center gap-1 text-sm text-stone-500"><MapPin className="h-3.5 w-3.5 shrink-0" />{listing.location}</p>
         <p className="mt-auto pt-3 text-sm text-stone-600">
           <span className="text-base font-semibold text-stone-900">{rupees(listing.rent)}</span>/month · {listing.propertyType}{listing.bedrooms > 1 ? ` · ${listing.bedrooms} BHK` : ""}{listing.furnishing ? ` · ${furnishingLabel(listing.furnishing)}` : ""}
