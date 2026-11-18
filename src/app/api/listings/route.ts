@@ -5,6 +5,7 @@ import { deleteImages, isOwnUpload } from "@/lib/image-storage";
 import { lifestylePreferences } from "@/data/preferences";
 import { cleanNearbyMetro, isFurnishing } from "@/data/furnishing";
 import { cleanAmenityTags, isFlatConfiguration, isRoomType, isTenantPreference } from "@/data/listing-attributes";
+import { countPlaces } from "@/data/indian-cities";
 import { isAdminSession } from "@/lib/current-admin";
 import { isRateLimited } from "@/lib/rate-limit";
 import { withoutOwnerDetails } from "@/lib/visitor";
@@ -51,6 +52,9 @@ function isValidCount(value: unknown) {
 }
 
 const propertyTypes = ["Room", "Apartment", "Flat", "PG"];
+
+// A requirement names one area; a list of them makes the post's page and title about none.
+const MULTIPLE_PLACES_ERROR = "Enter one location per post, like \"Sector 62, Noida\". Post again for another area.";
 
 /** Checks every field that's present; POST and PATCH share it, so an edit can't store what a new post couldn't. */
 function invalidField(body: Partial<NewListing>): string | undefined {
@@ -103,6 +107,7 @@ export async function POST(request: Request) {
   // Types first, so the checks below only ever see strings where they expect them.
   const invalid = invalidField(body);
   if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
+  if (body.listingKind === "flat-requirement" && body.location && countPlaces(body.location) > 1) return NextResponse.json({ error: MULTIPLE_PLACES_ERROR }, { status: 400 });
   if (!body.title?.trim() || !body.location?.trim() || !body.rent || !body.propertyType) {
     return NextResponse.json({ error: "Title, location, budget, and property type are required." }, { status: 400 });
   }
@@ -178,7 +183,10 @@ export async function PATCH(request: Request) {
   if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
   // New photos must be the owner's own uploads, and new tags known amenities;
   // photos and tags the post already has are kept as they are.
-  const existing = body.images || body.tags ? await getListingById(body.id) : undefined;
+  const existing = body.images || body.tags || body.location !== undefined ? await getListingById(body.id) : undefined;
+  if (body.location !== undefined && (body.listingKind ?? existing?.listingKind) === "flat-requirement" && countPlaces(body.location) > 1) {
+    return NextResponse.json({ error: MULTIPLE_PLACES_ERROR }, { status: 400 });
+  }
   const current = new Set(existing?.images || []);
   const images = body.images ? body.images.filter((image) => current.has(image) || (Boolean(actualOwnerId) && isOwnUpload(image, actualOwnerId!))).slice(0, 3) : undefined;
   const tags = cleanAmenityTags(body.tags, existing?.tags) ?? undefined;
