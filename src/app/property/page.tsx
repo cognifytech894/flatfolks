@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Camera, CheckCircle2, Loader2, MapPin, Phone, X } from "lucide-react";
 import { BackLink } from "@/components/ui/back-link";
-import { searchLocations } from "@/data/indian-cities";
+import { countPlaces, searchLocations } from "@/data/indian-cities";
 import { compressImageFile } from "@/lib/compress-image";
 import { PreferencesField } from "@/components/listing/preferences-field";
 import { furnishingOptions, nearbyMetroMaxLength, type Furnishing } from "@/data/furnishing";
@@ -45,6 +45,7 @@ function PostListing() {
   function validate(): Partial<Record<RequiredField, string>> {
     const found: Partial<Record<RequiredField, string>> = {};
     if (!form.location.trim()) found.location = isFlatRequirement ? "Enter the area or society you want to live in." : "Enter the area or society of the flat.";
+    else if (isFlatRequirement && countPlaces(form.location) > 1) found.location = "Enter one location per post, like \"Sector 62, Noida\". Post again for another area.";
     if (!(Number(form.budget) >= 1)) found.budget = isFlatRequirement ? "Enter your maximum monthly budget." : "Enter the monthly rent.";
     if (!form.availableFrom) found.availableFrom = isFlatRequirement ? "Pick the date you need the flat from." : "Pick the date the flat is available from.";
     if (!form.contactPhone.trim()) found.contactPhone = "Enter a contact number.";

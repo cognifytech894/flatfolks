@@ -46,13 +46,44 @@ export type LocationSuggestion = { label: string; hint: string; value: string };
 const pincodeByCity = new Map(indianCities.map(({ city, pincode }) => [city, pincode]));
 
 /** Matches both localities (e.g. "Gaur City 1") and cities/PIN codes for a single location search box. */
+// Lowercase words with punctuation dropped, so "Sector 62, Noida", "sector 62 noida"
+// and "sector-62 noida" all read the same; "sec 62" counts as "sector 62".
+const words = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\bsec\b/g, "sector").trim().split(" ").filter(Boolean);
+// Every typed word must appear somewhere in the place's area, city or PIN code.
+const matchesAll = (queryWords: string[], place: string) => {
+  const haystack = ` ${words(place).join(" ")}`;
+  return queryWords.every((word) => haystack.includes(` ${word}`));
+};
+
+// Known area names as word lists, longest first so "Vaishali Nagar" wins over "Vaishali".
+const areaWordLists = [...new Set(indianLocalities.map(({ area }) => words(area).join(" ")))].sort((a, b) => b.length - a.length);
+
+/**
+ * How many separate places the text names: each distinct sector number and each
+ * known area counts once; cities and PIN codes don't. "Sector 62, Noida" is 1,
+ * "Sector 62, Indirapuram, Sector 63" is 3.
+ */
+export function countPlaces(location: string) {
+  let text = ` ${words(location).join(" ")} `;
+  const places = new Set<string>();
+  for (const area of areaWordLists) {
+    if (text.includes(` ${area} `)) { places.add(area.replace(/^sector /, "")); text = text.split(` ${area} `).join(" | "); }
+  }
+  for (const match of text.matchAll(/ sector (\d+[a-z]?)(?= )/g)) places.add(match[1]);
+  return places.size;
+}
+
 export function searchLocations(query: string, limit = 8): LocationSuggestion[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  const localityMatches = indianLocalities.filter(({ area }) => area.toLowerCase().includes(q)).map(({ area, city }) => {
+  const q = words(query);
+  if (!q.length) return [];
+  const toSuggestion = ({ area, city }: IndianLocality) => {
     const pincode = pincodeByCity.get(city);
     return { label: area, hint: city, value: `${area}, ${city}${pincode ? ` - ${pincode}` : ""}` };
-  });
-  const cityMatches = indianCities.filter(({ city, pincode }) => city.toLowerCase().includes(q) || pincode.startsWith(q)).map(({ city, pincode }) => ({ label: city, hint: `PIN ${pincode}`, value: `${city} - ${pincode}` }));
-  return [...localityMatches, ...cityMatches].slice(0, limit);
+  };
+  const localities = indianLocalities.filter(({ area, city }) => matchesAll(q, `${area} ${city} ${pincodeByCity.get(city) || ""}`));
+  // "Sector 62 Noida" names the area, so its localities lead; plain "Noida" names
+  // only the city, so the city comes before its many localities.
+  const namesArea = ({ area }: IndianLocality) => q.some((word) => matchesAll([word], area));
+  const cityMatches = indianCities.filter(({ city, pincode }) => matchesAll(q, `${city} ${pincode}`)).map(({ city, pincode }) => ({ label: city, hint: `PIN ${pincode}`, value: `${city} - ${pincode}` }));
+  return [...localities.filter(namesArea).map(toSuggestion), ...cityMatches, ...localities.filter((place) => !namesArea(place)).map(toSuggestion)].slice(0, limit);
 }
