@@ -107,6 +107,31 @@ function dropEmailKeyColumn() {
   return emailKeyColumn;
 }
 
+let welcomeColumn: Promise<unknown> | undefined;
+// Same as data/schema.sql, added on first use so it works before that file is re-run.
+// When the column is first added, every existing member is marked as already
+// welcomed: they got the old welcome email at sign-up.
+function ensureWelcomeColumn() {
+  welcomeColumn ??= pool.query(`DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'welcome_email_sent_at') THEN
+        ALTER TABLE users ADD COLUMN welcome_email_sent_at TIMESTAMPTZ;
+        UPDATE users SET welcome_email_sent_at = NOW();
+      END IF;
+    END $$`)
+    .catch((error) => { welcomeColumn = undefined; throw error; });
+  return welcomeColumn;
+}
+
+/**
+ * Claims the one welcome email for this member. True only the first time, so
+ * two saves at once can't send it twice.
+ */
+export async function claimWelcomeEmail(id: string): Promise<boolean> {
+  await ensureWelcomeColumn();
+  const result = await pool.query("UPDATE users SET welcome_email_sent_at = NOW() WHERE id = $1 AND welcome_email_sent_at IS NULL", [id]);
+  return (result.rowCount ?? 0) > 0;
+}
+
 let twoRkConfiguration: Promise<unknown> | undefined;
 // Same CHECK as data/schema.sql, widened on first use so "2rk" saves before that file is re-run.
 function allowTwoRk() {
@@ -544,11 +569,14 @@ export async function verifyEmailAuthOtp(email: string, otp: string): Promise<{ 
   const normalizedEmail = normalizeEmail(email);
   if (!(await consumeOtp(normalizedEmail, "email-auth", otp))) throw new Error("Invalid or expired OTP. Please request a new OTP.");
   await dropEmailKeyColumn();
-  const { rows } = await pool.query<UserRow>("SELECT * FROM users WHERE email = $1", [normalizedEmail]);
+  await ensureWelcomeColumn();
+  const { rows } = await pool.query<UserRow & { welcome_email_sent_at: Date | null }>("SELECT * FROM users WHERE email = $1", [normalizedEmail]);
   if (rows[0]) {
     // Logging in is activity; it keeps the member's posts from being removed.
     await pool.query("UPDATE users SET last_seen_at = NOW() WHERE id = $1", [rows[0].id]);
-    return { user: rowToPublicUser(rows[0]), isNewUser: false };
+    // Someone who left before typing their name is still "new": they get the
+    // name step again (the welcome email is sent once that name is saved).
+    return { user: rowToPublicUser(rows[0]), isNewUser: rows[0].welcome_email_sent_at === null };
   }
   const id = randomUUID();
   const name = normalizedEmail.split("@")[0] || "FlatFolks member";

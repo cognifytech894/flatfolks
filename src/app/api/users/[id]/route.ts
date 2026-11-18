@@ -1,6 +1,9 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/current-user";
-import { getUserPhoto, touchLastSeen, updateUser } from "@/lib/database";
+import { claimWelcomeEmail, getUserPhoto, touchLastSeen, updateUser } from "@/lib/database";
+import { sendWelcomeEmail } from "@/lib/email";
+import { siteUrl } from "@/lib/site-url";
+import { buildWelcomeEmail } from "@/lib/welcome-email";
 import { isAllowedProfilePhoto } from "@/lib/image-storage";
 import { jsonBody } from "@/lib/json-body";
 import { publicErrorMessage } from "@/lib/public-error";
@@ -26,6 +29,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (body.gender !== undefined && !["Male", "Female"].includes(body.gender)) return NextResponse.json({ error: "Invalid gender." }, { status: 400 });
   // Keeping the current photo is always fine; a new one must be the member's own upload.
   if (body.photo !== undefined && !isAllowedProfilePhoto(body.photo, id) && body.photo !== await getUserPhoto(id)) return NextResponse.json({ error: "Invalid photo." }, { status: 400 });
-  try { return NextResponse.json({ user: await updateUser(id, body) }); }
+  try {
+    const user = await updateUser(id, body);
+    // A new member's welcome email goes out once, when they first save their
+    // name (the step right after the sign-up OTP), greeting them by first
+    // name. Sent after the response, and a failure never blocks the save.
+    if (body.name !== undefined && await claimWelcomeEmail(id).catch((error) => { console.error("Could not claim welcome email:", error); return false; })) {
+      after(async () => {
+        try { await sendWelcomeEmail(buildWelcomeEmail(user.email, siteUrl, user.name)); }
+        catch (error) { console.error("Failed to send welcome email:", error); }
+      });
+    }
+    return NextResponse.json({ user });
+  }
   catch (error) { return NextResponse.json({ error: publicErrorMessage(error, "Could not update profile.") }, { status: 400 }); }
 }

@@ -1,14 +1,24 @@
-// The welcome email a member gets once, when their account is created on
-// their first login. Table layout with inline styles so it renders the same in
-// Gmail, Outlook and phone mail apps. The greeting is "Hi Folks" because the
-// account has no real name yet at that point.
+// The welcome email a member gets once, after they verify their email with the
+// OTP and save their name. Table layout with inline styles so it renders the
+// same in Gmail, Outlook and phone mail apps. The greeting uses their first
+// name, or "Folks" when there isn't one.
 //
 // Kept free of "@/..." imports so Node can load it directly in tests.
 
 export type WelcomeEmail = { to: string; subject: string; html: string; text: string };
 
-export function buildWelcomeEmail(to: string, siteUrl: string): WelcomeEmail {
+/** The first word of the name, or "" when there isn't one. */
+export function firstName(fullName: string | null | undefined): string {
+  return (fullName ?? "").trim().split(/\s+/)[0]?.slice(0, 40) ?? "";
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+export function buildWelcomeEmail(to: string, siteUrl: string, name?: string): WelcomeEmail {
   const site = siteUrl.replace(/\/$/, "");
+  const greetingName = firstName(name) || "Folks";
   const subject = "Welcome to FlatFolks 🏠";
   const intro = "Whether you're looking for a room, searching for a flatmate, or sharing a space with others, FlatFolks makes it easier to connect with people and find the right fit — without brokerage.";
   const steps = [
@@ -45,7 +55,7 @@ export function buildWelcomeEmail(to: string, siteUrl: string): WelcomeEmail {
           </tr></table>
         </td></tr>
         <tr><td style="padding:20px 32px 4px;${font}">
-          <p style="margin:0;font-size:20px;font-weight:700;color:#0f172a;">Hi Folks,</p>
+          <p style="margin:0;font-size:20px;font-weight:700;color:#0f172a;">Hi ${escapeHtml(greetingName)},</p>
           <p style="margin:12px 0 0;font-size:15px;line-height:23px;color:#334155;">Welcome to <b style="color:#0f172a;">FlatFolks!</b> 🏠 Your account is ready, and we're excited to help you find a place to call home.</p>
           <p style="margin:12px 0 0;font-size:15px;line-height:23px;color:#334155;">${intro}</p>
           <p style="margin:22px 0 12px;font-size:15px;font-weight:700;color:#0f172a;">Here's how you can get started:</p>
@@ -62,7 +72,7 @@ export function buildWelcomeEmail(to: string, siteUrl: string): WelcomeEmail {
 </html>`;
 
   const text = [
-    "Hi Folks,",
+    `Hi ${greetingName},`,
     "",
     "Welcome to FlatFolks! 🏠 Your account is ready, and we're excited to help you find a place to call home.",
     "",

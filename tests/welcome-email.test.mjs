@@ -3,7 +3,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildWelcomeEmail } from "../src/lib/welcome-email.ts";
+import { buildWelcomeEmail, firstName } from "../src/lib/welcome-email.ts";
 
 const email = buildWelcomeEmail("new@example.test", "https://flatfolks.in/");
 
@@ -28,4 +28,22 @@ test("signs off as Team FlatFolks with the site link", () => {
     assert.match(body, /Team FlatFolks/);
     assert.ok(body.includes("https://flatfolks.in/"));
   }
+});
+
+test("greets the member by first name", () => {
+  const named = buildWelcomeEmail("new@example.test", "https://flatfolks.in/", "  Ankit   Kumar ");
+  for (const body of [named.html, named.text]) assert.match(body, /Hi Ankit,/);
+  assert.doesNotMatch(named.html + named.text, /Hi Folks,/);
+});
+
+test("escapes the name in the HTML", () => {
+  const named = buildWelcomeEmail("new@example.test", "https://flatfolks.in/", "<b>x</b>");
+  assert.match(named.html, /Hi &lt;b&gt;x&lt;\/b&gt;,/);
+  assert.doesNotMatch(named.html, /Hi <b>/);
+});
+
+test("firstName takes the first word, empty when blank", () => {
+  assert.equal(firstName("Priya Sharma"), "Priya");
+  assert.equal(firstName("   "), "");
+  assert.equal(firstName(undefined), "");
 });
