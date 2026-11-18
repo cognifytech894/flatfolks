@@ -7,7 +7,7 @@ import { BackLink } from "@/components/ui/back-link";
 import { MyPosts } from "@/components/dashboard/my-posts";
 import { syncSavedListings } from "@/lib/saved-listings-sync";
 
-export function DashboardView() {
+export function DashboardView({ listingViews }: { listingViews: number }) {
   const [savedCount, setSavedCount] = useState(0);
   useEffect(() => {
     // Counts only saved posts that are still live, and drops ones that were deleted.
@@ -16,7 +16,7 @@ export function DashboardView() {
     window.addEventListener("flatfolks-saved-listings", syncSaved);
     return () => { cancelAnimationFrame(frame); window.removeEventListener("flatfolks-saved-listings", syncSaved); };
   }, []);
-  const cards = [{ title: "Listing Views", value: "0" }, { title: "Saved Listings", value: String(savedCount) }];
+  const cards = [{ title: "Listing Views", value: listingViews.toLocaleString("en-IN") }, { title: "Saved Listings", value: String(savedCount) }];
   return (
     <div className="min-h-screen bg-cream-50">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

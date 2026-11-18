@@ -5,6 +5,7 @@ import { ListingDetail } from "@/components/listing/listing-detail";
 import { ListingUnavailable } from "@/components/listing/listing-unavailable";
 import { LandingPage, landingMetadata, pickFilters } from "@/components/seo/landing-page";
 import { getListingByIdSuffix, getListings, recordListingView, type Listing } from "@/lib/database";
+import { shouldCountView } from "@/lib/listing-views";
 import { getIntent, listingPath, parseListingSlug, type Scope } from "@/lib/seo/listings";
 import { listingContext, listingMetadata } from "@/lib/seo/listing-page";
 import { getCity, walkPlaces } from "@/lib/seo/locations";
@@ -53,7 +54,8 @@ export default async function PlacePage({ params, searchParams }: Props) {
   if (canonical !== resolved.requestedPath) permanentRedirect(canonical);
   // A removed post keeps its URL (it may be restored) but shows none of its details.
   if (resolved.listing.status !== "published") return <ListingUnavailable {...listingContext(resolved.listing, listings)} />;
-  const listing = (await recordListingView(resolved.listing.id)) || resolved.listing;
-  const isLoggedIn = Boolean(await getSessionUserId());
+  const viewerId = await getSessionUserId();
+  const listing = (await recordListingView(resolved.listing.id, await shouldCountView(resolved.listing.ownerId, viewerId))) || resolved.listing;
+  const isLoggedIn = Boolean(viewerId);
   return <ListingDetail listing={listing} isLoggedIn={isLoggedIn} {...listingContext(listing, listings)} />;
 }

@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { ListingDetail } from "@/components/listing/listing-detail";
 import { ListingUnavailable } from "@/components/listing/listing-unavailable";
 import { getListingById, getListings, recordListingView } from "@/lib/database";
+import { shouldCountView } from "@/lib/listing-views";
 import { listingPath } from "@/lib/seo/listings";
 import { listingContext, listingMetadata } from "@/lib/seo/listing-page";
 
@@ -26,8 +27,9 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   if (canonical !== `/property/${id}`) permanentRedirect(canonical);
   if (existing.status !== "published") return <ListingUnavailable {...listingContext(existing, await getListings().catch(() => []))} />;
 
-  const listing = (await recordListingView(id)) || existing;
-  const isLoggedIn = Boolean(await getSessionUserId());
+  const viewerId = await getSessionUserId();
+  const listing = (await recordListingView(id, await shouldCountView(existing.ownerId, viewerId))) || existing;
+  const isLoggedIn = Boolean(viewerId);
   const context = listingContext(listing, await getListings().catch(() => []));
   return <ListingDetail listing={listing} isLoggedIn={isLoggedIn} {...context} />;
 }

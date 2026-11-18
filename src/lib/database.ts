@@ -3,6 +3,7 @@ import pool from "@/lib/db";
 import { countHit, currentCount } from "@/lib/rate-limit";
 import { normalizeEmail } from "@/lib/email-identity";
 import { serverHmac } from "@/lib/session";
+import { POSTS_AT_A_TIME } from "@/lib/inactive-posts";
 import type { Furnishing } from "@/data/furnishing";
 import type { FlatConfiguration, RoomType, TenantPreference } from "@/data/listing-attributes";
 
@@ -305,7 +306,56 @@ export async function getFeaturedListings(limit = 4, city = ""): Promise<Listing
 
 export type NewListing = Pick<Listing, "title" | "location" | "rent" | "deposit" | "propertyType"> & { bedrooms?: number; bathrooms?: number; description?: string; image?: string; images?: string[]; tags?: string[]; ownerId?: string; contactPhone?: string; preferences?: string[]; availableFrom?: string; genderPreference?: "Male" | "Female" | "Family" | "Any"; status?: "draft" | "published"; listingKind?: "flat-offer" | "flat-requirement"; furnishing?: Furnishing | null; nearbyMetro?: string | null; flatConfiguration?: FlatConfiguration | null; roomType?: RoomType | null; tenantPreference?: TenantPreference | null };
 
-export async function createListing(input: NewListing): Promise<Listing> {
+let listingDeviceColumn: Promise<unknown> | undefined;
+// Same column and index as data/schema.sql, added on first use so it works before that file is re-run.
+function ensureListingDeviceColumn() {
+  listingDeviceColumn ??= pool.query("ALTER TABLE listings ADD COLUMN IF NOT EXISTS device_id UUID")
+    .then(() => pool.query("CREATE INDEX IF NOT EXISTS idx_listings_device_kind ON listings (device_id, listing_kind)"))
+    .catch((error) => { listingDeviceColumn = undefined; throw error; });
+  return listingDeviceColumn;
+}
+
+/** Statuses that hold a member's one post of a kind; removed posts don't. */
+const POST_SLOT_STATUSES = ["published", "draft", "moderation"];
+export type ListingKind = NonNullable<Listing["listingKind"]>;
+
+/**
+ * Each member may have POSTS_AT_A_TIME posts of each kind live at a time,
+ * counted per account and per device (device-id.ts): another email on the
+ * same phone doesn't get extra posts. Returns false, creating nothing, when
+ * that kind is already full.
+ */
+export async function createListingInFreeSlot(input: NewListing & { ownerId: string; deviceId: string }): Promise<Listing | false> {
+  await ensureListingDeviceColumn();
+  if (input.flatConfiguration === "2rk") await allowTwoRk();
+  const kind: ListingKind = input.listingKind || "flat-offer";
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    // Parallel requests for the same member or device wait their turn, so two can't both see a free slot.
+    for (const key of [`post-slot:${input.ownerId}:${kind}`, `post-slot-device:${input.deviceId}:${kind}`].sort()) {
+      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [key]);
+    }
+    // Like the phone-number cap: the account and the device each have the limit, and either one being full stops the post.
+    const { rows } = await client.query<{ account_posts: string; device_posts: string }>(
+      `SELECT COUNT(*) FILTER (WHERE owner_id = $3) AS account_posts, COUNT(*) FILTER (WHERE device_id = $4) AS device_posts
+       FROM listings WHERE listing_kind = $1 AND status = ANY($2) AND (owner_id = $3 OR device_id = $4)`,
+      [kind, POST_SLOT_STATUSES, input.ownerId, input.deviceId],
+    );
+    const limit = POSTS_AT_A_TIME[kind];
+    if (Number(rows[0].account_posts) >= limit || Number(rows[0].device_posts) >= limit) { await client.query("ROLLBACK"); return false; }
+    const listing = await createListing({ ...input, listingKind: kind }, client);
+    await client.query("COMMIT");
+    return listing;
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function createListing(input: NewListing & { deviceId?: string }, db: Pick<typeof pool, "query"> = pool): Promise<Listing> {
   if (input.flatConfiguration === "2rk") await allowTwoRk();
   const listing: Listing = {
     id: randomUUID(), title: input.title.trim(), location: tidyLocation(input.location), rent: input.rent, deposit: input.deposit,
@@ -327,14 +377,16 @@ export async function createListing(input: NewListing): Promise<Listing> {
     roomType: input.roomType || undefined,
     tenantPreference: input.tenantPreference || undefined,
   };
-  await pool.query(
-    `INSERT INTO listings (id, title, location, rent, deposit, bedrooms, bathrooms, property_type, description, image, verified, tags, match_score, min_budget, max_budget, images, status, views, saves, owner_id, available_from, gender_preference, listing_kind, contact_phone, preferences, furnishing, nearby_metro, flat_configuration, room_type, tenant_preference)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)`,
+  await ensureListingDeviceColumn();
+  await db.query(
+    `INSERT INTO listings (id, title, location, rent, deposit, bedrooms, bathrooms, property_type, description, image, verified, tags, match_score, min_budget, max_budget, images, status, views, saves, owner_id, available_from, gender_preference, listing_kind, contact_phone, preferences, furnishing, nearby_metro, flat_configuration, room_type, tenant_preference, device_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)`,
     [listing.id, listing.title, listing.location, listing.rent, listing.deposit, listing.bedrooms, listing.bathrooms, listing.propertyType,
       listing.description || null, listing.image, listing.verified, JSON.stringify(listing.tags), listing.matchScore, listing.minBudget, listing.maxBudget,
       listing.images ? JSON.stringify(listing.images) : null, listing.status, listing.views, listing.saves, listing.ownerId || null,
       listing.availableFrom || null, listing.genderPreference, listing.listingKind, listing.contactPhone || null, JSON.stringify(listing.preferences),
-      listing.furnishing || null, listing.nearbyMetro || null, listing.flatConfiguration || null, listing.roomType || null, listing.tenantPreference || null],
+      listing.furnishing || null, listing.nearbyMetro || null, listing.flatConfiguration || null, listing.roomType || null, listing.tenantPreference || null,
+      input.deviceId || null],
   );
   return listing;
 }
@@ -448,9 +500,10 @@ export async function getListingByIdSuffix(suffix: string): Promise<Listing | un
   return rows[0] ? rowToListing(rows[0]) : undefined;
 }
 
-export async function recordListingView(id: string): Promise<Listing | undefined> {
+/** Adds one view when `count` is true (see shouldCountView), then returns the listing. */
+export async function recordListingView(id: string, count: boolean): Promise<Listing | undefined> {
   // Set by `npm run ui-audit` so automated page loads don't inflate real view counts.
-  if (process.env.DISABLE_VIEW_TRACKING !== "1") await pool.query("UPDATE listings SET views = views + 1 WHERE id = $1", [id]);
+  if (count && process.env.DISABLE_VIEW_TRACKING !== "1") await pool.query("UPDATE listings SET views = views + 1 WHERE id = $1", [id]);
   const { rows } = await pool.query<ListingRow>(`${listingSelect} WHERE listings.id = $1`, [id]);
   return rows[0] ? rowToListing(rows[0]) : undefined;
 }

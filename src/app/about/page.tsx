@@ -77,8 +77,7 @@ export default function AboutPage() {
               </span>
               <h2 className="mt-3 text-2xl font-bold">Our Vision</h2>
               <p className="mt-3 leading-7 text-stone-600">
-                To become India&apos;s most trusted platform for shared living by making room discovery and flatmate
-                matching fast, reliable, and accessible for everyone.
+                To make room discovery and flatmate matching fast, reliable, and accessible for everyone.
               </p>
             </section>
           </div>

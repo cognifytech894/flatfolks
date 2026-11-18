@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/current-user";
 import pool from "@/lib/db";
-import { restoreOwnPost, restoreWithToken } from "@/lib/inactive-posts";
+import { POSTS_AT_A_TIME, restoreOwnPost, restoreWithToken } from "@/lib/inactive-posts";
 import { isUuid, jsonBody } from "@/lib/json-body";
 import { isRateLimited } from "@/lib/rate-limit";
 
@@ -24,6 +24,7 @@ export async function POST(request: Request) {
     const result = await restoreOwnPost(pool, id, userId, now);
     if (result === "gone") return NextResponse.json({ error: "This post has been permanently deleted." }, { status: 410 });
     if (result === "stale") return NextResponse.json({ error: "You can only restore your own posts." }, { status: 403 });
+    if (result === "slot-taken") return NextResponse.json({ error: `You already have as many live posts of this kind as allowed (${POSTS_AT_A_TIME["flat-offer"]} flats, ${POSTS_AT_A_TIME["flat-requirement"]} requirement). Delete one first to restore this one.` }, { status: 409 });
     return NextResponse.json({ result });
   }
 

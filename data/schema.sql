@@ -55,6 +55,9 @@ CREATE TABLE IF NOT EXISTS listings (
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_listing_kind ON listings (listing_kind);
+-- The posting browser's device id (src/lib/device-id.ts): one flat post and one requirement per device too.
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS device_id UUID;
+CREATE INDEX IF NOT EXISTS idx_listings_device_kind ON listings (device_id, listing_kind);
 CREATE INDEX IF NOT EXISTS idx_owner ON listings (owner_id);
 -- Widens `image` on databases created before it was TEXT (was VARCHAR(2048),
 -- too short for an uploaded photo's base64 string); a no-op once already TEXT.
@@ -215,6 +218,9 @@ CREATE TABLE IF NOT EXISTS contact_reveals (
   revealed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_contact_reveals_user_time ON contact_reveals (user_id, revealed_at);
+-- The browser's device id (src/lib/device-id.ts), so the daily cap also holds per device.
+ALTER TABLE contact_reveals ADD COLUMN IF NOT EXISTS device_id UUID;
+CREATE INDEX IF NOT EXISTS idx_contact_reveals_device_time ON contact_reveals (device_id, revealed_at);
 
 -- Row Level Security with no policies: Supabase's public REST/GraphQL API
 -- (anon and authenticated roles) can read or change nothing. The app connects

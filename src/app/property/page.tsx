@@ -98,8 +98,9 @@ function PostListing() {
           contactPhone: form.contactPhone,
           furnishing: form.furnishing || undefined,
           nearbyMetro: isFlatRequirement ? undefined : form.nearbyMetro.trim() || undefined,
-          flatConfiguration: isFlatRequirement ? undefined : form.flatConfiguration || undefined,
-          roomType: isFlatRequirement ? undefined : form.roomType || undefined,
+          // A requirement keeps only the field its "Looking for" choice showed.
+          flatConfiguration: isFlatRequirement && form.propertyType !== "Apartment" ? undefined : form.flatConfiguration || undefined,
+          roomType: isFlatRequirement && form.propertyType === "Apartment" ? undefined : form.roomType || undefined,
           tenantPreference: isFlatRequirement || form.genderPreference === "Family" ? undefined : form.tenantPreference || undefined,
           status: "published",
         }),
@@ -271,6 +272,7 @@ function PostListing() {
       <select value={form.propertyType} onChange={(event) => update("propertyType", event.target.value)} className={fieldClass}>
         <option>Flat</option>
         <option>Room</option>
+        {isFlatRequirement && <option value="Apartment">Full flat</option>}
       </select>
     </label>
   );
@@ -289,7 +291,7 @@ function PostListing() {
     <label className={labelClass}>
       Flat size <span className="font-normal text-stone-500">(optional)</span>
       <select value={form.flatConfiguration} onChange={(event) => update("flatConfiguration", event.target.value)} className={fieldClass}>
-        <option value="">Not specified</option>
+        <option value="">{isFlatRequirement ? "Any" : "Not specified"}</option>
         {flatConfigurationOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>
     </label>
@@ -297,9 +299,9 @@ function PostListing() {
 
   const roomTypeField = (
     <label className={labelClass}>
-      Room on offer <span className="font-normal text-stone-500">(optional)</span>
+      {isFlatRequirement ? "Room type" : "Room on offer"} <span className="font-normal text-stone-500">(optional)</span>
       <select value={form.roomType} onChange={(event) => update("roomType", event.target.value)} className={fieldClass}>
-        <option value="">Not specified</option>
+        <option value="">{isFlatRequirement ? "Any" : "Not specified"}</option>
         {roomTypeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>
     </label>
@@ -384,6 +386,8 @@ function PostListing() {
                 <div className="space-y-4">
                   {locationField}
                   {propertyTypeField}
+                  {/* A full flat is wanted by size (2 BHK); a flat share or room by private vs shared room. */}
+                  {form.propertyType === "Apartment" ? flatConfigurationField : roomTypeField}
                   {furnishingField}
                   {budgetField}
                 </div>

@@ -66,7 +66,8 @@ export default function PrivacyPolicyPage() {
         <h2>Cookies and local storage</h2>
         <p>
           We use a secure cookie to keep you signed in, and your browser&apos;s local storage to remember things like your profile details on
-          your device. These are needed for the site to work. You can clear them at any time from your browser settings, which
+          your device. When you view a poster&apos;s number or publish a post, we also store a random device ID in a cookie, so the daily limit on
+          numbers and the limit on posts apply to each device as well as each account. These are needed for the site to work. You can clear them at any time from your browser settings, which
           will sign you out.
         </p>
         <p className="mt-3">

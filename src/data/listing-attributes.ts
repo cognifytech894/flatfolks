@@ -36,6 +36,14 @@ export const flatConfigurationLabel = labelOf(flatConfigurationOptions);
 export const roomTypeLabel = labelOf(roomTypeOptions);
 export const tenantPreferenceLabel = labelOf(tenantPreferenceOptions);
 
+/** A flat-requirement for "Apartment" means the whole flat, not a share of one. */
+export const propertyTypeLabel = (type?: string) => (type === "Apartment" ? "Full flat" : type);
+
+/** What a flat-requirement wants inside that property: a BHK size for a full flat, else a private or shared room. */
+export function requirementWantLabel(listing: { propertyType?: string; roomType?: string; flatConfiguration?: string }) {
+  return (listing.propertyType === "Apartment" ? flatConfigurationLabel(listing.flatConfiguration) : roomTypeLabel(listing.roomType)) || "Any";
+}
+
 /**
  * Amenity tags a poster can tick. `value` is what's stored in listings.tags —
  * WiFi and Power Backup keep their original spelling so older listings still match.

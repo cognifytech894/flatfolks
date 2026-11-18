@@ -71,16 +71,29 @@ export function verifyRestoreToken(token: string, secret: string, now: Date): { 
 
 // --------------------------------------------------------------- restore ---
 
-export type RestoreResult = "restored" | "already-active" | "stale" | "gone";
+/** "slot-taken": the owner already has as many live posts of this kind as POSTS_AT_A_TIME allows. */
+export type RestoreResult = "restored" | "already-active" | "stale" | "gone" | "slot-taken";
 
 const restoreColumns = "status = 'published', removed_at = NULL, removal_email_sent_at = NULL, removal_email_attempts = 0, removal_email_error = NULL, inactivity_warning_sent_at = NULL";
+
+/**
+ * How many live posts of each kind one person may have at a time (enforced on
+ * new posts by createListingInFreeSlot in database.ts). Kept here because this
+ * file can't import "@/..." modules.
+ */
+export const POSTS_AT_A_TIME = { "flat-offer": 5, "flat-requirement": 1 } as const;
+
+// A removed post comes back only while its owner has room for another post of its kind.
+const slotFull = `(SELECT COUNT(*) FROM listings other WHERE other.owner_id = listings.owner_id AND other.listing_kind = listings.listing_kind
+  AND other.status IN ('published', 'draft', 'moderation') AND other.id <> listings.id)
+  >= CASE listings.listing_kind WHEN 'flat-requirement' THEN ${POSTS_AT_A_TIME["flat-requirement"]} ELSE ${POSTS_AT_A_TIME["flat-offer"]} END`;
 
 /** Restores the post a restore link was issued for. Only that post, and only that removal. */
 export async function restoreWithToken(db: Pool, token: string, secret: string, now: Date): Promise<{ result: RestoreResult | "invalid"; listingId?: string }> {
   const verified = verifyRestoreToken(token, secret, now);
   if (!verified) return { result: "invalid" };
   const { rows } = await db.query<{ owner_id: string | null }>(
-    `UPDATE listings SET ${restoreColumns} WHERE id = $1 AND status = 'removed_inactive' AND removed_at = $2 RETURNING owner_id`,
+    `UPDATE listings SET ${restoreColumns} WHERE id = $1 AND status = 'removed_inactive' AND removed_at = $2 AND NOT (${slotFull}) RETURNING owner_id`,
     [verified.listingId, verified.removedAt],
   );
   if (rows[0]) {
@@ -92,15 +105,21 @@ export async function restoreWithToken(db: Pool, token: string, secret: string, 
 
 /** The owner restoring their own post from the dashboard. */
 export async function restoreOwnPost(db: Pool, listingId: string, ownerId: string, now: Date): Promise<RestoreResult> {
-  const { rowCount } = await db.query(`UPDATE listings SET ${restoreColumns} WHERE id = $1 AND owner_id = $2 AND status = 'removed_inactive'`, [listingId, ownerId]);
+  const { rowCount } = await db.query(`UPDATE listings SET ${restoreColumns} WHERE id = $1 AND owner_id = $2 AND status = 'removed_inactive' AND NOT (${slotFull})`, [listingId, ownerId]);
   if (rowCount) { await markSeen(db, ownerId, now); return "restored"; }
-  return whyNotRestored(db, listingId);
+  return whyNotRestored(db, listingId, ownerId);
 }
 
-async function whyNotRestored(db: Pool, listingId: string): Promise<RestoreResult> {
-  const { rows } = await db.query<{ status: string }>("SELECT status FROM listings WHERE id = $1", [listingId]);
+/** `ownerId`: the member asking from their dashboard; someone else's post is "stale" to them, whatever its state. */
+async function whyNotRestored(db: Pool, listingId: string, ownerId?: string): Promise<RestoreResult> {
+  const { rows } = await db.query<{ status: string; owner_id: string | null; slot_taken: boolean }>(
+    `SELECT status, owner_id, (${slotFull}) AS slot_taken FROM listings WHERE id = $1`,
+    [listingId],
+  );
   if (!rows[0]) return "gone";
-  return rows[0].status === "removed_inactive" ? "stale" : "already-active";
+  if (ownerId && rows[0].owner_id !== ownerId) return "stale";
+  if (rows[0].status !== "removed_inactive") return "already-active";
+  return rows[0].slot_taken ? "slot-taken" : "stale";
 }
 
 /** Restoring counts as activity. The only users column ever written here. */

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { withoutOwnerDetails } from "@/lib/visitor";
-import { Armchair, Bath, Bed, CalendarDays, Clock, Home as HomeIcon, Lock, MapPin, ShieldAlert, ShieldCheck, TrainFront, UserRound, UsersRound, Wallet } from "lucide-react";
+import { Armchair, Bath, Bed, CalendarDays, Clock, Home as HomeIcon, Lock, MapPin, ShieldAlert, TrainFront, UserRound, UsersRound, Wallet } from "lucide-react";
 import { ContactReveal } from "@/components/listing/contact-reveal";
 import { SaveListingButton } from "@/components/listing/save-listing-button";
 import { PhotoCarousel } from "@/components/listing/photo-carousel";
@@ -10,6 +10,7 @@ import type { Listing } from "@/lib/database";
 import { safeJsonLd } from "@/lib/json-ld";
 import { lifestylePreferences } from "@/data/preferences";
 import { furnishingLabel } from "@/data/furnishing";
+import { propertyTypeLabel, requirementWantLabel } from "@/data/listing-attributes";
 import { perMonth } from "@/lib/budget";
 import { listingName } from "@/lib/seo/listing-page";
 
@@ -111,7 +112,8 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
     ? [
       ...(listing.ownerGender ? [{ icon: UserRound, label: "Gender", value: listing.ownerGender }] : []),
       { icon: Wallet, label: "Max budget", value: perMonth(listing.rent), money: true },
-      { icon: HomeIcon, label: "Looking for", value: listing.propertyType },
+      { icon: HomeIcon, label: "Looking for", value: propertyTypeLabel(listing.propertyType) || "Flat" },
+      { icon: Bed, label: listing.propertyType === "Apartment" ? "Flat size" : "Room type", value: requirementWantLabel(listing) },
       { icon: UsersRound, label: "Flatmate gender", value: listing.genderPreference || "Any" },
       ...(available ? [{ icon: CalendarDays, label: "Move-in", value: available }] : []),
       ...(furnishing ? [{ icon: Armchair, label: "Preferred furnishing", value: furnishing }] : []),
@@ -204,7 +206,6 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
             <div className={`flex flex-col gap-8 p-5 sm:p-6 lg:flex-row lg:p-8 ${withGallery ? "pt-2 sm:pt-2 lg:pt-3" : ""}`}>
               <div className="min-w-0 flex-1 space-y-6">
                 <div>
-                  {listing.verified && <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-sm font-semibold text-brand-700"><ShieldCheck className="h-4 w-4" /> Verified listing</div>}
                   <h1 className="text-2xl font-semibold tracking-tight text-stone-950 sm:text-3xl">{listingName(listing)}</h1>
                   <p className="mt-3 flex items-start gap-2 text-stone-600"><MapPin className="mt-1 h-4 w-4 shrink-0" /> {listing.location}</p>
                   {!isRequirement && listing.nearbyMetro && <p className="mt-2 flex items-start gap-2 text-sm text-stone-600"><TrainFront className="mt-0.5 h-4 w-4 shrink-0" /> Nearest metro: {listing.nearbyMetro} <span className="text-stone-500">(as given by the poster)</span></p>}

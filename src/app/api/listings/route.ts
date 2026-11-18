@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/current-user";
-import { createListing, deleteListing, getListingById, getListingOwnerId, getListings, getOwnerListings, touchLastSeen, updateListing, type NewListing } from "@/lib/database";
+import { createListingInFreeSlot, deleteListing, getListingById, getListingOwnerId, getListings, getOwnerListings, touchLastSeen, updateListing, type NewListing } from "@/lib/database";
 import { deleteImages, isOwnUpload } from "@/lib/image-storage";
 import { lifestylePreferences } from "@/data/preferences";
 import { cleanNearbyMetro, isFurnishing } from "@/data/furnishing";
@@ -11,7 +11,9 @@ import { withoutOwnerDetails } from "@/lib/visitor";
 import { publicErrorMessage } from "@/lib/public-error";
 import { isUuid, jsonBody } from "@/lib/json-body";
 import { isValidAmount } from "@/lib/budget";
-import { overPostCap, POSTS_PER_DAY } from "@/lib/daily-caps";
+import { countPost, postCapReached, POSTS_PER_DAY } from "@/lib/daily-caps";
+import { deviceIdFrom, saveDeviceId } from "@/lib/device-id";
+import { POSTS_AT_A_TIME } from "@/lib/inactive-posts";
 
 export const runtime = "nodejs";
 
@@ -113,10 +115,13 @@ export async function POST(request: Request) {
   // sites' images) or another member's photos (deleting this post would delete them).
   const images = body.images?.filter((image) => isOwnUpload(image, sessionUserId)).slice(0, 3);
   if (body.listingKind === "flat-requirement" && images?.length) return NextResponse.json({ error: "Flat requirements cannot include images." }, { status: 400 });
-  // Counted only for posts that passed every check above.
-  if (await overPostCap(sessionUserId)) return NextResponse.json({ error: `You've posted ${POSTS_PER_DAY} times today, the daily limit. Please try again tomorrow.` }, { status: 429 });
   await touchLastSeen(sessionUserId);
-  const listing = await createListing({
+  const device = deviceIdFrom(request);
+  if (await postCapReached(sessionUserId, device.id)) {
+    return saveDeviceId(NextResponse.json({ error: `You've posted ${POSTS_PER_DAY} times today, the daily limit. Please try again tomorrow.` }, { status: 429 }), request, device);
+  }
+  const listing = await createListingInFreeSlot({
+    deviceId: device.id,
     title: body.title,
     location: body.location,
     rent: Number(body.rent),
@@ -138,7 +143,14 @@ export async function POST(request: Request) {
     ...attributes.values,
     nearbyMetro: cleanNearbyMetro(body.nearbyMetro),
   });
-  return NextResponse.json(listing, { status: 201 });
+  if (!listing) {
+    const error = body.listingKind === "flat-requirement"
+      ? `You already have a flat requirement, and you can have only ${POSTS_AT_A_TIME["flat-requirement"]} at a time. Edit or delete it in My Posts on your dashboard.`
+      : `You already have ${POSTS_AT_A_TIME["flat-offer"]} flats posted, the most you can have at a time. Delete one in My Posts on your dashboard to post another.`;
+    return saveDeviceId(NextResponse.json({ error }, { status: 409 }), request, device);
+  }
+  await countPost(sessionUserId, device.id);
+  return saveDeviceId(NextResponse.json(listing, { status: 201 }), request, device);
 }
 
 export async function PATCH(request: Request) {
@@ -156,6 +168,8 @@ export async function PATCH(request: Request) {
     await touchLastSeen(sessionUserId);
     // Owners can't set status: a removed post comes back only through restore.
     delete body.status;
+    // Nor turn a post into the other kind, which would give them two of one kind.
+    delete body.listingKind;
   } else if (body.status && !["draft", "published", "moderation"].includes(body.status)) {
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   }
