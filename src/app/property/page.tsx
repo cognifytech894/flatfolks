@@ -99,7 +99,7 @@ function PostListing() {
           furnishing: form.furnishing || undefined,
           nearbyMetro: isFlatRequirement ? undefined : form.nearbyMetro.trim() || undefined,
           flatConfiguration: isFlatRequirement ? undefined : form.flatConfiguration || undefined,
-          roomType: isFlatRequirement ? undefined : form.roomType || undefined,
+          roomType: form.roomType || undefined,
           tenantPreference: isFlatRequirement || form.genderPreference === "Family" ? undefined : form.tenantPreference || undefined,
           status: "published",
         }),
@@ -297,9 +297,9 @@ function PostListing() {
 
   const roomTypeField = (
     <label className={labelClass}>
-      Room on offer <span className="font-normal text-stone-500">(optional)</span>
+      {isFlatRequirement ? "Room type" : "Room on offer"} <span className="font-normal text-stone-500">(optional)</span>
       <select value={form.roomType} onChange={(event) => update("roomType", event.target.value)} className={fieldClass}>
-        <option value="">Not specified</option>
+        <option value="">{isFlatRequirement ? "Any" : "Not specified"}</option>
         {roomTypeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>
     </label>
@@ -384,6 +384,7 @@ function PostListing() {
                 <div className="space-y-4">
                   {locationField}
                   {propertyTypeField}
+                  {roomTypeField}
                   {furnishingField}
                   {budgetField}
                 </div>
