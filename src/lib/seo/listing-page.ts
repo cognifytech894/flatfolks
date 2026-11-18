@@ -47,6 +47,19 @@ export function listingName(listing: Listing) {
   return listing.listingKind === "flat-requirement" ? `Looking for a ${kind} in ${place}` : `${kind} in ${place}`;
 }
 
+// What the post form saves when the poster leaves the title empty (src/app/property/page.tsx).
+const placeholderTitles = new Set(["looking for a flat", "flat available for a flatmate"]);
+
+/**
+ * The heading on the listing's own page: the title the poster wrote, or the
+ * built name (listingName) when they left it empty. The page's <title> and
+ * cards still use the built name, so search keywords don't depend on it.
+ */
+export function listingHeading(listing: Listing) {
+  const own = listing.title?.trim() ?? "";
+  return own && !placeholderTitles.has(own.toLowerCase()) ? own : listingName(listing);
+}
+
 /** "2 BHK Sharing Flat in Sector 73, Noida – ₹4,000/month | Female Flatmate". The suffix is dropped when it would make the title too long. */
 export function listingTitle(listing: Listing) {
   const isRequirement = listing.listingKind === "flat-requirement";

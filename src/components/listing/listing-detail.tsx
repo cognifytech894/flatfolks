@@ -12,7 +12,7 @@ import { lifestylePreferences } from "@/data/preferences";
 import { furnishingLabel } from "@/data/furnishing";
 import { propertyTypeLabel, requirementWantLabel } from "@/data/listing-attributes";
 import { perMonth } from "@/lib/budget";
-import { listingName } from "@/lib/seo/listing-page";
+import { listingHeading, listingName } from "@/lib/seo/listing-page";
 
 function formatDate(value?: string) {
   if (!value) return undefined;
@@ -206,7 +206,7 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
             <div className={`flex flex-col gap-8 p-5 sm:p-6 lg:flex-row lg:p-8 ${withGallery ? "pt-2 sm:pt-2 lg:pt-3" : ""}`}>
               <div className="min-w-0 flex-1 space-y-6">
                 <div>
-                  <h1 className="text-2xl font-semibold tracking-tight text-stone-950 sm:text-3xl">{listingName(listing)}</h1>
+                  <h1 className="text-2xl font-semibold tracking-tight text-stone-950 sm:text-3xl">{listingHeading(listing)}</h1>
                   <p className="mt-3 flex items-start gap-2 text-stone-600"><MapPin className="mt-1 h-4 w-4 shrink-0" /> {listing.location}</p>
                   {!isRequirement && listing.nearbyMetro && <p className="mt-2 flex items-start gap-2 text-sm text-stone-600"><TrainFront className="mt-0.5 h-4 w-4 shrink-0" /> Nearest metro: {listing.nearbyMetro} <span className="text-stone-500">(as given by the poster)</span></p>}
                   {posted && <p className="mt-2 flex items-center gap-2 text-sm text-stone-500"><Clock className="h-4 w-4" /> Posted {posted}</p>}
