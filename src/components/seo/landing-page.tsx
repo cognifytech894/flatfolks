@@ -66,7 +66,14 @@ function bhkSummary(listings: Listing[]): string {
   return sizes.length === 1 ? `${sizes[0]} BHK` : `${sizes.slice(0, -1).join(", ")} & ${sizes[sizes.length - 1]} BHK`;
 }
 
+// Hand-picked title and heading for single pages, keyed by path, where search
+// already shows the page for a phrase we want it to carry.
+const pageTitles: Record<string, string> = {
+  "/noida/flatmates": "Flats and Flatmates in Noida",
+};
+
 function heading(scope: Scope): string {
+  if (pageTitles[landingPath(scope)]) return pageTitles[landingPath(scope)];
   const place = label(scope);
   if (!place) return scope.intent ? nationalCopy[scope.intent.slug].h1 : "Sharing Flats, Flats for Rent & Flatmates";
   if (scope.intent) return `${scope.intent.label} in ${place}`;
@@ -116,6 +123,7 @@ function placeTitle(scope: Scope, place: string): string {
 
 /** Plain page titles, as they read in search results: "Sharing Flat in Greater Noida". No site name, no taglines. */
 function title(scope: Scope): string {
+  if (pageTitles[landingPath(scope)]) return pageTitles[landingPath(scope)];
   const place = titleLabel(scope);
   if (!place) return scope.intent ? nationalCopy[scope.intent.slug].title : heading(scope);
   switch (scope.intent?.slug) {
