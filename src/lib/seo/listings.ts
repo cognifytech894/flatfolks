@@ -140,6 +140,8 @@ export function isScopeIndexable(listings: Listing[], scope: Scope): boolean {
   const trail = scope.trail || [];
   const level = levelOf(trail);
   if (!scope.intent && (trail.length ? trail[trail.length - 1].alwaysIndex : scope.city?.alwaysIndex)) return true;
+  // A target city's own intent pages (/noida/flatmates) already rank; an empty spell mustn't drop them from the index.
+  if (scope.intent && !trail.length && scope.city?.alwaysIndex) return true;
   const ids = genuineIds(listings, scope);
   if (ids.length < indexMinimum[level][scope.intent ? "intent" : "hub"]) return false;
   if (scope.intent && level !== "city" && ids.length < standaloneIntentMinimum && sameSet(ids, genuineIds(listings, { ...scope, intent: undefined }))) return false;
