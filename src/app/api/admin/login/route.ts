@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { ADMIN_SESSION_COOKIE, createAdminSessionToken, verifyAdminCredentials } from "@/lib/admin-auth";
-import { clientIp, failAdminLoginAttempt, passAdminLoginAttempt, startAdminLoginAttempt } from "@/lib/admin-login-guard";
+import { clientIp, failAdminLoginAttempt, passAdminLoginAttempt, releaseAdminLoginAttempt, startAdminLoginAttempt } from "@/lib/admin-login-guard";
 import { jsonBody } from "@/lib/json-body";
 import { isRateLimited } from "@/lib/rate-limit";
 import { isAdminSession } from "@/lib/current-admin";
@@ -27,13 +27,20 @@ export async function POST(request: Request) {
   // wrong code counts as a failed attempt just like a wrong password.
   const totpSecret = adminTotpSecret();
   const passwordOk = typeof body.username === "string" && typeof body.password === "string" && Boolean(body.username.trim() && body.password) && verifyAdminCredentials(body.username.trim(), body.password);
+  // Two steps: username + password first, and only once they're right does the
+  // page ask for the authenticator code. That first step is not a failure.
+  const codeGiven = typeof body.code === "string" && body.code.trim() !== "";
+  if (totpSecret && passwordOk && !codeGiven) {
+    await releaseAdminLoginAttempt(pool, ip);
+    return NextResponse.json({ needsCode: true });
+  }
   const step = totpSecret && typeof body.code === "string" ? matchTotp(totpSecret, body.code) : null;
   // Checked only after the password, so a wrong password can't burn a code.
   const codeOk = !totpSecret || (step !== null && passwordOk && await claimTotpStep(pool, step));
   if (!passwordOk || !codeOk) {
     const left = await failAdminLoginAttempt(pool, ip, attempt.attempt);
     if (!left) return blocked();
-    const what = totpSecret ? "username, password or authenticator code" : "username or password";
+    const what = totpSecret && passwordOk ? "authenticator code" : "username or password";
     return NextResponse.json({ error: `Incorrect ${what}. ${left} attempt${left === 1 ? "" : "s"} left before this IP is blocked.` }, { status: 401 });
   }
   await passAdminLoginAttempt(pool, ip);
@@ -49,11 +56,6 @@ export async function POST(request: Request) {
   // One sign-in per browser: an admin login ends any member session here.
   response.cookies.delete(SESSION_COOKIE);
   return response;
-}
-
-/** Tells the login page whether to ask for an authenticator code. */
-export async function GET() {
-  return NextResponse.json({ totp: Boolean(adminTotpSecret()) });
 }
 
 /** Admin logout: ends every admin session on the server (copied cookies too), then clears this browser's cookie. */

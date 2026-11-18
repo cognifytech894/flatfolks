@@ -75,6 +75,14 @@ export async function passAdminLoginAttempt(pool: Pool, ip: string): Promise<voi
   await pool.query("DELETE FROM admin_login_blocks WHERE ip = $1 AND blocked_at IS NULL", [ip]);
 }
 
+/**
+ * After a correct password when the authenticator code is still to come: hands
+ * back the attempt counted for it, so the code step starts where the IP stood.
+ */
+export async function releaseAdminLoginAttempt(pool: Pool, ip: string): Promise<void> {
+  await pool.query("UPDATE admin_login_blocks SET failed_attempts = GREATEST(failed_attempts - 1, 0) WHERE ip = $1 AND blocked_at IS NULL", [ip]);
+}
+
 async function blockIp(pool: Pool, ip: string) {
   await pool.query("UPDATE admin_login_blocks SET blocked_at = COALESCE(blocked_at, NOW()) WHERE ip = $1", [ip]);
 }
