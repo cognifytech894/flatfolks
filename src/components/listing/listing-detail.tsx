@@ -10,6 +10,7 @@ import type { Listing } from "@/lib/database";
 import { safeJsonLd } from "@/lib/json-ld";
 import { lifestylePreferences } from "@/data/preferences";
 import { furnishingLabel } from "@/data/furnishing";
+import { propertyTypeLabel, requirementWantLabel } from "@/data/listing-attributes";
 import { perMonth } from "@/lib/budget";
 import { listingName } from "@/lib/seo/listing-page";
 
@@ -111,7 +112,8 @@ export function ListingDetail({ listing: original, isLoggedIn, url, crumbs, rela
     ? [
       ...(listing.ownerGender ? [{ icon: UserRound, label: "Gender", value: listing.ownerGender }] : []),
       { icon: Wallet, label: "Max budget", value: perMonth(listing.rent), money: true },
-      { icon: HomeIcon, label: "Looking for", value: listing.propertyType },
+      { icon: HomeIcon, label: "Looking for", value: propertyTypeLabel(listing.propertyType) || "Flat" },
+      { icon: Bed, label: listing.propertyType === "Apartment" ? "Flat size" : "Room type", value: requirementWantLabel(listing) },
       { icon: UsersRound, label: "Flatmate gender", value: listing.genderPreference || "Any" },
       ...(available ? [{ icon: CalendarDays, label: "Move-in", value: available }] : []),
       ...(furnishing ? [{ icon: Armchair, label: "Preferred furnishing", value: furnishing }] : []),

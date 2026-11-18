@@ -4,7 +4,7 @@ import { MapPin, UserRound } from "lucide-react";
 import type { Listing } from "@/lib/database";
 import { listingPath } from "@/lib/seo/listings";
 import { furnishingLabel } from "@/data/furnishing";
-import { roomTypeLabel } from "@/data/listing-attributes";
+import { propertyTypeLabel, requirementWantLabel } from "@/data/listing-attributes";
 import { perMonth, rupees } from "@/lib/budget";
 import { listingName } from "@/lib/seo/listing-page";
 
@@ -28,8 +28,8 @@ export function ListingCard({ listing }: { listing: Listing }) {
         <dl className="mt-4 grid grid-cols-2 gap-y-3 rounded-2xl bg-cream-50 p-3 text-center">
           <div className="border-r border-stone-200"><dt className="text-xs text-stone-500">Flatmate</dt><dd className="text-sm font-semibold text-stone-900">{listing.genderPreference || "Any"}</dd></div>
           <div><dt className="text-xs text-stone-500">Max budget</dt><dd className="text-sm font-semibold text-stone-900">{perMonth(listing.rent)}</dd></div>
-          <div className="border-r border-stone-200"><dt className="text-xs text-stone-500">Property type</dt><dd className="text-sm font-semibold text-stone-900">{listing.propertyType}</dd></div>
-          <div><dt className="text-xs text-stone-500">Looking for</dt><dd className="text-sm font-semibold text-stone-900">{roomTypeLabel(listing.roomType) || "Any"}</dd></div>
+          <div className="border-r border-stone-200"><dt className="text-xs text-stone-500">Property type</dt><dd className="text-sm font-semibold text-stone-900">{propertyTypeLabel(listing.propertyType)}</dd></div>
+          <div><dt className="text-xs text-stone-500">Looking for</dt><dd className="text-sm font-semibold text-stone-900">{requirementWantLabel(listing)}</dd></div>
         </dl>
       </article>
     );
