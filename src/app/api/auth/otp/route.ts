@@ -1,8 +1,6 @@
-import { after, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { OtpError, requestEmailAuthOtp, verifyEmailAuthOtp } from "@/lib/database";
-import { sendOtpEmail, sendWelcomeEmail } from "@/lib/email";
-import { siteUrl } from "@/lib/site-url";
-import { buildWelcomeEmail } from "@/lib/welcome-email";
+import { sendOtpEmail } from "@/lib/email";
 import { ADMIN_SESSION_COOKIE } from "@/lib/admin-auth";
 import { clientIp } from "@/lib/admin-login-guard";
 import { isValidSignInEmail } from "@/lib/email-identity";
@@ -50,15 +48,8 @@ export async function POST(request: Request) {
       if (!body.email?.trim() || !body.otp?.trim()) return NextResponse.json({ error: "Email address and OTP are required." }, { status: 400 });
       if (!isValidSignInEmail(body.email)) return NextResponse.json({ error: "Please enter a valid email address. Use only letters, numbers, dots, _ and - before the @." }, { status: 400 });
       const { user, isNewUser } = await verifyEmailAuthOtp(body.email, body.otp);
-      // Only an account created just now gets the welcome email, once. It goes
-      // out after the response so login isn't slowed, and a failure never
-      // blocks login.
-      if (isNewUser) {
-        after(async () => {
-          try { await sendWelcomeEmail(buildWelcomeEmail(user.email, siteUrl)); }
-          catch (error) { console.error("Failed to send welcome email:", error); }
-        });
-      }
+      // No welcome email yet: a new member gets it once they save their name
+      // on the next step (PATCH /api/users/[id]), so it can greet them by name.
       const response = NextResponse.json({ user, isNewUser });
       response.cookies.set(SESSION_COOKIE, createSessionToken(user.id, (await getSessionVersion(user.id)) ?? 0), {
         httpOnly: true, sameSite: "lax", secure: isSecureContext(request), path: "/", maxAge: 60 * 60 * 24 * SESSION_DAYS,

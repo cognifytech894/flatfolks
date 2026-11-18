@@ -25,6 +25,14 @@ ALTER TABLE users DROP CONSTRAINT IF EXISTS users_gender_check;
 UPDATE users SET gender = 'Male' WHERE gender = 'Boy';
 UPDATE users SET gender = 'Female' WHERE gender = 'Girl';
 ALTER TABLE users ADD CONSTRAINT users_gender_check CHECK (gender IN ('Male', 'Female'));
+-- The one welcome email goes out once the new member saves their name. When
+-- this column is first added, existing members count as already welcomed.
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'welcome_email_sent_at') THEN
+    ALTER TABLE users ADD COLUMN welcome_email_sent_at TIMESTAMPTZ;
+    UPDATE users SET welcome_email_sent_at = NOW();
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS listings (
   id UUID PRIMARY KEY,

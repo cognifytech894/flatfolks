@@ -55,7 +55,9 @@ export default function AuthPage() {
       if (!response.ok || !result.user) throw new Error(result.error || "Invalid or expired OTP.");
       if (result.isNewUser) {
         setUserId(result.user.id);
-        setName(result.user.name);
+        // Left empty on purpose: a new member must type their own name (the
+        // account's placeholder name is just the email's first part).
+        setName("");
         setStep("onboarding");
       } else {
         finish(result.user);
@@ -65,7 +67,9 @@ export default function AuthPage() {
   }
 
   async function completeOnboarding(event: React.FormEvent) {
-    event.preventDefault(); setLoading(true); setMessage("");
+    event.preventDefault();
+    if (!name.trim()) { setMessage("Please enter your name."); return; }
+    setLoading(true); setMessage("");
     try {
       const response = await fetch(`/api/users/${userId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, location, gender: gender || undefined }) });
       const result = await response.json() as { error?: string; user?: PublicUser };
@@ -117,7 +121,7 @@ export default function AuthPage() {
           {step === "onboarding" && (
             <form onSubmit={completeOnboarding} className="mt-6 space-y-4">
               <label className="block text-sm font-medium text-stone-700">
-                Your name
+                Your full name
                 <div className={fieldClass}><UserRound className="h-4 w-4 text-stone-500" /><input autoFocus required value={name} onChange={(event) => setName(event.target.value)} className={inputClass} placeholder="Your full name" /></div>
               </label>
               <label className="relative block text-sm font-medium text-stone-700">
@@ -166,7 +170,7 @@ export default function AuthPage() {
                   ))}
                 </div>
               </fieldset>
-              <button disabled={loading} className="w-full rounded-xl bg-brand-800 py-3 text-sm font-semibold text-white disabled:opacity-70">{loading ? "Saving..." : "Finish & continue"}</button>
+              <button disabled={loading || !name.trim()} className="w-full rounded-xl bg-brand-800 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{loading ? "Saving..." : "Finish & continue"}</button>
             </form>
           )}
 
