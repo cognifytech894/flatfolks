@@ -6,6 +6,7 @@ import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { getSavedCity, rememberCity, sortByCity } from "@/lib/saved-city";
 import { perMonth, rupees } from "@/lib/budget";
+import { propertyTypeLabel } from "@/data/listing-attributes";
 import { editBudgetEvent } from "@/components/search/search-filters";
 
 type ResultListing = {
@@ -55,7 +56,7 @@ export function SearchResults({ listings, searchedLocation, budget, keepOrder }:
               <div className="mt-3 flex items-center gap-3">
                 {/* Badges wrap onto a hidden second row, so one that doesn't fit is left out rather than cut in half. */}
                 <div className="flex h-6 min-w-0 flex-1 flex-wrap gap-1.5 overflow-hidden">
-                  <span className="shrink-0 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-600">{listing.propertyType}</span>
+                  <span className="shrink-0 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-600">{propertyTypeLabel(listing.propertyType)}</span>
                   {listing.badges.map((badge) => <span key={badge} className="shrink-0 rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-600">{badge}</span>)}
                 </div>
                 <Link href={listing.href} target="_blank" rel="noopener" className="shrink-0 py-1 text-sm font-semibold text-brand-600 hover:underline">View details</Link>

@@ -45,7 +45,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
         <h3 className="font-semibold text-stone-900"><Link href={href} className="after:absolute after:inset-0">{listingHeading(listing)}</Link></h3>
         <p className="mt-1 flex items-center gap-1 text-sm text-stone-500"><MapPin className="h-3.5 w-3.5 shrink-0" />{listing.location}</p>
         <p className="mt-auto pt-3 text-sm text-stone-600">
-          <span className="text-base font-semibold text-stone-900">{rupees(listing.rent)}</span>/month · {listing.propertyType}{listing.bedrooms > 1 ? ` · ${listing.bedrooms} BHK` : ""}{listing.furnishing ? ` · ${furnishingLabel(listing.furnishing)}` : ""}
+          <span className="text-base font-semibold text-stone-900">{rupees(listing.rent)}</span>/month · {propertyTypeLabel(listing.propertyType)}{listing.bedrooms > 1 ? ` · ${listing.bedrooms} BHK` : ""}{listing.furnishing ? ` · ${furnishingLabel(listing.furnishing)}` : ""}
         </p>
       </div>
     </article>
