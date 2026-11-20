@@ -101,7 +101,7 @@ function PostListing() {
           nearbyMetro: isFlatRequirement ? undefined : form.nearbyMetro.trim() || undefined,
           // A requirement keeps only the field its "Looking for" choice showed.
           flatConfiguration: isFlatRequirement && form.propertyType !== "Apartment" ? undefined : form.flatConfiguration || undefined,
-          roomType: isFlatRequirement && form.propertyType === "Apartment" ? undefined : form.roomType || undefined,
+          roomType: form.propertyType === "Apartment" ? undefined : form.roomType || undefined,
           tenantPreference: isFlatRequirement || form.genderPreference === "Family" ? undefined : form.tenantPreference || undefined,
           status: "published",
         }),
@@ -254,7 +254,7 @@ function PostListing() {
   const budgetField = (
     <label className={labelClass}>
       {isFlatRequirement ? "Max budget (₹/month)" : "Monthly rent (₹/month)"}
-      {!isFlatRequirement && <span className="mt-1 block text-xs font-normal text-stone-500">Rent for the room or bed you&apos;re offering, not the whole flat.</span>}
+      {!isFlatRequirement && <span className="mt-1 block text-xs font-normal text-stone-500">{form.propertyType === "Apartment" ? "Rent for the whole flat." : "Rent for the room or bed you're offering, not the whole flat."}</span>}
       <input required min="1" type="number" inputMode="numeric" {...invalidProps("budget")} value={form.budget} onChange={(event) => update("budget", event.target.value)} className={fieldClass + errorBorder("budget")} placeholder="₹" />
       {fieldError("budget")}
     </label>
@@ -273,7 +273,7 @@ function PostListing() {
       <select value={form.propertyType} onChange={(event) => update("propertyType", event.target.value)} className={fieldClass}>
         <option>Flat</option>
         <option>Room</option>
-        {isFlatRequirement && <option value="Apartment">Full flat</option>}
+        <option value="Apartment">Full flat</option>
       </select>
     </label>
   );
@@ -430,7 +430,8 @@ function PostListing() {
                 {locationField}
                 {propertyTypeField}
                 {flatConfigurationField}
-                {roomTypeField}
+                {/* A full flat is let whole, so there's no single room on offer. */}
+                {form.propertyType !== "Apartment" && roomTypeField}
                 {genderField}
                 {/* A family is the whole household, so students vs working professionals doesn't apply. */}
                 {form.genderPreference !== "Family" && tenantPreferenceField}
